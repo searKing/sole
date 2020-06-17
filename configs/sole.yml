@@ -1,0 +1,11 @@
+log:
+  level: info
+  path: ./log/sole
+  rotation_duration: 24h
+  rotation_max_age: 168h
+#  rotation_max_count: 7
+database:
+  dsn: "mysql://root:root@tcp(localhost:3306)/sole?max_conns=20&max_idle_conns=4"
+  fail_after_duration: 5m
+  max_wait_duration: 5s
+system_secret: "Aa123456Aa123456"
