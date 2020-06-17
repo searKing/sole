@@ -1,0 +1,15 @@
+[subtree "third_party/github.com/googleapis/googleapis"]
+	prefix = third_party/github.com/googleapis/googleapis
+	url = https://github.com/googleapis/googleapis.git
+	branch = master
+	disabled = false
+[subtree "third_party/github.com/mwitkow/go-proto-validators"]
+	prefix = third_party/github.com/mwitkow/go-proto-validators
+	url = https://github.com/mwitkow/go-proto-validators.git
+	branch = master
+	disabled = false
+[subtree "third_party/github.com/grpc-ecosystem/grpc-gateway"]
+	prefix = third_party/github.com/grpc-ecosystem/grpc-gateway
+	url = https://github.com/grpc-ecosystem/grpc-gateway.git
+	branch = v1.14.6
+	disabled = false
