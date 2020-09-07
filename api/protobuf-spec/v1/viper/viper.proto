@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package shield.api.v1.viper;
+import "github.com/mwitkow/go-proto-validators/validator.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "gitlab.hobot.cc/haixin.chen/shield/api/v1/viper;viper";
+
+// ViperProto is immutable, so mutex free
+message ViperProto {
+    string system_secret = 1;
+    AppInfo app_info = 2;
+    Service service = 3;
+    Log log = 4;
+    Tracing tracing = 5;
+    Web web = 6;
+    Database database = 7;
+}
+
+message AppInfo {
+    string build_version = 1; // 编译版本
+    string build_hash = 2; // 源码hash
+    string build_time = 3; // 编译时间
+}
+
+message Service {
+    string name = 1; // 服务名称
+    string display_name = 2; // 服务全称
+    string description = 3; // 服务描述
+    string id = 4; // 服务实例ID
+}
+
+message Log {
+    // 日志等级
+    enum Level {
+        option allow_alias = true;
+        panic = 0;
+        fatal = 1;
+        error = 2;
+        warn = 3;
+        warning = 3;
+        info = 4;
+        debug = 5;
+        trace = 6;
+    }
+    // 日志格式
+    enum Format {
+        json = 0;
+        text = 1;
+    }
+    Level level = 1 [(validator.field) = {is_in_enum : true}]; // 日志最低打印等级
+    Format format = 2 [(validator.field) = {is_in_enum : true}]; // 日志格式
+    string path = 3; //日志存储路径
+    google.protobuf.Duration rotation_duration = 4 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}]; // 日志循环覆盖分片时间
+    int32 rotation_max_count = 5 [(validator.field) = {int_gt : 0}]; //日志循环覆盖保留分片个数
+    google.protobuf.Duration rotation_max_age = 6 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}]; // 文件最大保存时间
+}
+
+message Tracing {
+    bool enable = 1;
+    Type type = 2 [(validator.field) = {is_in_enum : true}];
+    Jaeger jaeger = 3;
+
+    message Jaeger {
+        Reporter reporter = 1;
+        Sampler sampler = 2;
+
+        // Reporter configures the reporter. All fields are optional.
+        message Reporter {
+            // LocalAgentHostPort instructs reporter to send spans to jaeger-agent at this address
+            string local_agent_host_port = 1;
+        }
+        // Sampler allows initializing a non-default sampler.  All fields are optional.
+        message Sampler {
+            // server_url is the address of jaeger-agent's HTTP sampling server
+            string server_url = 1;
+            Type type = 2 [(validator.field) = {is_in_enum : true}];
+
+            // Param is a value passed to the sampler.
+            // Valid values for Param field are:
+            // - for "const" sampler, 0 or 1 for always false/true respectively
+            // - for "probabilistic" sampler, a probability between 0 and 1
+            // - for "rateLimiting" sampler, the number of spans per second
+            // - for "remote" sampler, param is the same as for "probabilistic"
+            //   and indicates the initial sampling rate before the actual one
+            //   is received from the mothership.
+            float param = 3;
+            // Type specifies the type of the sampler: const, probabilistic, rateLimiting, or remote
+            enum Type {
+                const = 0;
+                probabilistic = 1;
+                rateLimiting = 2;
+                remote = 3;
+            }
+        }
+    }
+    enum Type {
+        urber_jaeger = 0; //uber-jaeger
+        zipkin = 1; //zipkin
+    }
+}
+
+message Web {
+    Net bind_addr = 1; // for listen
+    Net advertise_addr = 2; // for expose
+    TLS tls = 3; // for tls such as https
+    CORS cors = 4; // for cors
+
+    // for debug
+    bool force_disable_tls = 5; // disable tls
+    message Net {
+        string host = 1;
+        int32 port = 2;
+    }
+
+    message TLS {
+        bool enable = 1;
+        KeyPair key_pair_base64 = 2; // key pair in base64 format encoded from pem
+        KeyPair key_pair_path = 3; // key pair stored in file from pem
+        // service_name is used to verify the hostname on the returned
+        // certificates unless InsecureSkipVerify is given. It is also included
+        // in the client's handshake to support virtual hosting unless it is
+        // an IP address.
+        string service_name = 4;
+
+
+        repeated string allowed_tls_cidrs = 5; //"127.0.0.1/24"
+        repeated string whitelisted_paths = 6;
+        // a public/private key pair
+        message KeyPair {
+            string cert = 1; // public key
+            string key = 2; // private key
+        }
+    }
+
+    message CORS {
+        bool enable = 1;
+        // returns Access-Control-Allow-Origin: * if false
+        bool use_conditional = 2;
+
+        // Conditional Cors bellow
+
+        // allowed_origins is a list of origins a cross-domain request can be executed from.
+        // If the special "*" value is present in the list, all origins will be allowed.
+        // An origin may contain a wildcard (*) to replace 0 or more characters
+        // (i.e.: http://*.domain.com). Usage of wildcards implies a small performance penalty.
+        // Only one wildcard can be used per origin.
+        // Default value is ["*"]
+        // return Access-Control-Allow-Origin
+        repeated string allowed_origins = 3;
+        // allowed_methods is a list of methods the client is allowed to use with
+        // cross-domain requests. Default value is simple methods (HEAD, GET and POST).
+        repeated string allowed_methods = 4;
+        // allowed_headers is list of non simple headers the client is allowed to use with
+        // cross-domain requests.
+        // If the special "*" value is present in the list, all headers will be allowed.
+        // Default value is [] but "Origin" is always appended to the list.
+        repeated string allowed_headers = 5;
+        // exposed_headers indicates which headers are safe to expose to the API of a CORS
+        // API specification
+        // return Access-Control-Expose-Headers
+        repeated string exposed_headers = 6;
+        // allow_credentials indicates whether the request can include user credentials like
+        // cookies, HTTP authentication or client side SSL certificates.
+        // return Access-Control-Allow-Credentials
+        repeated string allow_credentials = 7;
+        // options_passthrough instructs preflight to let other potential next handlers to
+        // process the OPTIONS method. Turn this on if your application handles OPTIONS.
+        bool options_passthrough = 8;
+        // max_age indicates how long the results of a preflight request
+        // can be cached
+        google.protobuf.Duration max_age = 9 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}];
+        // debug flag adds additional output to debug server side CORS issues
+        bool debug = 10;
+    }
+}
+
+message Database {
+    string dsn = 1; // memory|schema://[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+    google.protobuf.Duration max_wait_duration = 2 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}];
+    google.protobuf.Duration fail_after_duration = 3 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}];
+}

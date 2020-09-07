@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+// 健康监测服务 API
+package sole.api.v1.debug;
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "github.com/googleapis/googleapis/google/api/httpbody.proto";
+import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
+
+option go_package = "github.com/searKing/sole/protobuf-spec/api/v1/debug;debug";
+
+// 性能调试
+service DebugService {
+    // golang 性能监控
+    rpc PProf (google.protobuf.Empty) returns (google.api.HttpBody) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "服务性能"
+            consumes:""
+            produces:"text/html"
+			external_docs {
+				url: "https://github.com/golang/go/wiki/Performance"
+                description: "golang pprof"
+            }
+            description:"+ 本接口返回服务节点资源信息\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n"
+        };
+    };
+
+    // golang 变量监控
+    rpc ExpVar (google.protobuf.Empty) returns (google.api.HttpBody) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "服务性能"
+            consumes:""
+            produces:"application/json"
+			external_docs {
+				url: "http://golang.org/pkg/expvar"
+                description: "golang expvar"
+            }
+            description:"+ 本接口返回服务节点资源信息\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n"
+        };
+    };
+}

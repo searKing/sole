@@ -1,0 +1,9 @@
+swagger: "2.0"
+
+info:
+  title: sole
+  version: 1.0.0
+  contact:
+    name: "sole"
+    url: "http://github.com/searKing/sole"
+    email: "searKingChan@gmail.com"

@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+// 健康监测服务 API
+package solstice.api.v1.health;
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "github.com/googleapis/googleapis/google/api/httpbody.proto";
+import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
+
+
+option go_package = "github.com/searKing/solstice/api/v1/health;health";
+
+// 健康监测
+service HealthService {
+    // 节点启动状态检测
+    rpc Alive (google.protobuf.Empty) returns (AliveResponse) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "健康监测"
+            consumes:""
+            produces:"application/json"
+            description:"+ 本接口检测服务节点状态，即该节点是否正常启动；但不包括依赖的其他服务状态\n"
+                        "+ 当本服务HTTP服务启动成功后 ，返回状态码200。\n"
+                        "+ 当前状态码并不检测本服务所依赖的其他服务的运行状态\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。"
+        };
+    };
+    // 节点就绪状态监测
+    rpc Ready (google.protobuf.Empty) returns (ReadyResponse) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "健康监测"
+            consumes:""
+            produces:"application/json"
+            description:"+ 本接口检测本服务节点状态，即服务节点是否可用，即是否可正常对外提供服务；包括本节点HTTP服务运行状态及所依赖的其他服务的运行状态\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。"
+        };
+    };
+
+    // 服务版本查询
+    rpc Version (google.protobuf.Empty) returns (VersionResponse) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "健康监测"
+            consumes:""
+            produces: "application/json"
+            description:"+ 本接口返回服务节点软件版本\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。\n"
+        };
+    };
+
+    // Prometheus监控
+    rpc MetricsPrometheus (google.protobuf.Empty) returns (google.api.HttpBody) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "微服务管理"
+            consumes:""
+            produces:"text/plain"
+			external_docs {
+				url: "https://prometheus.io/docs/prometheus/latest/querying/api/"
+                description: "prometheus"
+            }
+            description:"+ 本接口检测本服务节点状态，即服务节点是否可用，即是否可正常对外提供服务；包括本节点HTTP服务运行状态及所依赖的其他服务的运行状态\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。\n"
+                        "+ 支持promethus API接口，promethus是一种集中式度量系统，用于记录可聚合的数据；如队列的当前深度，随元素入队出队而更新；HTTP的请求个数，随HTTP请求到来而更新\n"
+        };
+    };
+}
+
+message AliveResponse {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema {
+                required: "status"
+        }
+        example { value: '{"status":"ok"}' }
+    };
+    // Status always contains "ok".
+    Status status = 1;
+}
+
+message ReadyResponse {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        example { value: '{"status":"ok"}' }
+    };
+
+    // Status always contains "ok".
+    Status status = 1;
+    // Errors contains a list of errors that caused the not ready status.
+    map<string, string> errors = 2;
+}
+
+message VersionResponse {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        example { value: '{"version":"dev-master"}' }
+    };
+
+    // 服务软件版本
+    string version = 1;
+}
+
+enum Status {
+    ok = 0;
+}

@@ -1,0 +1,111 @@
+<!doctype html>
+{{ define "index" }}
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>searKing {{.Name}} {{.Version}}</title>
+    <base id="webBase" href="{{.BaseUrl}}">
+    <link href="/webapp/static/dist/bootstrap/4.3.1/css/bootstrap.css" rel="stylesheet">
+    <link href="/webapp/assets/css/logo.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="container">
+    <header class="wrapper clearfix text-center">
+        <h1>searKing {{.Name}} {{.Version}}</h1>
+    </header>
+    <p>{{.Description}}</p>
+</div>
+
+<main role="main" class="container">
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 rounded shadow-sm" style="background-color: purple">
+        <div class="lh-100">
+            <h6 class="mb-0 text-white lh-100">searKing Sole API</h6>
+            <small>Since 2019</small>
+        </div>
+    </div>
+
+    <div id="apis" class="accordion">
+        <div class="my-3 p-3 bg-white rounded shadow-sm">
+            <h6 class="border-bottom border-gray pb-2 mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#healthAPIs" aria-expanded="true"
+                        aria-controls="healthAPIs">
+                    健康监测 APIs
+                    <a href="#" name="health"></a>
+                </button>
+            </h6>
+            <div id="healthAPIs" class="collapse show" aria-labelledby="headingHealthAPIs" data-parent="#apis">
+                <div class="media text-muted pt-3">
+                    <img data-src="holder.js/32x32?theme=thumb&bg=007bff&fg=007bff&size=1"
+                         alt="" class="mr-2 rounded">
+                    <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
+                        <strong class="d-block text-dark">@服务版本</strong>
+                        <a href="/version" target="_blank" class="nav-link">版本信息</a>
+                    </p>
+                </div>
+                <div class="media text-muted pt-3">
+                    <img data-src="holder.js/32x32?theme=thumb&bg=e83e8c&fg=e83e8c&size=1" alt="" class="mr-2 rounded">
+                    <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
+                        <strong class="d-block text-dark">@服务节点状态</strong>
+                        <a href="/health/alive" target="_blank" class="nav-link">启动状态</a>
+                        <a href="/health/ready" target="_blank" class="nav-link">就绪状态</a>
+                        <a href="/debug/pprof" target="_blank" class="nav-link">服务性能监控</a>
+                        <a href="/debug/vars" target="_blank" class="nav-link">服务变量监控</a>
+                    </p>
+                </div>
+                <div class="media text-muted pt-3">
+                    <img data-src="holder.js/32x32?theme=thumb&bg=6f42c1&fg=6f42c1&size=1" alt="" class="mr-2 rounded">
+                    <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
+                        <strong class="d-block text-dark">@微服务管理</strong>
+                        <a href="/health/metrics/prometheus" target="_blank" class="nav-link">prometheus</a>
+                    </p>
+                </div>
+                <div class="media text-muted pt-3">
+                    <img data-src="holder.js/32x32?theme=thumb&bg=491217&fg=491217&size=1" alt="" class="mr-2 rounded">
+                    <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
+                        <strong class="d-block text-dark">@文档</strong>
+                        <a href="/doc/swagger/swagger.json" target="_blank" class="nav-link">swagger.json</a>
+                        <a href="/doc/swagger/swagger.yaml" target="_blank" class="nav-link">swagger.yaml</a>
+                        <a href="/doc/swagger/swagger-ui" target="_blank" class="nav-link">swagger-ui</a>
+                    </p>
+                </div>
+                <small class="d-block text-right mt-3">
+                    <a href="/#health">所有 健康监测API</a>
+                </small>
+            </div>
+        </div>
+        <div class="my-3 p-3 bg-white rounded shadow-sm">
+            <h6 class="border-bottom border-gray pb-2 mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#taskAPIs" aria-expanded="true"
+                        aria-controls="taskAPIs">
+                    业务 APIs
+                    <a href="#" name="tasks"></a>
+                </button>
+            </h6>
+            <div id="taskAPIs" class="collapse show" aria-labelledby="headingTaskAPIs" data-parent="#apis">
+                <small class="d-block text-right mt-3">
+                    <a href="/#tasks">所有 业务API</a>
+                </small>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap core JavaScript
+   ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/webapp/static/dist/jquery/3.4.1/jquery.min.js"></script>
+    <script src="/webapp/static/dist/holder/2.9.0/holder.min.js"></script>
+    <script src="/webapp/static/dist/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</main>
+
+<footer>
+    <div class="logo-container">
+        <a rel="noreferrer noopener" href="https://www.horizon.ai/" target="_blank">
+            <img src="/webapp/assets/images/logo_horizon.png" class="logo-image">
+        </a>
+    </div>
+</footer>
+</body>
+</html>
+{{ end }}
