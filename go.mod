@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/client_golang v1.6.0
 	github.com/rs/cors v1.7.0
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
-	github.com/searKing/golang v0.0.7
+	github.com/searKing/golang v0.0.8
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
@@ -41,5 +41,3 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.3.0
 )
-
-replace github.com/searKing/golang v0.0.7 => ../golang
