@@ -1,5 +1,5 @@
 consumes:
-  - application/json
+- application/json
 definitions:
   apiHttpBody:
     description: |-

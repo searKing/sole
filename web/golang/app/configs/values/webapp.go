@@ -4,8 +4,8 @@
 
 package values
 
-//import "github.com/searKing/sole/api/protobuf-spec/v1/webapp"
-//
-//var (
-//	WebApp = webapp.Pattern_WebAppService_File_0.String() // "/webapp"
-//)
+import "github.com/searKing/sole/api/protobuf-spec/v1/webapp"
+
+var (
+	WebApp = webapp.Pattern_WebAppService_File_0.String() // "/webapp"
+)
