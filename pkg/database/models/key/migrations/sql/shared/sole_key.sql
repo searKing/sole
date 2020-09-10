@@ -5,7 +5,7 @@
  */
 
 -- +migrate Up notransaction
-CREATE TABLE IF NOT EXISTS shield_key
+CREATE TABLE IF NOT EXISTS sole_key
 (
     # 业务条目
     set_id     VARCHAR(225)     NOT NULL COMMENT 'key所属的集合名称',
@@ -27,4 +27,4 @@ CREATE TABLE IF NOT EXISTS shield_key
 ) DEFAULT CHARSET = utf8 COMMENT ='json web key 表';
 
 -- +migrate Down
-DROP TABLE IF EXISTS shield_key;
+DROP TABLE IF EXISTS sole_key;

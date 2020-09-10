@@ -29,7 +29,6 @@ func main() {
 		defer profile.Profile().Stop()
 		rootCmd.SetHelpTemplate(fmt.Sprintf(`%s
 %s`, rootCmd.HelpTemplate(), profile.HelpMessage()))
-
 	}
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		log.Fatal(err)
