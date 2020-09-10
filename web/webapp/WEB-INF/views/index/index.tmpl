@@ -5,7 +5,9 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>searKing {{.Name}} {{.Version}}</title>
+    {{if .BaseUrl}}
     <base id="webBase" href="{{.BaseUrl}}">
+    {{end}}
     <link href="/webapp/static/dist/bootstrap/4.3.1/css/bootstrap.css" rel="stylesheet">
     <link href="/webapp/assets/css/logo.css" rel="stylesheet">
 </head>
@@ -101,8 +103,8 @@
 
 <footer>
     <div class="logo-container">
-        <a rel="noreferrer noopener" href="https://www.horizon.ai/" target="_blank">
-            <img src="/webapp/assets/images/logo_horizon.png" class="logo-image">
+        <a rel="noreferrer noopener" href="https://github.com/searKing" target="_blank">
+            <img src="/webapp/assets/images/logo_github_searKing.png" class="logo-image">
         </a>
     </div>
 </footer>

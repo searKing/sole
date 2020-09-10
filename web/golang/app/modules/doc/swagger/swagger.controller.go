@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/gin-gonic/gin/render"
-	"github.com/searKing/sole/web/golang/app/modules/webapp"
 )
 
 type Controller struct{}
@@ -34,13 +33,12 @@ func (c *Controller) Yaml() gin.HandlerFunc {
 
 func (c *Controller) UI() gin.HandlerFunc {
 	const swaggerIndexTmplName = "web/webapp/WEB-INF/views/swagger-ui/index.tmpl"
-	const swaggerIndexHtmlName = "web/webapp/app/modules/swagger-ui/index.html"
-
+	r := &render.TemplateHTML{
+		Name:  "index",
+		Files: []string{swaggerIndexTmplName},
+		Data:  GetIndexTemplateInfo(""),
+	}
 	return func(c *gin.Context) {
-		c.Render(http.StatusOK, render.TemplateHTML{
-			Name:  "index",
-			Files: []string{swaggerIndexTmplName},
-			Data:  GetIndexTemplateInfo(webapp.ResolveWeb(swaggerIndexHtmlName)),
-		})
+		c.Render(http.StatusOK, r)
 	}
 }

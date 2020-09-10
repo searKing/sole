@@ -14,13 +14,13 @@ import (
 
 func Controller() gin.HandlerFunc {
 	const IndexTmplName = "web/webapp/WEB-INF/views/index/index.tmpl"
-	const IndexHtmlName = "web/webapp/app/modules/index/index.html"
 
+	r := &render.TemplateHTML{
+		Name:  "index",
+		Files: []string{IndexTmplName},
+		Data:  GetIndexTemplateInfo(values.WebApp, ""),
+	}
 	return func(c *gin.Context) {
-		c.Render(http.StatusOK, render.TemplateHTML{
-			Name:  "index",
-			Files: []string{IndexTmplName},
-			Data:  GetIndexTemplateInfo(values.WebApp, IndexHtmlName),
-		})
+		c.Render(http.StatusOK, r)
 	}
 }
