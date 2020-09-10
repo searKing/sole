@@ -12,27 +12,27 @@ import (
 	"github.com/searKing/sole/web/golang/app/modules/webapp"
 )
 
-type SwaggerController struct{}
+type Controller struct{}
 
-func NewSwaggerController() *SwaggerController {
-	return &SwaggerController{}
+func NewController() *Controller {
+	return &Controller{}
 }
 
-func (c *SwaggerController) Json() gin.HandlerFunc {
+func (c *Controller) Json() gin.HandlerFunc {
 	const serviceSwaggerJson = "web/webapp/static/swagger/swagger.json"
 	return func(ctx *gin.Context) {
 		ctx.File(serviceSwaggerJson)
 	}
 }
 
-func (c *SwaggerController) Yaml() gin.HandlerFunc {
+func (c *Controller) Yaml() gin.HandlerFunc {
 	const serviceSwaggerYaml = "web/webapp/static/swagger/swagger.yaml"
 	return func(ctx *gin.Context) {
 		ctx.File(serviceSwaggerYaml)
 	}
 }
 
-func (c *SwaggerController) UI() gin.HandlerFunc {
+func (c *Controller) UI() gin.HandlerFunc {
 	const swaggerIndexTmplName = "web/webapp/WEB-INF/views/swagger-ui/index.tmpl"
 	const swaggerIndexHtmlName = "web/webapp/app/modules/swagger-ui/index.html"
 

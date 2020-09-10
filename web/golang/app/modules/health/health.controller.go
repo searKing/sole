@@ -19,17 +19,17 @@ import (
 	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-type HealthController struct {
+type Controller struct {
 	h *healthx.Handler
 }
 
-func NewHealthController() *HealthController {
-	h := &HealthController{}
+func NewController() *Controller {
+	h := &Controller{}
 	h.init()
 	return h
 }
 
-func (d *HealthController) init() {
+func (d *Controller) init() {
 	c := provider.GlobalProvider()
 	//dependency.ExpectDependency(c.Logger(), map[string]interface{}{"service_discovery": c.ServiceDiscoveryConnection})
 
@@ -43,24 +43,24 @@ func (d *HealthController) init() {
 	})
 }
 
-func (d *HealthController) Health() gin.HandlerFunc {
+func (d *Controller) Health() gin.HandlerFunc {
 	router := httprouter.New()
 	d.h.SetRoutes(router, true)
 	return gin.WrapF(router.ServeHTTP)
 }
 
-func (d *HealthController) MetricsPrometheus() gin.HandlerFunc {
+func (d *Controller) MetricsPrometheus() gin.HandlerFunc {
 	return gin.WrapH(promhttp.Handler())
 }
 
-func (d *HealthController) Alive() gin.HandlerFunc {
+func (d *Controller) Alive() gin.HandlerFunc {
 	return gin.WrapH(http.WrapHTTPRouterF(d.h.Alive))
 }
 
-func (d *HealthController) Ready(shareErrors bool) gin.HandlerFunc {
+func (d *Controller) Ready(shareErrors bool) gin.HandlerFunc {
 	return gin.WrapH(http.WrapHTTPRouterF(d.h.Ready(shareErrors)))
 }
 
-func (d *HealthController) Version() gin.HandlerFunc {
+func (d *Controller) Version() gin.HandlerFunc {
 	return gin.WrapH(http.WrapHTTPRouterF(d.h.Version))
 }

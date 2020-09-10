@@ -12,7 +12,7 @@ import (
 	"github.com/searKing/sole/web/golang/app/configs/values"
 )
 
-func IndexController() gin.HandlerFunc {
+func Controller() gin.HandlerFunc {
 	const IndexTmplName = "web/webapp/WEB-INF/views/index/index.tmpl"
 	const IndexHtmlName = "web/webapp/app/modules/index/index.html"
 

@@ -9,8 +9,8 @@ import (
 	"github.com/searKing/sole/web/golang/app/configs/values"
 )
 
-func DebugRouter(router gin.IRouter, prefix string) gin.IRouter {
-	debug := NewDebugController(prefix)
+func Router(router gin.IRouter, prefix string) gin.IRouter {
+	debug := NewController(prefix)
 	router.GET(values.DebugPProf, debug.PProf())
 	router.GET(values.DebugExpVar, debug.ExpVar())
 
