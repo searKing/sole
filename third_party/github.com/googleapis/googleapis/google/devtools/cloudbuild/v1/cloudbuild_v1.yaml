@@ -37,6 +37,12 @@ backend:
     deadline: 5.0
   - selector: google.longrunning.Operations.GetOperation
     deadline: 5.0
+  - selector: google.devtools.cloudbuild.v1.CloudBuild.CreateWorkerPool
+    deadline: 320.0
+  - selector: google.devtools.cloudbuild.v1.CloudBuild.DeleteWorkerPool
+    deadline: 320.0
+  - selector: google.devtools.cloudbuild.v1.CloudBuild.UpdateWorkerPool
+    deadline: 20.0
 
 http:
   rules:

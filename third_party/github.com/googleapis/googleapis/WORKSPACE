@@ -224,8 +224,8 @@ pip_repositories()
 # Change upstream repository once PR is merged
 http_archive(
     name = "gapic_generator_python",
-    urls = ["https://github.com/googleapis/gapic-generator-python/archive/v0.32.2.zip"],
-    strip_prefix = "gapic-generator-python-0.32.2",
+    urls = ["https://github.com/googleapis/gapic-generator-python/archive/v0.33.0.zip"],
+    strip_prefix = "gapic-generator-python-0.33.0",
 )
 
 load("@gapic_generator_python//:repositories.bzl",
@@ -315,6 +315,14 @@ php_gapic_repositories()
 ##############################################################################
 # C#
 ##############################################################################
+
+# Required to access the C#-specific common resources config.
+http_archive(
+    name = "gax_dotnet",
+    urls = ["https://github.com/googleapis/gax-dotnet/archive/b4bf8c3e67a89e558f06af60f777bd12abe84392.zip"],
+    strip_prefix = "gax-dotnet-b4bf8c3e67a89e558f06af60f777bd12abe84392",
+    build_file_content = "exports_files([\"Google.Api.Gax/ResourceNames/CommonResourcesConfig.json\"])",
+)
 
 http_archive(
     name = "gapic_generator_csharp",
