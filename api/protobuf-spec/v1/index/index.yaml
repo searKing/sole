@@ -6,12 +6,12 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: index.solstice.searking.github.com
+name: index.sole.searking.github.com
 
 #
 # API title to appear in the user interface (Swagger).
 #
-title: searKing Solstice Index API
+title: searKing Sole Index API
 
 #
 # API usage restrictions.
@@ -36,7 +36,7 @@ http:
     # Client example (Assuming your service is hosted at the given 'DOMAIN_NAME'):
     #   curl http://DOMAIN_NAME/v1/shelves
     #
-    - selector: solstice.api.v1.index.IndexService.HomePage
+    - selector: sole.api.v1.index.IndexService.HomePage
       get: '/index'
       additional_bindings:
         - get: '/index.html'

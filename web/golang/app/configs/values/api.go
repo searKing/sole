@@ -5,5 +5,5 @@
 package values
 
 const (
-	APIPathPrefix = "/shield/api/v1"
+	APIPathPrefix = "/sole/api/v1"
 )

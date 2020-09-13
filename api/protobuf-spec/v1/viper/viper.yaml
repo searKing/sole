@@ -6,8 +6,8 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: viper.shield.horizon.com
-title: searKing Shield Viper Data Structure
+name: viper.sole.searKing.github.com
+title: searKing Sole Viper Data Structure
 usage:
   rules:
     # Allow unregistered calls for all methods.

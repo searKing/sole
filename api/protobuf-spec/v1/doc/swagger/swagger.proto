@@ -1,14 +1,14 @@
 syntax = "proto3";
 
 // Swagger服务 API
-package solstice.api.v1.doc.swagger;
+package sole.api.v1.doc.swagger;
 import "google/protobuf/empty.proto";
 import "google/protobuf/descriptor.proto";
 import "github.com/googleapis/googleapis/google/api/httpbody.proto";
 import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
 
 
-option go_package = "github.com/searKing/solstice/api/v1/doc/swagger;swagger";
+option go_package = "github.com/searKing/sole/api/v1/doc/swagger;swagger";
 
 // Swagger服务
 service SwaggerService {

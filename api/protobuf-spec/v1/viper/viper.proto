@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package shield.api.v1.viper;
+package sole.api.v1.viper;
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "gitlab.hobot.cc/haixin.chen/shield/api/v1/viper;viper";
+option go_package = "github.com/searKing/sole/api/v1/viper;viper";
 
 // ViperProto is immutable, so mutex free
 message ViperProto {

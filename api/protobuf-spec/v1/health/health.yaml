@@ -6,12 +6,12 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: health.solstice.searking.github.com
+name: health.sole.searking.github.com
 
 #
 # API title to appear in the user interface (Swagger).
 #
-title: searKing Solstice Health API
+title: searKing Sole Health API
 
 #
 # API usage restrictions.
@@ -36,11 +36,11 @@ http:
     # Client example (Assuming your service is hosted at the given 'DOMAIN_NAME'):
     #   curl http://DOMAIN_NAME/v1/shelves
     #
-    - selector: solstice.api.v1.health.HealthService.Alive
+    - selector: sole.api.v1.health.HealthService.Alive
       get: /health/alive
-    - selector: solstice.api.v1.health.HealthService.Ready
+    - selector: sole.api.v1.health.HealthService.Ready
       get: /health/ready
-    - selector: solstice.api.v1.health.HealthService.Version
+    - selector: sole.api.v1.health.HealthService.Version
       get: /version
-    - selector: solstice.api.v1.health.HealthService.MetricsPrometheus
+    - selector: sole.api.v1.health.HealthService.MetricsPrometheus
       get: /health/metrics/prometheus

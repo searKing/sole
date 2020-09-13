@@ -235,6 +235,90 @@ info:
   title: sole
   version: 1.0.0
 paths:
+  /debug/pprof:
+    get:
+      description: |
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      externalDocs:
+        description: golang pprof
+        url: https://github.com/golang/go/wiki/Performance
+      operationId: PProf3
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: golang 性能监控
+      tags:
+        - 服务性能
+  /debug/pprof/**:
+    get:
+      description: |
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      externalDocs:
+        description: golang pprof
+        url: https://github.com/golang/go/wiki/Performance
+      operationId: PProf2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: golang 性能监控
+      tags:
+        - 服务性能
+  /debug/pprof/*path:
+    get:
+      description: |
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      externalDocs:
+        description: golang pprof
+        url: https://github.com/golang/go/wiki/Performance
+      operationId: PProf
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: golang 性能监控
+      tags:
+        - 服务性能
+  /debug/vars:
+    get:
+      description: |
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      externalDocs:
+        description: golang expvar
+        url: http://golang.org/pkg/expvar
+      operationId: ExpVar
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: golang 变量监控
+      tags:
+        - 服务性能
   /doc/swagger/swagger-ui:
     get:
       description: |-
@@ -383,6 +467,42 @@ paths:
       summary: 节点就绪状态监测
       tags:
         - 健康监测
+  /index:
+    get:
+      description: |-
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      operationId: HomePage
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 主页
+      tags:
+        - 主页
+  /index.html:
+    get:
+      description: |-
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+      operationId: HomePage2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 主页
+      tags:
+        - 主页
   /version:
     get:
       description: |
@@ -404,8 +524,8 @@ paths:
   /webapp:
     get:
       description: |-
-        + 本接口返回流媒体服务节点资源信息
-        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的流媒体服务节点，并不反应整个集群的资源状态。
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
          本接口提供静态文件服务
       operationId: File
       responses:

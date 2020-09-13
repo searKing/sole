@@ -22,7 +22,7 @@
   "_resolved": "https://registry.npmjs.org/popper.js/-/popper.js-1.15.0.tgz",
   "_shasum": "5560b99bbad7647e9faa475c6b8056621f5a4ff2",
   "_spec": "popper.js",
-  "_where": "/Users/chenhaixin/workspace/go/src/gitlab.hobot.cc/haixin.chen/namor/web/webapp/static/dist/popper.js",
+  "_where": "/Users/chenhaixin/workspace/go/src/github.com/searKing/sole/web/webapp/static/dist/popper.js",
   "author": {
     "name": "Federico Zivolo",
     "email": "federico.zivolo@gmail.com"

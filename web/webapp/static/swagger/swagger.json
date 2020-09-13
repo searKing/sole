@@ -16,6 +16,118 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/debug/pprof": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n",
+        "tags": [
+          "服务性能"
+        ],
+        "summary": "golang 性能监控",
+        "externalDocs": {
+          "description": "golang pprof",
+          "url": "https://github.com/golang/go/wiki/Performance"
+        },
+        "operationId": "PProf3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
+    "/debug/pprof/**": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n",
+        "tags": [
+          "服务性能"
+        ],
+        "summary": "golang 性能监控",
+        "externalDocs": {
+          "description": "golang pprof",
+          "url": "https://github.com/golang/go/wiki/Performance"
+        },
+        "operationId": "PProf2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
+    "/debug/pprof/*path": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n",
+        "tags": [
+          "服务性能"
+        ],
+        "summary": "golang 性能监控",
+        "externalDocs": {
+          "description": "golang pprof",
+          "url": "https://github.com/golang/go/wiki/Performance"
+        },
+        "operationId": "PProf",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
+    "/debug/vars": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n",
+        "tags": [
+          "服务性能"
+        ],
+        "summary": "golang 变量监控",
+        "externalDocs": {
+          "description": "golang expvar",
+          "url": "http://golang.org/pkg/expvar"
+        },
+        "operationId": "ExpVar",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
     "/doc/swagger/swagger-ui": {
       "get": {
         "description": "+ 本接口检测本服务节点状态，即服务节点是否可用，即是否可正常对外提供服务；包括本节点HTTP服务运行状态及所依赖的其他服务的运行状态\n+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。\n+ 本接口提供Swagger文档在线预览静态站点,快速预览Swagger文档",
@@ -204,6 +316,54 @@
         }
       }
     },
+    "/index": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。",
+        "tags": [
+          "主页"
+        ],
+        "summary": "主页",
+        "operationId": "HomePage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
+    "/index.html": {
+      "get": {
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。",
+        "tags": [
+          "主页"
+        ],
+        "summary": "主页",
+        "operationId": "HomePage2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiHttpBody"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        }
+      }
+    },
     "/version": {
       "get": {
         "description": "+ 本接口返回服务节点软件版本\n+ 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。\n",
@@ -230,7 +390,7 @@
     },
     "/webapp": {
       "get": {
-        "description": "+ 本接口返回流媒体服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的流媒体服务节点，并不反应整个集群的资源状态。\n 本接口提供静态文件服务",
+        "description": "+ 本接口返回服务节点资源信息\n+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n 本接口提供静态文件服务",
         "tags": [
           "HTML应用"
         ],

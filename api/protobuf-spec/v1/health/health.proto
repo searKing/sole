@@ -1,14 +1,14 @@
 syntax = "proto3";
 
 // 健康监测服务 API
-package solstice.api.v1.health;
+package sole.api.v1.health;
 import "google/protobuf/empty.proto";
 import "google/protobuf/descriptor.proto";
 import "github.com/googleapis/googleapis/google/api/httpbody.proto";
 import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
 
 
-option go_package = "github.com/searKing/solstice/api/v1/health;health";
+option go_package = "github.com/searKing/sole/api/v1/health;health";
 
 // 健康监测
 service HealthService {

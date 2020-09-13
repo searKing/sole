@@ -6,12 +6,12 @@ config_version: 3
 #
 # Name of the service configuration.
 #
-name: swagger.doc.solstice.searking.github.com
+name: swagger.doc.sole.searking.github.com
 
 #
 # API title to appear in the user interface (Swagger).
 #
-title: searKing Solstice Doc Swagger API
+title: searKing Sole Doc Swagger API
 
 #
 # API usage restrictions.
@@ -36,11 +36,11 @@ http:
     # Client example (Assuming your service is hosted at the given 'DOMAIN_NAME'):
     #   curl http://DOMAIN_NAME/v1/shelves
     #
-    - selector: solstice.api.v1.doc.swagger.SwaggerService.Json
+    - selector: sole.api.v1.doc.swagger.SwaggerService.Json
       get: '/doc/swagger/swagger.json'
-    - selector: solstice.api.v1.doc.swagger.SwaggerService.Yaml
+    - selector: sole.api.v1.doc.swagger.SwaggerService.Yaml
       get: '/doc/swagger/swagger.yaml'
-    - selector: solstice.api.v1.doc.swagger.SwaggerService.UI
+    - selector: sole.api.v1.doc.swagger.SwaggerService.UI
       get: '/doc/swagger/swagger-ui'
       additional_bindings:
         - get: '/doc/swagger/swagger-ui/index.html'
