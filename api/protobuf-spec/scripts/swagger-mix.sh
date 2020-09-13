@@ -51,6 +51,7 @@ trap cleanup EXIT
 mkdir -p "${tmpdir}"
 
 # Sanity check that the right tools are accessible.
+# swagger https://github.com/go-swagger/go-swagger
 for tool in swagger; do
   q=$(command -v $tool) || die "didn't find $tool"
   echo 1>&2 "$tool: $q"
