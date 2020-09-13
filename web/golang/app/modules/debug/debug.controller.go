@@ -14,15 +14,15 @@ import (
 	gin2 "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
 )
 
-type DebugController struct {
+type Controller struct {
 	pathPrefixTrim string
 }
 
-func NewDebugController(prefix string) *DebugController {
-	return &DebugController{pathPrefixTrim: prefix}
+func NewController(prefix string) *Controller {
+	return &Controller{pathPrefixTrim: prefix}
 }
 
-func (d *DebugController) PProf() gin.HandlerFunc {
+func (d *Controller) PProf() gin.HandlerFunc {
 	runtime.SetBlockProfileRate(1)
 	runtime.SetMutexProfileFraction(1)
 
@@ -32,7 +32,7 @@ func (d *DebugController) PProf() gin.HandlerFunc {
 	return gin.WrapH(http.DefaultServeMux)
 }
 
-func (d *DebugController) ExpVar() gin.HandlerFunc {
+func (d *Controller) ExpVar() gin.HandlerFunc {
 	if d.pathPrefixTrim != "" {
 		return gin2.RedirectTrim(http.StatusFound, d.pathPrefixTrim)
 	}

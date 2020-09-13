@@ -7,7 +7,9 @@
     <title>searKing {{.Name}} Swagger UI</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{if .BaseUrl}}
     <base id="webBase" href="{{.BaseUrl}}">
+    {{end}}
 
     <link rel="stylesheet" type="text/css" href="/webapp/static/dist/swagger-ui/3.23.0/swagger-ui.css">
     <link rel="icon" type="image/png" href="/webapp/static/dist/swagger-ui/3.23.0/favicon-32x32.png" sizes="32x32"/>
@@ -35,8 +37,8 @@
 <body>
 <div id="swagger-ui"></div>
 
-<script src="../../../static/dist/swagger-ui/3.23.0/swagger-ui-bundle.js"></script>
-<script src="../../../static/dist/swagger-ui/3.23.0/swagger-ui-standalone-preset.js"></script>
+<script src="/webapp/static/dist/swagger-ui/3.23.0/swagger-ui-bundle.js"></script>
+<script src="/webapp/static/dist/swagger-ui/3.23.0/swagger-ui-standalone-preset.js"></script>
 <script>
     window.onload = function () {
         // Begin Swagger UI call region

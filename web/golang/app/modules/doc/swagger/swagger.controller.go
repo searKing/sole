@@ -9,38 +9,36 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/gin-gonic/gin/render"
-	"github.com/searKing/sole/web/golang/app/modules/webapp"
 )
 
-type SwaggerController struct{}
+type Controller struct{}
 
-func NewSwaggerController() *SwaggerController {
-	return &SwaggerController{}
+func NewController() *Controller {
+	return &Controller{}
 }
 
-func (c *SwaggerController) Json() gin.HandlerFunc {
+func (c *Controller) Json() gin.HandlerFunc {
 	const serviceSwaggerJson = "web/webapp/static/swagger/swagger.json"
 	return func(ctx *gin.Context) {
 		ctx.File(serviceSwaggerJson)
 	}
 }
 
-func (c *SwaggerController) Yaml() gin.HandlerFunc {
+func (c *Controller) Yaml() gin.HandlerFunc {
 	const serviceSwaggerYaml = "web/webapp/static/swagger/swagger.yaml"
 	return func(ctx *gin.Context) {
 		ctx.File(serviceSwaggerYaml)
 	}
 }
 
-func (c *SwaggerController) UI() gin.HandlerFunc {
+func (c *Controller) UI() gin.HandlerFunc {
 	const swaggerIndexTmplName = "web/webapp/WEB-INF/views/swagger-ui/index.tmpl"
-	const swaggerIndexHtmlName = "web/webapp/app/modules/swagger-ui/index.html"
-
+	r := &render.TemplateHTML{
+		Name:  "index",
+		Files: []string{swaggerIndexTmplName},
+		Data:  GetIndexTemplateInfo(""),
+	}
 	return func(c *gin.Context) {
-		c.Render(http.StatusOK, render.TemplateHTML{
-			Name:  "index",
-			Files: []string{swaggerIndexTmplName},
-			Data:  GetIndexTemplateInfo(webapp.ResolveWeb(swaggerIndexHtmlName)),
-		})
+		c.Render(http.StatusOK, r)
 	}
 }

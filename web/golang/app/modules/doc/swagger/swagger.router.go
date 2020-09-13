@@ -9,8 +9,8 @@ import (
 	"github.com/searKing/sole/web/golang/app/configs/values"
 )
 
-func SwaggerRouter(router gin.IRouter) gin.IRouter {
-	s := NewSwaggerController()
+func Router(router gin.IRouter) gin.IRouter {
+	s := NewController()
 	router.GET(values.SwaggerJson, s.Json())
 	router.GET(values.SwaggerYaml, s.Yaml())
 

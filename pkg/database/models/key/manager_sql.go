@@ -28,11 +28,11 @@ type SQLManager struct {
 
 const (
 	version      = 0
-	addKeySet    = `INSERT INTO shield_key (set_id, key_id, key_data, version) VALUES (:set_id, :key_id, :key_data, :version)`
-	queryKey     = `SELECT * FROM shield_key WHERE set_id=? AND key_id=? ORDER BY created_at DESC`
-	queryKeySet  = `SELECT * FROM shield_key WHERE set_id=?  ORDER BY created_at DESC`
-	deleteKey    = `DELETE FROM shield_key WHERE set_id=? AND key_id=?`
-	deleteKeySet = `DELETE FROM shield_key WHERE set_id=?`
+	addKeySet    = `INSERT INTO sole_key (set_id, key_id, key_data, version) VALUES (:set_id, :key_id, :key_data, :version)`
+	queryKey     = `SELECT * FROM sole_key WHERE set_id=? AND key_id=? ORDER BY created_at DESC`
+	queryKeySet  = `SELECT * FROM sole_key WHERE set_id=?  ORDER BY created_at DESC`
+	deleteKey    = `DELETE FROM sole_key WHERE set_id=? AND key_id=?`
+	deleteKeySet = `DELETE FROM sole_key WHERE set_id=?`
 )
 
 type sqlData struct {
@@ -52,7 +52,7 @@ type sqlData struct {
 
 // TableName return table name
 func (*sqlData) TableName() string {
-	return `shield_key`
+	return `sole_key`
 }
 
 func NewSQLManager(db *sqlx.DB, provider Provider) *SQLManager {
@@ -63,7 +63,7 @@ func NewSQLManager(db *sqlx.DB, provider Provider) *SQLManager {
 }
 
 func (*SQLManager) MigrateTableName() string {
-	return `shield_key_migration`
+	return `sole_key_migration`
 }
 
 func (m *SQLManager) AddKey(ctx context.Context, setId string, key *jose.JSONWebKey) error {

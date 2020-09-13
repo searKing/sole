@@ -26,18 +26,18 @@ func NewHandler() *Handler {
 func (h *Handler) SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway) {
 	// bind grpcGateway as default
 	middlewares.MiddlewaresRouter(ginRouter)
-	index.IndexRouter(ginRouter)
-	debug.DebugRouter(ginRouter, "")
-	health.HealthRouter(ginRouter)
+	index.Router(ginRouter)
+	debug.Router(ginRouter, "")
+	health.Router(ginRouter)
 	// webapp static files
-	webapp.WebAppRouter(ginRouter)
+	webapp.Router(ginRouter)
 	// doc
-	swagger.SwaggerRouter(ginRouter)
+	swagger.Router(ginRouter)
 	// API
 	apiRouter := ginRouter.Group(values.APIPathPrefix)
-	index.IndexRouter(apiRouter)
-	debug.DebugRouter(apiRouter, values.APIPathPrefix)
-	health.HealthRouter(apiRouter)
+	index.Router(apiRouter)
+	debug.Router(apiRouter, values.APIPathPrefix)
+	health.Router(apiRouter)
 
 	//// NOTE: It might be required to set Router.HandleMethodNotAllowed to false to avoid problems.
 	//r.HandleMethodNotAllowed = false
