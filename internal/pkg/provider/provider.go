@@ -6,10 +6,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"sync/atomic"
 	"syscall"
 
@@ -159,24 +157,4 @@ func (p *Provider) RegisterMigrateModules() {
 	p.updateLogger()
 	p.updateSqlDB()
 	p.updateKeyManager()
-}
-
-func (p *Provider) GetBackendBindHostPort() string {
-	local := p.Proto().GetWeb().GetBindAddr()
-	return getHostPort(local.GetHost(), local.GetPort())
-}
-
-func (p *Provider) GetBackendAdvertiseHostPort() string {
-	www := p.Proto().GetWeb().GetAdvertiseAddr()
-	if www.GetHost() == "" {
-		return p.GetBackendBindHostPort()
-	}
-	return getHostPort(www.GetHost(), www.GetPort())
-}
-
-func getHostPort(hostname string, port int32) string {
-	if strings.HasPrefix(hostname, "unix:") {
-		return hostname
-	}
-	return fmt.Sprintf("%s:%d", hostname, port)
 }

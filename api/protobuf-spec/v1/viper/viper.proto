@@ -108,9 +108,18 @@ message Web {
 
     // for debug
     bool force_disable_tls = 5; // disable tls
+
+    LocalIpResolver local_ip_resolver = 6; // for resolve local ip to expose, used if advertise_addr is empty
+
     message Net {
         string host = 1;
         int32 port = 2;
+    }
+
+    message LocalIpResolver {
+        repeated string networks = 1;
+        repeated string addresses = 2;
+        google.protobuf.Duration timeout = 3 [(validator.field) = {regex: "^[-+]?([0-9]*(\\.[0-9]*)?[a-z]+)+$"}];
     }
 
     message TLS {

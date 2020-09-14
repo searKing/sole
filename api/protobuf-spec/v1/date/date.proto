@@ -2,9 +2,7 @@ syntax = "proto3";
 
 // 日期查询 API
 package sole.api.v1.date;
-import "google/protobuf/empty.proto";
 import "google/protobuf/descriptor.proto";
-import "github.com/googleapis/googleapis/google/api/httpbody.proto";
 import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
 import "github.com/mwitkow/go-proto-validators/validator.proto";
 
