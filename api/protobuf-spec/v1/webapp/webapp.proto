@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+// 主页HomePage API
+package sole.api.v1.webapp;
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "github.com/googleapis/googleapis/google/api/httpbody.proto";
+import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options/annotations.proto";
+
+option go_package = "github.com/searKing/sole/api/v1/webapp;webapp";
+
+// HTML应用
+service WebAppService {
+    // 静态文件下载
+    rpc File (google.protobuf.Empty) returns (google.api.HttpBody) {
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            tags: "HTML应用"
+            consumes:""
+            produces:"text/css; charset=utf-8"
+            produces:"image/gif"
+            produces:"text/html; charset=utf-8"
+            produces:"image/jpeg"
+            produces:"image/jpeg"
+            produces:"application/javascript"
+            produces:"application/javascript"
+            produces:"application/pdf"
+            produces:"image/png"
+            produces:"image/svg+xml"
+            produces:"application/wasm"
+            produces:"image/webp"
+            produces:"text/xml; charset=utf-8"
+            description:"+ 本接口返回服务节点资源信息\n"
+                        "+ 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。\n"
+                        " 本接口提供静态文件服务"
+        };
+    };
+}
