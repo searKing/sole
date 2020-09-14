@@ -28,16 +28,17 @@ require (
 	github.com/prometheus/client_golang v1.6.0
 	github.com/rs/cors v1.7.0
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
-	github.com/searKing/golang v0.0.8
+	github.com/searKing/golang v0.0.9
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/uber/jaeger-client-go v2.24.0+incompatible
 	github.com/urfave/negroni v1.0.0
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	google.golang.org/genproto v0.0.0-20200808173500-a06252235341
-	google.golang.org/grpc v1.31.0
+	golang.org/x/net v0.0.0-20200822124328-c89045814202
+	google.golang.org/api v0.31.0
+	google.golang.org/genproto v0.0.0-20200831141814-d751682dd103
+	google.golang.org/grpc v1.31.1
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.3.0
 )
