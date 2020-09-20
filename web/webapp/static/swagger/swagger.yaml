@@ -592,6 +592,25 @@ paths:
       summary: 服务版本查询
       tags:
       - 健康监测
+  /webapp:
+    get:
+      description: |-
+        + 本接口返回服务节点资源信息
+        + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
+         本接口提供静态文件服务
+      operationId: File
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 静态文件下载
+      tags:
+      - HTML应用
 produces:
 - application/json
 swagger: "2.0"

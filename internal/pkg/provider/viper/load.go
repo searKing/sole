@@ -7,8 +7,8 @@ package viper
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"strings"
 
@@ -17,6 +17,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/searKing/golang/go/error/multi"
+	os_ "github.com/searKing/golang/go/os"
 	proto_ "github.com/searKing/golang/third_party/github.com/golang/protobuf/proto"
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/spf13/viper"
@@ -95,8 +96,8 @@ func mergeConfigFromFile(cfgFile string, onConfigFileChange func(in fsnotify.Eve
 		// enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 		log.Printf("[INFO] Using config file: %s\n", cfgFile)
-		if _, err := os.Stat(cfgFile); err != nil {
-			_, _ = os.Create(cfgFile)
+		if err := os_.CreateAllIfNotExist(cfgFile); err != nil {
+			return fmt.Errorf("create %s %w", cfgFile, err)
 		}
 	}
 
