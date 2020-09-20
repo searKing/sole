@@ -74,7 +74,7 @@ install-only:
 	@mkdir -p "$(DESTDIR)$(PREFIX)/bin"
 	@cp -Rv "$(TARGET)" "$(DESTDIR)$(PREFIX)/bin/$(TARGET)"
 	@mkdir -p "$(DESTDIR)$(PREFIX)/conf"
-	@cp -Rv "${MAKEFILE_PATH}/../../configs/$(TARGET).yml" "$(DESTDIR)$(PREFIX)/conf/$(TARGET).yml"
+	@cp -Rv "${MAKEFILE_PATH}/../../configs/$(TARGET).yaml" "$(DESTDIR)$(PREFIX)/conf/$(TARGET).yaml"
 	@mkdir -p "$(DESTDIR)$(PREFIX)/web/webapp"
 	@cp -Rv "${MAKEFILE_PATH}/../../web/webapp"/* "$(DESTDIR)$(PREFIX)/web/webapp/"
 	@mkdir -p "$(DESTDIR)$(PREFIX)/website"

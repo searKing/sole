@@ -12,4 +12,4 @@ bazel-testlogs
 vendor
 
 # Generated travis files
-.travis.yml
+.travis.yaml

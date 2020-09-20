@@ -66,5 +66,5 @@ func NewDefaultViperProto() *viper.ViperProto {
 
 // DefaultConfigPath returns config file's default path
 func DefaultConfigPath() string {
-	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yml", ServiceName))
+	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yaml", ServiceName))
 }

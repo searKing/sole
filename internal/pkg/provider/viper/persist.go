@@ -14,10 +14,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-// persistConfig writes config using into .use.<name>.yml
+// persistConfig writes config using into .use.<name>.yaml
 func persistConfig() error {
 	// persist using config
-	f := viper.ConfigFileUsed() // /root/.sole.yml
+	f := viper.ConfigFileUsed() // /root/.sole.yaml
 	if f == "" {
 		log.Printf("[WARN] persist skiped, for no config file used\n")
 		return nil
@@ -27,7 +27,7 @@ func persistConfig() error {
 	ext := filepath.Ext(f)
 	name := strings.TrimPrefix(strings.TrimSuffix(base, ext), ".")
 
-	configFileUsing := filepath.Join(dir, ".use."+name+".yml") // /root/.use.sole.yml
+	configFileUsing := filepath.Join(dir, ".use."+name+".yaml") // /root/.use.sole.yaml
 
 	err := viper.WriteConfigAs(configFileUsing)
 	if err != nil {
