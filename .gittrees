@@ -11,5 +11,5 @@
 [subtree "third_party/github.com/grpc-ecosystem/grpc-gateway"]
 	prefix = third_party/github.com/grpc-ecosystem/grpc-gateway
 	url = https://github.com/grpc-ecosystem/grpc-gateway.git
-	branch = v1.14.6
+	branch = v1.15.0
 	disabled = false
