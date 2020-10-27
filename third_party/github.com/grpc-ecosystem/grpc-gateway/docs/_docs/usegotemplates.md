@@ -15,11 +15,16 @@ as:
 ## How to use it
 
 By default this function is turned off, so if you want to use it you
-have to set the `use_go_templates` flag to true inside of the
-`swagger_out` flag.
+have to add the `use_go_templates` option:
 
 ```shell
---swagger_out=use_go_templates=true:.
+--openapiv2_out . --openapiv2_opt use_go_templates=true
+```
+
+or:
+
+```shell
+--openapiv2_out=use_go_templates=true:.
 ```
 
 ### Example script
@@ -28,9 +33,11 @@ Example of a bash script with the `use_go_templates` flag set to true:
 
 ```shell
 $ protoc -I. \
-    --go_out=plugins=grpc:. \
-    --grpc-gateway_out=logtostderr=true:. \
-    --swagger_out=logtostderr=true,use_go_templates=true:. \
+    --go_out . --go-grpc_out . \
+    --grpc-gateway_out . --grpc-gateway_opt logtostderr=true \
+    --openapiv2_out . \
+    --openapiv2_opt logtostderr=true \
+    --openapiv2_opt use_go_templates=true \
     path/to/my/proto/v1/myproto.proto 
 ```
 
@@ -80,19 +87,19 @@ The content of `tables.md`:
 | {{.Number}} | {{.Name}} | {{if eq .Label.String "LABEL_REPEATED"}}[]{{end}}{{.Type}} | {{fieldcomments .Message .}} | {{end}}  
 ```
 
-## Swagger output
+## OpenAPI output
 
 ### SwaggerUI
 
-This is how the swagger file would be rendered in [SwaggerUI](https://swagger.io/tools/swagger-ui/)
+This is how the OpenAPI file would be rendered in [Swagger UI](https://swagger.io/tools/swagger-ui/)
 
-![Screenshot swaggerfile in SwaggerUI](https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/docs/_imgs/gotemplates/swaggerui.png)
+![Screenshot OpenAPI file in SwaggerUI](https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/docs/_imgs/gotemplates/swaggerui.png)
 
 ### Postman
 
-This is how the swagger file would be rendered in [Postman](https://www.getpostman.com/)
+This is how the OpenAPI file would be rendered in [Postman](https://www.getpostman.com/)
 
-![Screenshot swaggerfile in Postman](https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/docs/_imgs/gotemplates/postman.png)
+![Screenshot OpenAPI file in Postman](https://raw.githubusercontent.com/grpc-ecosystem/grpc-gateway/master/docs/_imgs/gotemplates/postman.png)
 
 For a more detailed example of a protofile that has Go templates enabled,
 [see the examples](https://github.com/grpc-ecosystem/grpc-gateway/blob/master/examples/internal/proto/examplepb/use_go_template.proto).

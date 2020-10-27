@@ -1,7 +1,88 @@
 # Change Log
 
+## [v2.0.1](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.1) (2020-10-21)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0...v2.0.1)
+
+**Closed issues:**
+
+- why was swagger removed [\#1765](https://github.com/grpc-ecosystem/grpc-gateway/issues/1765)
+- Option -module does not work anymore for protoc-gen-grpc-gateway v2 [\#1753](https://github.com/grpc-ecosystem/grpc-gateway/issues/1753)
+- grpc-gateway\_out Cannot set flag [\#1751](https://github.com/grpc-ecosystem/grpc-gateway/issues/1751)
+
+**Merged pull requests:**
+
+- Update module google.golang.org/grpc to v1.33.1 \(master\) [\#1768](https://github.com/grpc-ecosystem/grpc-gateway/pull/1768) ([renovate[bot]](https://github.com/apps/renovate))
+- Update google.golang.org/genproto commit hash to 1ed22bb \(master\) [\#1764](https://github.com/grpc-ecosystem/grpc-gateway/pull/1764) ([renovate[bot]](https://github.com/apps/renovate))
+- Update dependency io\_bazel\_rules\_go to v0.24.4 \(master\) [\#1762](https://github.com/grpc-ecosystem/grpc-gateway/pull/1762) ([renovate[bot]](https://github.com/apps/renovate))
+- Update google.golang.org/genproto commit hash to 32ed001 \(master\) [\#1761](https://github.com/grpc-ecosystem/grpc-gateway/pull/1761) ([renovate[bot]](https://github.com/apps/renovate))
+- Update module golang/protobuf to v1.4.3 \(master\) [\#1760](https://github.com/grpc-ecosystem/grpc-gateway/pull/1760) ([renovate[bot]](https://github.com/apps/renovate))
+- Update golang Docker tag to v1.15.3 \(master\) [\#1759](https://github.com/grpc-ecosystem/grpc-gateway/pull/1759) ([renovate[bot]](https://github.com/apps/renovate))
+- fix import alias issue with protoc-gen-grpc-gateway [\#1757](https://github.com/grpc-ecosystem/grpc-gateway/pull/1757) ([danielhochman](https://github.com/danielhochman))
+- Refactor registry and generator to use protogen [\#1756](https://github.com/grpc-ecosystem/grpc-gateway/pull/1756) ([adambabik](https://github.com/adambabik))
+- Adapt usage instructions to use protoc-gen-go-grpc [\#1755](https://github.com/grpc-ecosystem/grpc-gateway/pull/1755) ([olivierlemasle](https://github.com/olivierlemasle))
+- Fix -module option for protoc-gen-grpc-gateway [\#1754](https://github.com/grpc-ecosystem/grpc-gateway/pull/1754) ([olivierlemasle](https://github.com/olivierlemasle))
+- fix empty parameter fatal in protoc-gen-grpc-gateway  [\#1752](https://github.com/grpc-ecosystem/grpc-gateway/pull/1752) ([danielhochman](https://github.com/danielhochman))
+- Update google.golang.org/genproto commit hash to 03b6142 \(master\) [\#1750](https://github.com/grpc-ecosystem/grpc-gateway/pull/1750) ([renovate[bot]](https://github.com/apps/renovate))
+- Update Readme  + remove duplicated paragraph [\#1749](https://github.com/grpc-ecosystem/grpc-gateway/pull/1749) ([olivierlemasle](https://github.com/olivierlemasle))
+- Update gorelease base for master [\#1747](https://github.com/grpc-ecosystem/grpc-gateway/pull/1747) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Update google.golang.org/genproto commit hash to 7f9ee70 \(master\) [\#1745](https://github.com/grpc-ecosystem/grpc-gateway/pull/1745) ([renovate[bot]](https://github.com/apps/renovate))
+
+## [v2.0.0](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0) (2020-10-14)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.15.1...v2.0.0)
+
+**Closed issues:**
+
+- protoc-gen-swagger: support a header parameter [\#1737](https://github.com/grpc-ecosystem/grpc-gateway/issues/1737)
+- Cannot unmarshal list [\#1736](https://github.com/grpc-ecosystem/grpc-gateway/issues/1736)
+- https://github.com/grpc-ecosystem/grpc-gateway/issues/1723 [\#1724](https://github.com/grpc-ecosystem/grpc-gateway/issues/1724)
+- too many arguments in call to runtime.NewPattern and  undefined: runtime.AssumeColonVerbOpt [\#1723](https://github.com/grpc-ecosystem/grpc-gateway/issues/1723)
+- v2 release planning [\#1223](https://github.com/grpc-ecosystem/grpc-gateway/issues/1223)
+
+**Merged pull requests:**
+
+- Generate changelog for v2.0.0 [\#1744](https://github.com/grpc-ecosystem/grpc-gateway/pull/1744) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Disable renovate automerge while master is frozen [\#1739](https://github.com/grpc-ecosystem/grpc-gateway/pull/1739) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Merge v2 into master [\#1731](https://github.com/grpc-ecosystem/grpc-gateway/pull/1731) ([johanbrandhorst](https://github.com/johanbrandhorst))
+
+## [v1.15.1](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.15.1) (2020-10-02)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.15.2...v1.15.1)
+
+## [v1.15.2](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.15.2) (2020-10-02)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0-beta.5...v1.15.2)
+
+**Closed issues:**
+
+- Error when trying to call endpoint with empty parameter of Enum array [\#1711](https://github.com/grpc-ecosystem/grpc-gateway/issues/1711)
+- Add option to remove \(or remove\) package comment in generated .pb.gw.go files [\#1701](https://github.com/grpc-ecosystem/grpc-gateway/issues/1701)
+- Can't import googleapis [\#1698](https://github.com/grpc-ecosystem/grpc-gateway/issues/1698)
+
+**Merged pull requests:**
+
+- Update dependency bazel\_gazelle to v0.22.2 \(master\) [\#1717](https://github.com/grpc-ecosystem/grpc-gateway/pull/1717) ([renovate[bot]](https://github.com/apps/renovate))
+- Add Slack badge, remove fuzzit badge \(\#1712\) [\#1713](https://github.com/grpc-ecosystem/grpc-gateway/pull/1713) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Add --omit\_package\_doc flag [\#1702](https://github.com/grpc-ecosystem/grpc-gateway/pull/1702) ([olivierlemasle](https://github.com/olivierlemasle))
+- Install "patch" command in CircleCI build-env image [\#1699](https://github.com/grpc-ecosystem/grpc-gateway/pull/1699) ([jasonewang](https://github.com/jasonewang))
+
+## [v2.0.0-beta.5](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0-beta.5) (2020-09-24)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.15.0...v2.0.0-beta.5)
+
+**Closed issues:**
+
+- Sending NULL for int64/uint64 types calls gRPC server with zero-value [\#1681](https://github.com/grpc-ecosystem/grpc-gateway/issues/1681)
+- protoc-gen-swagger: allow `-output` dir [\#1679](https://github.com/grpc-ecosystem/grpc-gateway/issues/1679)
+
+**Merged pull requests:**
+
+- Add devcontainer.json \(master\) \(\#1687\) [\#1691](https://github.com/grpc-ecosystem/grpc-gateway/pull/1691) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Update dependency com\_github\_bazelbuild\_buildtools to v3.5.0 \(master\) [\#1689](https://github.com/grpc-ecosystem/grpc-gateway/pull/1689) ([renovate[bot]](https://github.com/apps/renovate))
+- Update dependency bazel\_gazelle to v0.22.1 \(master\) [\#1325](https://github.com/grpc-ecosystem/grpc-gateway/pull/1325) ([renovate[bot]](https://github.com/apps/renovate))
+
 ## [v1.15.0](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.15.0) (2020-09-18)
 [Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.14.8...v1.15.0)
+
+**Implemented enhancements:**
+
+- YAML support for Swagger annotations [\#701](https://github.com/grpc-ecosystem/grpc-gateway/issues/701)
 
 **Closed issues:**
 
@@ -16,6 +97,7 @@
 **Merged pull requests:**
 
 - Regenerate files [\#1676](https://github.com/grpc-ecosystem/grpc-gateway/pull/1676) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- Generate changelog for 1.15.0 [\#1675](https://github.com/grpc-ecosystem/grpc-gateway/pull/1675) ([johanbrandhorst](https://github.com/johanbrandhorst))
 - End default response desc with period [\#1663](https://github.com/grpc-ecosystem/grpc-gateway/pull/1663) ([rubda](https://github.com/rubda))
 - Update golang Docker tag to v1.15.2 \(master\) [\#1657](https://github.com/grpc-ecosystem/grpc-gateway/pull/1657) ([renovate[bot]](https://github.com/apps/renovate))
 - Update module google.golang.org/grpc to v1.32.0 \(master\) [\#1653](https://github.com/grpc-ecosystem/grpc-gateway/pull/1653) ([renovate[bot]](https://github.com/apps/renovate))
@@ -55,15 +137,28 @@
 - document optional swagger plugin for unannotated grpc\_api\_configuration [\#1588](https://github.com/grpc-ecosystem/grpc-gateway/pull/1588) ([piengeng](https://github.com/piengeng))
 
 ## [v1.14.7](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.14.7) (2020-08-12)
-[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.14.6...v1.14.7)
-
-**Fixed bugs:**
-
-- Flaky Timeout test [\#1258](https://github.com/grpc-ecosystem/grpc-gateway/issues/1258)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0-beta.4...v1.14.7)
 
 **Closed issues:**
 
 - CVE-2020-14001: Unintended read access in kramdown gem [\#1579](https://github.com/grpc-ecosystem/grpc-gateway/issues/1579)
+
+**Merged pull requests:**
+
+- Generate changelog for 1.14.7 [\#1587](https://github.com/grpc-ecosystem/grpc-gateway/pull/1587) ([johanbrandhorst](https://github.com/johanbrandhorst))
+- chore\(deps\): update golang docker tag to v1.15.0 \(master\) [\#1585](https://github.com/grpc-ecosystem/grpc-gateway/pull/1585) ([renovate[bot]](https://github.com/apps/renovate))
+- Update github-pages [\#1581](https://github.com/grpc-ecosystem/grpc-gateway/pull/1581) ([johanbrandhorst](https://github.com/johanbrandhorst))
+
+## [v2.0.0-beta.4](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0-beta.4) (2020-08-10)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0-beta.3...v2.0.0-beta.4)
+
+**Fixed bugs:**
+
+- Flaky Timeout test [\#1258](https://github.com/grpc-ecosystem/grpc-gateway/issues/1258)
+- `protoc-gen-swagger` does not parse query params of a DELETE HTTP rpc definition into swagger.json file  [\#559](https://github.com/grpc-ecosystem/grpc-gateway/issues/559)
+
+**Closed issues:**
+
 - \[v2\] expose defaultHTTPErrorHandler \(and perhaps defaultStreamErrorHandler\) [\#1576](https://github.com/grpc-ecosystem/grpc-gateway/issues/1576)
 - protoc-gen-swagger: Add prefix to all paths [\#1567](https://github.com/grpc-ecosystem/grpc-gateway/issues/1567)
 - Generate Swagger description using proto comments. [\#1552](https://github.com/grpc-ecosystem/grpc-gateway/issues/1552)
@@ -128,8 +223,17 @@
 - Fixes 1398: deprecate Regiter\_XXX\_HandlerServer [\#1399](https://github.com/grpc-ecosystem/grpc-gateway/pull/1399) ([joesonw](https://github.com/joesonw))
 - Adding docs about controlling http response status codes [\#1391](https://github.com/grpc-ecosystem/grpc-gateway/pull/1391) ([zhughes3](https://github.com/zhughes3))
 
+## [v2.0.0-beta.3](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0-beta.3) (2020-05-25)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.14.6...v2.0.0-beta.3)
+
 ## [v1.14.6](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.14.6) (2020-05-25)
-[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.14.5...v1.14.6)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0-beta.2...v1.14.6)
+
+## [v2.0.0-beta.2](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0-beta.2) (2020-05-25)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v2.0.0-beta.1...v2.0.0-beta.2)
+
+## [v2.0.0-beta.1](https://github.com/grpc-ecosystem/grpc-gateway/tree/v2.0.0-beta.1) (2020-05-25)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.14.5...v2.0.0-beta.1)
 
 **Implemented enhancements:**
 
@@ -1170,7 +1274,7 @@
 - properly respect file flag for protoc-gen-swagger [\#293](https://github.com/grpc-ecosystem/grpc-gateway/pull/293) ([tmc](https://github.com/tmc))
 
 ## [v1.3.1](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.3.1) (2017-12-23)
-[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.3...v1.3.1)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.3.0...v1.3.1)
 
 **Implemented enhancements:**
 
@@ -1226,11 +1330,11 @@
 - grpc-gateway/generator: respect full package [\#462](https://github.com/grpc-ecosystem/grpc-gateway/pull/462) ([glerchundi](https://github.com/glerchundi))
 - Add proto marshaller for proto-over-http [\#459](https://github.com/grpc-ecosystem/grpc-gateway/pull/459) ([MatthewDolan](https://github.com/MatthewDolan))
 
-## [v1.3](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.3) (2017-11-03)
-[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.3.0...v1.3)
-
 ## [v1.3.0](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.3.0) (2017-11-03)
-[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.2.2...v1.3.0)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.3...v1.3.0)
+
+## [v1.3](https://github.com/grpc-ecosystem/grpc-gateway/tree/v1.3) (2017-11-03)
+[Full Changelog](https://github.com/grpc-ecosystem/grpc-gateway/compare/v1.2.2...v1.3)
 
 **Closed issues:**
 
