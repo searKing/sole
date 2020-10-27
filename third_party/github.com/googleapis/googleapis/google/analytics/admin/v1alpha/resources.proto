@@ -56,7 +56,7 @@ message Account {
   bool deleted = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
-// A resource message representing a Google Analytics App+Web property.
+// A resource message representing a Google Analytics GA4 property.
 message Property {
   option (google.api.resource) = {
     type: "analyticsadmin.googleapis.com/Property"
@@ -354,7 +354,7 @@ message EnhancedMeasurementSettings {
   string excluded_domains = 18;
 }
 
-// A link between an App+Web property and a Firebase project.
+// A link between an GA4 property and a Firebase project.
 message FirebaseLink {
   option (google.api.resource) = {
     type: "analyticsadmin.googleapis.com/FirebaseLink"
@@ -376,7 +376,7 @@ message FirebaseLink {
   // Output only. Time when this FirebaseLink was originally created.
   google.protobuf.Timestamp create_time = 3 [(google.api.field_behavior) = OUTPUT_ONLY];
 
-  // Maximum user access to the App + Web property allowed to admins of
+  // Maximum user access to the GA4 property allowed to admins of
   // the linked Firebase project.
   MaximumUserAccess maximum_user_access = 4;
 }
@@ -394,7 +394,7 @@ message GlobalSiteTag {
   string snippet = 1 [(google.api.field_behavior) = IMMUTABLE];
 }
 
-// A link between an App+Web property and a Google Ads account.
+// A link between an GA4 property and a Google Ads account.
 message GoogleAdsLink {
   option (google.api.resource) = {
     type: "analyticsadmin.googleapis.com/GoogleAdsLink"
@@ -568,4 +568,44 @@ enum MaximumUserAccess {
   // Firebase users have edit access to the Analytics property and may manage
   // the Firebase link.
   EDITOR_INCLUDING_LINK_MANAGEMENT = 4;
+}
+
+// A virtual resource representing an overview of an account and
+// all its child GA4 properties.
+message AccountSummary {
+  option (google.api.resource) = {
+    type: "analyticsadmin.googleapis.com/AccountSummary"
+    pattern: "accountSummaries/{account_summary}"
+  };
+
+  // Resource name for this account summary.
+  // Format: accountSummaries/{account_id}
+  // Example: "accountSummaries/1000"
+  string name = 1;
+
+  // Resource name of account referred to by this account summary
+  // Format: accounts/{account_id}
+  // Example: "accounts/1000"
+  string account = 2 [(google.api.resource_reference) = {
+                        type: "analyticsadmin.googleapis.com/Account"
+                      }];
+
+  // Display name for the account referred to in this account summary.
+  string display_name = 3;
+
+  // List of summaries for child accounts of this account.
+  repeated PropertySummary property_summaries = 4;
+}
+
+// A virtual resource representing metadata for an GA4 property.
+message PropertySummary {
+  // Resource name of property referred to by this property summary
+  // Format: properties/{property_id}
+  // Example: "properties/1000"
+  string property = 1 [(google.api.resource_reference) = {
+                         type: "analyticsadmin.googleapis.com/Property"
+                       }];
+
+  // Display name for the property referred to in this account summary.
+  string display_name = 2;
 }

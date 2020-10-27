@@ -35,6 +35,10 @@
         {
           "service": "google.firestore.v1.Firestore",
           "method": "RunQuery"
+        },
+        {
+          "service": "google.firestore.v1.Firestore",
+          "method": "PartitionQuery"
         }
       ],
       "timeout": "300s",
