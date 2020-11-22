@@ -31,7 +31,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 ```
 instead of
 ```protobuf
-option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 ```
 
 The bazel rule has been renamed `protoc_gen_openapiv2`.

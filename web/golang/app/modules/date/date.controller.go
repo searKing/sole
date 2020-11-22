@@ -11,10 +11,14 @@ import (
 	"github.com/searKing/sole/api/protobuf-spec/v1/date"
 )
 
-type Controller struct{}
+type Controller struct {
+
+	// Embed the unimplemented server
+	date.UnimplementedDateServiceServer
+}
 
 // 日期查询
-func (c *Controller) Now(ctx context.Context, req *date.DateRequest) (resp *date.DateResponse, err error) {
+func (c *Controller) Now(_ context.Context, req *date.DateRequest) (resp *date.DateResponse, err error) {
 	return &date.DateResponse{
 		RequestId: req.GetRequestId(),
 		Date:      time.Now().String(),

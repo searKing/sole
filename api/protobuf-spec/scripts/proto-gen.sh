@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Copyright 2020 The searKing Author. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+
 set -o pipefail
 set -o errexit
 set -o nounset
@@ -41,8 +47,18 @@ function die() {
 }
 
 # Sanity check that the right tools are accessible.
-for tool in protoc protoc-gen-go protoc-gen-grpc-gateway protoc-gen-swagger protoc-gen-govalidators; do
-  q=$(command -v $tool) || die "didn't find $tool"
+for tool in protoc protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2 protoc-gen-go-tag; do
+  q=$(command -v $tool) || die "didn't find $tool
+# http://google.github.io/proto-lens/installing-protoc.html
+  protoc: brew install protobuf.
+#  protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
+# https://github.com/grpc/grpc-go
+# https://www.grpc.io/docs/languages/go/quickstart/
+  protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+  protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+  protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
+  protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/cmd/protoc-gen-go-tag
+  "
   echo 1>&2 "$tool: $q"
 done
 
@@ -51,31 +67,37 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   proto_dir="$(dirname "${proto_file}")"
   pushd "${proto_dir}" 1>/dev/null 2>&1 || exit
 
-  grpc_option="--grpc-gateway_out=logtostderr=true"
-  swagger_option="--swagger_out=logtostderr=true"
+  #  go_option="--go_out=plugins=grpc,paths=source_relative:."
+  go_option="--go_out=paths=source_relative:."
+  go_grpc_option="--go-grpc_out=paths=source_relative:."
+  grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
+  openapiv2_option="--openapiv2_out=logtostderr=true"
+  go_tag_option="--go-tag_out=paths=source_relative:."
 
   api_conf_yaml="${proto_base_name}.yaml"
   if [[ -f "${api_conf_yaml}" ]]; then
-    grpc_option="${grpc_option},grpc_api_configuration=${api_conf_yaml}"
-    swagger_option="${swagger_option},grpc_api_configuration=${api_conf_yaml}"
+    grpc_gateway_option="${grpc_gateway_option},grpc_api_configuration=${api_conf_yaml}"
+    openapiv2_option="${openapiv2_option},grpc_api_configuration=${api_conf_yaml}"
   fi
-  grpc_option="${grpc_option},paths=source_relative:."
-  swagger_option="${swagger_option}:."
+  grpc_gateway_option="${grpc_gateway_option},paths=source_relative:."
+  openapiv2_option="${openapiv2_option}:."
 
-  service_swagger_json="${proto_base_name}.swagger.json"
-  [[ -f "${service_swagger_json}" ]] && rm -f "${service_swagger_json}"
+  service_openapiv2_json="${proto_base_name}.openapiv2.json"
+  [[ -f "${service_openapiv2_json}" ]] && rm -f "${service_openapiv2_json}"
 
-  printf "\r\033[K%s compiling" "${proto_file}"
-  protoc -I . ${g_proto_headers} --govalidators_out=paths=source_relative:. --go_out=plugins=grpc,paths=source_relative:. "${grpc_option}" "${swagger_option}" *.proto || exit
-  printf "\r\033[K%s compilied" "${proto_file}"
+  printf "\r\033[K%s compiling " "${proto_file}"
+  #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
+  echo protoc -I . ${g_proto_headers} "${go_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto
+  protoc -I . ${g_proto_headers} "${go_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
+  printf "\r\033[K%s compilied " "${proto_file}"
 
   popd 1>/dev/null 2>&1 || exit
 done
 printf "\r\033[Kproto-gen done...\n"
 
-#protoc -I . -I .. --govalidators_out=. --go_out=. *.proto
+#protoc -I . -I .. --go_out=. *.proto
 
-#protoc -I . -I .. -I ../github.com/googleapis/googleapis/ --govalidators_out=. --go_out=plugins=grpc:. --grpc-gateway_out=logtostderr=true:. *.proto
+#protoc -I . -I .. -I ../github.com/googleapis/googleapis/ --go_out=plugins=grpc:. --grpc-gateway_out=logtostderr=true:. *.proto
 
 # 编译google api，新版编译器可以省略M参数
 #protoc -I . --go_out=plugins=grpc,Mgoogle/protobuf/descriptor.proto=github.com/golang/protobuf/protoc-gen-go/descriptor:. google/api/*.proto

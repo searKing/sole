@@ -43,7 +43,7 @@ definitions:
       Use of this type only changes how the request and response bodies are
       handled, all other features will continue to work unchanged.
     properties:
-      content_type:
+      contentType:
         description: The HTTP Content-Type header value specifying the content type of the body.
         type: string
       data:
@@ -60,9 +60,21 @@ definitions:
     type: object
   dateDateResponse:
     properties:
+      RequestId:
+        type: string
       date:
         type: string
-      request_id:
+    type: object
+  googlerpcStatus:
+    properties:
+      code:
+        format: int32
+        type: integer
+      details:
+        items:
+          $ref: '#/definitions/protobufAny'
+        type: array
+      message:
         type: string
     type: object
   healthAliveResponse:
@@ -70,7 +82,7 @@ definitions:
       status: ok
     properties:
       status:
-        $ref: '#/definitions/healthStatus'
+        $ref: '#/definitions/v1healthStatus'
         description: Status always contains "ok".
     required:
     - status
@@ -85,14 +97,9 @@ definitions:
         description: Errors contains a list of errors that caused the not ready status.
         type: object
       status:
-        $ref: '#/definitions/healthStatus'
+        $ref: '#/definitions/v1healthStatus'
         description: Status always contains "ok".
     type: object
-  healthStatus:
-    default: ok
-    enum:
-    - ok
-    type: string
   healthVersionResponse:
     example:
       version: dev-master
@@ -183,7 +190,7 @@ definitions:
             "value": "1.212s"
           }
     properties:
-      type_url:
+      typeUrl:
         description: |-
           A URL/resource name that uniquely identifies the type of the serialized
           protocol buffer message. This string must contain at least
@@ -218,6 +225,18 @@ definitions:
         format: byte
         type: string
     type: object
+  rpcStatus:
+    properties:
+      code:
+        format: int32
+        type: integer
+      details:
+        items:
+          $ref: '#/definitions/protobufAny'
+        type: array
+      message:
+        type: string
+    type: object
   runtimeError:
     properties:
       code:
@@ -232,6 +251,11 @@ definitions:
       message:
         type: string
     type: object
+  v1healthStatus:
+    default: ok
+    enum:
+      - ok
+    type: string
 info:
   contact:
     email: searKingChan@gmail.com
@@ -240,25 +264,87 @@ info:
   title: sole
   version: 1.0.0
 paths:
+  /api/v1/files/upload:
+    get:
+      description: |
+        + 本接口实现文件断点续传
+      externalDocs:
+        description: open protocols for resumable file uploads
+        url: https://tus.io/
+      operationId: Upload3
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 文件上传
+      tags:
+        - 文件上传
+  /api/v1/files/upload/**:
+    get:
+      description: |
+        + 本接口实现文件断点续传
+      externalDocs:
+        description: open protocols for resumable file uploads
+        url: https://tus.io/
+      operationId: Upload2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 文件上传
+      tags:
+        - 文件上传
+  /api/v1/files/upload/*path:
+    get:
+      description: |
+        + 本接口实现文件断点续传
+      externalDocs:
+        description: open protocols for resumable file uploads
+        url: https://tus.io/
+      operationId: Upload
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 文件上传
+      tags:
+        - 文件上传
   /date/*path:
     get:
       description: |
         + 本接口返回服务节点当前日期
         + 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。
-      operationId: Now
+      operationId: DateService_Now
       parameters:
-      - in: query
-        name: request_id
-        type: string
+        - in: query
+          name: requestId
+          type: string
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/dateDateResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 日期查询
       tags:
       - 日期查询
@@ -267,20 +353,22 @@ paths:
       description: |
         + 本接口返回服务节点当前日期
         + 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。
-      operationId: Now3
+      operationId: DateService_Now3
       parameters:
-      - in: query
-        name: request_id
-        type: string
+        - in: query
+          name: requestId
+          type: string
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/dateDateResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 日期查询
       tags:
       - 日期查询
@@ -289,20 +377,22 @@ paths:
       description: |
         + 本接口返回服务节点当前日期
         + 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。
-      operationId: Now2
+      operationId: DateService_Now2
       parameters:
-      - in: query
-        name: request_id
-        type: string
+        - in: query
+          name: requestId
+          type: string
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/dateDateResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 日期查询
       tags:
       - 日期查询
@@ -314,16 +404,18 @@ paths:
       externalDocs:
         description: golang pprof
         url: https://github.com/golang/go/wiki/Performance
-      operationId: PProf3
+      operationId: DebugService_PProf3
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: golang 性能监控
       tags:
       - 服务性能
@@ -335,16 +427,18 @@ paths:
       externalDocs:
         description: golang pprof
         url: https://github.com/golang/go/wiki/Performance
-      operationId: PProf2
+      operationId: DebugService_PProf2
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: golang 性能监控
       tags:
       - 服务性能
@@ -356,16 +450,18 @@ paths:
       externalDocs:
         description: golang pprof
         url: https://github.com/golang/go/wiki/Performance
-      operationId: PProf
+      operationId: DebugService_PProf
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: golang 性能监控
       tags:
       - 服务性能
@@ -377,16 +473,18 @@ paths:
       externalDocs:
         description: golang expvar
         url: http://golang.org/pkg/expvar
-      operationId: ExpVar
+      operationId: DebugService_ExpVar
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: golang 变量监控
       tags:
       - 服务性能
@@ -399,16 +497,18 @@ paths:
       externalDocs:
         description: swagger io
         url: https://swagger.io/
-      operationId: UI
+      operationId: SwaggerService_UI
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 静态Swagger UI
       tags:
       - 文档服务
@@ -421,16 +521,18 @@ paths:
       externalDocs:
         description: swagger io
         url: https://swagger.io/
-      operationId: UI2
+      operationId: SwaggerService_UI2
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 静态Swagger UI
       tags:
       - 文档服务
@@ -443,16 +545,18 @@ paths:
       externalDocs:
         description: swagger io
         url: https://swagger.io/
-      operationId: Json
+      operationId: SwaggerService_Json
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 静态Swagger JSON
       tags:
       - 文档服务
@@ -465,7 +569,29 @@ paths:
       externalDocs:
         description: swagger io
         url: https://swagger.io/
-      operationId: Yaml
+      operationId: SwaggerService_Yaml
+      produces:
+        - text/html
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      summary: 静态Swagger YAML
+      tags:
+        - 文档服务
+  /experiments/file_upload:
+    get:
+      description: |
+        + 本接口实现文件断点续传测试页面
+      externalDocs:
+        description: open protocols for resumable file uploads
+        url: https://tus.io/
+      operationId: UploadPage3
       responses:
         "200":
           description: A successful response.
@@ -475,9 +601,29 @@ paths:
           description: An unexpected error response
           schema:
             $ref: '#/definitions/runtimeError'
-      summary: 静态Swagger YAML
+      summary: 文件上传测试页面
       tags:
-      - 文档服务
+        - 文件上传
+  /experiments/file_upload/**:
+    get:
+      description: |
+        + 本接口实现文件断点续传测试页面
+      externalDocs:
+        description: open protocols for resumable file uploads
+        url: https://tus.io/
+      operationId: UploadPage2
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/apiHttpBody'
+        default:
+          description: An unexpected error response
+          schema:
+            $ref: '#/definitions/runtimeError'
+      summary: 文件上传测试页面
+      tags:
+        - 文件上传
   /health/alive:
     get:
       description: |-
@@ -485,16 +631,18 @@ paths:
         + 当本服务HTTP服务启动成功后 ，返回状态码200。
         + 当前状态码并不检测本服务所依赖的其他服务的运行状态
         + 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。
-      operationId: Alive
+      operationId: HealthService_Alive
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/healthAliveResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/googlerpcStatus'
       summary: 节点启动状态检测
       tags:
       - 健康监测
@@ -507,16 +655,18 @@ paths:
       externalDocs:
         description: prometheus
         url: https://prometheus.io/docs/prometheus/latest/querying/api/
-      operationId: MetricsPrometheus
+      operationId: HealthService_MetricsPrometheus
+      produces:
+        - text/plain
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/googlerpcStatus'
       summary: Prometheus监控
       tags:
       - 微服务管理
@@ -525,16 +675,18 @@ paths:
       description: |-
         + 本接口检测本服务节点状态，即服务节点是否可用，即是否可正常对外提供服务；包括本节点HTTP服务运行状态及所依赖的其他服务的运行状态
         + 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。
-      operationId: Ready
+      operationId: HealthService_Ready
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/healthReadyResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/googlerpcStatus'
       summary: 节点就绪状态监测
       tags:
       - 健康监测
@@ -543,16 +695,18 @@ paths:
       description: |-
         + 本接口返回服务节点资源信息
         + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
-      operationId: HomePage
+      operationId: IndexService_HomePage
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 主页
       tags:
       - 主页
@@ -561,16 +715,18 @@ paths:
       description: |-
         + 本接口返回服务节点资源信息
         + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
-      operationId: HomePage2
+      operationId: IndexService_HomePage2
+      produces:
+        - text/html
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 主页
       tags:
       - 主页
@@ -579,16 +735,18 @@ paths:
       description: |
         + 本接口返回服务节点软件版本
         + 如果本服务运行在多个节点之上，此接口返回的健康状态码只针对当前访问的服务节点，并不反应整个集群的健康状态。
-      operationId: Version
+      operationId: HealthService_Version
+      produces:
+        - application/json
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/healthVersionResponse'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/googlerpcStatus'
       summary: 服务版本查询
       tags:
       - 健康监测
@@ -598,16 +756,30 @@ paths:
         + 本接口返回服务节点资源信息
         + 如果本服务运行在多个节点之上，此接口返回的资源页面只针对当前访问的服务节点，并不反应整个集群的资源状态。
          本接口提供静态文件服务
-      operationId: File
+      operationId: WebAppService_File
+      produces:
+        - text/css; charset=utf-8
+        - image/gif
+        - text/html; charset=utf-8
+        - image/jpeg
+        - image/jpeg
+        - application/javascript
+        - application/javascript
+        - application/pdf
+        - image/png
+        - image/svg+xml
+        - application/wasm
+        - image/webp
+        - text/xml; charset=utf-8
       responses:
         "200":
           description: A successful response.
           schema:
             $ref: '#/definitions/apiHttpBody'
         default:
-          description: An unexpected error response
+          description: An unexpected error response.
           schema:
-            $ref: '#/definitions/runtimeError'
+            $ref: '#/definitions/rpcStatus'
       summary: 静态文件下载
       tags:
       - HTML应用

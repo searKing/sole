@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Copyright 2020 The searKing Author. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+#
+
 set -o pipefail
 set -o errexit
 set -o nounset
@@ -53,7 +59,8 @@ mkdir -p "${tmpdir}"
 # Sanity check that the right tools are accessible.
 # swagger https://github.com/go-swagger/go-swagger
 for tool in swagger; do
-  q=$(command -v $tool) || die "didn't find $tool"
+  q=$(command -v $tool) || die "didn't find $tool
+  swagger: go get -v github.com/go-swagger/go-swagger/cmd/swagger"
   echo 1>&2 "$tool: $q"
 done
 pushd "${g_protos_dir}" 1>/dev/null 2>&1 || exit
