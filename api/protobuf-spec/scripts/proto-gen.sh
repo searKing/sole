@@ -48,15 +48,17 @@ function die() {
 
 # Sanity check that the right tools are accessible.
 for tool in protoc protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2 protoc-gen-go-tag; do
+  # http://google.github.io/proto-lens/installing-protoc.html
+  # https://github.com/grpc/grpc-go
+  # https://www.grpc.io/docs/languages/go/quickstart/
+  # protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
+  # protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
   q=$(command -v $tool) || die "didn't find $tool
-# http://google.github.io/proto-lens/installing-protoc.html
   protoc: brew install protobuf.
-#  protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
-# https://github.com/grpc/grpc-go
-# https://www.grpc.io/docs/languages/go/quickstart/
+  protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
   protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
-  protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-  protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
+  protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+  protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2
   protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/cmd/protoc-gen-go-tag
   "
   echo 1>&2 "$tool: $q"
@@ -87,7 +89,6 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  echo protoc -I . ${g_proto_headers} "${go_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto
   protoc -I . ${g_proto_headers} "${go_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
   printf "\r\033[K%s compilied " "${proto_file}"
 
