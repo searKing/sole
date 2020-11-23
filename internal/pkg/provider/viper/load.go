@@ -96,7 +96,7 @@ func mergeConfigFromFile(cfgFile string, onConfigFileChange func(in fsnotify.Eve
 		// enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 		log.Printf("[INFO] Using config file: %s\n", cfgFile)
-		if err := os_.CreateAllIfNotExist(cfgFile); err != nil {
+		if err := os_.CreateAllIfNotExist(cfgFile, 0666); err != nil {
 			return fmt.Errorf("create %s %w", cfgFile, err)
 		}
 	}

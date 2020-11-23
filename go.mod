@@ -27,7 +27,7 @@ require (
 	github.com/prometheus/client_golang v1.6.0
 	github.com/rs/cors v1.7.0
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
-	github.com/searKing/golang v0.0.84
+	github.com/searKing/golang v0.0.85
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
