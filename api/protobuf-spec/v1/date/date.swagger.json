@@ -1,0 +1,163 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "日期查询 API",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/date/*path": {
+      "get": {
+        "summary": "日期查询",
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "operationId": "DateService_Now",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/date/now": {
+      "get": {
+        "summary": "日期查询",
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "operationId": "DateService_Now3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/date/now/**": {
+      "get": {
+        "summary": "日期查询",
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "operationId": "DateService_Now2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "dateDateResponse": {
+      "type": "object",
+      "properties": {
+        "RequestId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
