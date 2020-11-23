@@ -51,11 +51,12 @@ for tool in protoc protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapi
   # http://google.github.io/proto-lens/installing-protoc.html
   # https://github.com/grpc/grpc-go
   # https://www.grpc.io/docs/languages/go/quickstart/
+  # protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
   # protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
   # protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
   q=$(command -v $tool) || die "didn't find $tool
   protoc: brew install protobuf.
-  protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
+  protoc-gen-go: go get -u google.golang.org/protobuf/cmd/protoc-gen-go
   protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
   protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
   protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2
