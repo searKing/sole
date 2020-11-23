@@ -69,7 +69,7 @@ mixed_swagger_json="swagger.json"
 mixed_swagger_yaml="swagger.yaml"
 
 printf "%s generating" "${mixed_swagger_json}"
-swagger -q generate spec -o "${tmpdir}/${mixed_swagger_json}" "${tmpdir}" || exit
+swagger -q generate spec -o "${tmpdir}/${mixed_swagger_json}" "${tmpdir}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
 #swagger -q init spec --format="json" && cp swagger.json "${mixed_swagger_json}" || exit
 printf "\r\033[K%s generated" "${mixed_swagger_json}"
 
@@ -77,7 +77,7 @@ find "." -name "*.swagger.yaml" -o -name "*.swagger.json" -o -name "*.swagger.in
   printf "\r\033[K%s mixing" "${swagger_file}"
   if [[ "${swagger_file}" == *.init.yaml ]]; then
     tmp="${swagger_file}.json"
-    swagger -q generate spec -i "${swagger_file}" -o "${tmpdir}/${tmp}" || exit
+    swagger -q generate spec -i "${swagger_file}" -o "${tmpdir}/${tmp}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
 
     swagger -q mixin "${tmpdir}/${tmp}" "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_json}" || true
     [[ -f "${tmpdir}/${tmp}" ]] && rm -f "${tmpdir}/${tmp}"
@@ -89,7 +89,7 @@ find "." -name "*.swagger.yaml" -o -name "*.swagger.json" -o -name "*.swagger.in
   printf "\r\033[K%s mixed" "${swagger_file}"
 done
 printf "\r\033[K%s generating" "${mixed_swagger_yaml}"
-swagger -q generate spec -i "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_yaml}" || exit
+swagger -q generate spec -i "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_yaml}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
 printf "\r\033[K%s generated" "${mixed_swagger_yaml}"
 
 mv "${tmpdir}/${mixed_swagger_yaml}" "${mixed_swagger_yaml}"
