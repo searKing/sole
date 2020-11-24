@@ -684,7 +684,7 @@ cmd_purge() {
       continue
     fi
     say "$(printf "purging %s %s %s\n" "${prefix}" "${url}" "${branch}")"
-    git filter-branch --index-filter 'git rm --cached -rf "${prefix}"' HEAD
+    FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --index-filter 'git rm --cached -rf "${prefix}"' HEAD
     # reset and clean .git
     git reset --hard
     git for-each-ref --format="%(refname)" refs/original | xargs -n 1 git update-ref -d || exit
