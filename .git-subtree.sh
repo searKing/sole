@@ -53,7 +53,7 @@ USAGE="[--quiet] [--debug]
    or: $dashless [--quiet] [--debug] add --update --prefix <prefix> [--] <url> [<branch>] [<disabled>]
    or: $dashless [--quiet] [--debug] tidy --update --prefix <prefix> [--]
    or: $dashless [--quiet] [--debug] update --install --prefix <prefix> [--]
-   or: $dashless [--quiet] [--debug] download --prefix <prefix> [--]
+   or: $dashless [--quiet] [--debug] purge --prefix <prefix> [--]
    or: $dashless [--quiet] [--debug] summary --prefix <prefix> [--]"
 
 OPTIONS_SPEC="
@@ -61,7 +61,7 @@ ${dashless} add       --prefix=<prefix> <url> <branch>
 ${dashless} add       --prefix=<prefix> <url> <branch> <disabled>
 ${dashless} tidy      --prefix=<prefix>
 ${dashless} update    --prefix=<prefix>
-${dashless} download  --prefix=<prefix>
+${dashless} purge  --prefix=<prefix>
 ${dashless} summary   --prefix=<prefix>
 --
 h,help        show the help
@@ -174,7 +174,7 @@ command="$1"
 shift
 
 case "$command" in
-add | tidy | update | summary) ;;
+add | tidy | update | purge | summary) ;;
 
 *)
   die "Unknown command '$command'"
@@ -628,6 +628,75 @@ cmd_update() {
 }
 
 #
+# Purge each subtree path, using filter-branch as needed
+#
+cmd_purge() {
+  while test $# -ne 0; do
+    case "$1" in
+    -P | --prefix)
+      case "$2" in '') usage ;; esac
+      prefix+=$'\n'
+      prefix+=$2
+      shift
+      ;;
+    -q | --quiet)
+      GIT_QUIET=1
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      usage
+      ;;
+    *)
+      break
+      ;;
+    esac
+    shift
+  done
+
+  subtree_configed_prefixes="${prefix}"
+  # for each prefix that was subtree merged
+  if [ -z "$subtree_configed_prefixes" ]; then
+    subtree_configed_prefixes=$(get_subtree_prefixes_config "")
+  fi
+
+  for prefix in $subtree_configed_prefixes; do
+    if [ -z "${prefix}" ]; then
+      continue
+    fi
+
+    say "__________"
+
+    url=
+    branch=
+    disabled=
+    url="$(git config -f .gittrees --get subtree."$prefix".url)"
+    branch="$(git config -f .gittrees --get subtree."$prefix".branch)"
+    disabled="$(git config -f .gittrees --get subtree."$prefix".disabled)"
+
+    if [ "${disabled}"x != "true"x ]; then
+      continue
+    fi
+
+    if [ -z "${prefix}" ]; then
+      continue
+    fi
+    say "$(printf "purging %s %s %s\n" "${prefix}" "${url}" "${branch}")"
+    git filter-branch --index-filter 'git rm --cached -rf "${prefix}"' HEAD
+    # reset and clean .git
+    git reset --hard
+    git for-each-ref --format="%(refname)" refs/original | xargs -n 1 git update-ref -d || exit
+    git reflog expire --expire=now --all || exit
+    git gc --aggressive --prune=now || exit
+    say "$(printf "purge %s %s %s\n" "${prefix}" "${url}" "${branch}")"
+  done
+
+  say "__________"
+}
+
+#
 # Show configed summary for subtrees in index or working tree
 #
 cmd_summary() {
@@ -711,7 +780,7 @@ cmd_summary() {
 
 while test $# != 0 && test -z "$command"; do
   case "$1" in
-  add | tidy | update | summary)
+  add | tidy | update | purge | summary)
     command=$1
     ;;
   -q | --quiet)
