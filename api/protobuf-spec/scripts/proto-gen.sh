@@ -71,7 +71,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   pushd "${proto_dir}" 1>/dev/null 2>&1 || exit
 
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
-  go_option="--go_out=paths=source_relative:."
+  #  go_option="--go_out=paths=source_relative:."
   go_grpc_option="--go-grpc_out=paths=source_relative:."
   grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
   openapiv2_option="--openapiv2_out=logtostderr=true"
@@ -90,7 +90,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} "${go_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
+  protoc -I . ${g_proto_headers} "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
   printf "\r\033[K%s compilied " "${proto_file}"
 
   popd 1>/dev/null 2>&1 || exit

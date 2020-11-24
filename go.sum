@@ -1195,6 +1195,10 @@ github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdh
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/searKing/golang v0.0.85 h1:SmrQqC1jIiVH19c1SkkQVS9AsxmUER87nGY6T0E77sY=
 github.com/searKing/golang v0.0.85/go.mod h1:XjljxvMrx0dRIKdRp1l2kPFLep7FKyfe/s6xTY8J9H0=
+github.com/searKing/golang v0.0.86 h1:bpy7WAfORYf0vAWA1093qVN9Hvm8zpuYtGiLer04E7A=
+github.com/searKing/golang v0.0.86/go.mod h1:XjljxvMrx0dRIKdRp1l2kPFLep7FKyfe/s6xTY8J9H0=
+github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201124154339-e2e28d2f019b h1:PP8OUdEc1ZGcWgGYhFgqJlR5yvyxL5xDEJdOYFHFTpk=
+github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201124154339-e2e28d2f019b/go.mod h1:1ug/Cmfu29VYGyZplUQxmxtUHxtjMTw9xIMbR/rJr6o=
 github.com/segmentio/analytics-go v3.0.1+incompatible/go.mod h1:C7CYBtQWk4vRk2RyLu0qOcbHJ18E3F1HV2C/8JvKN48=
 github.com/segmentio/analytics-go v3.1.0+incompatible/go.mod h1:C7CYBtQWk4vRk2RyLu0qOcbHJ18E3F1HV2C/8JvKN48=
 github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c/go.mod h1:kJ9mm9YmoWSkk+oQ+5Cj8DEoRCX2JT6As4kEtIIOp1M=
