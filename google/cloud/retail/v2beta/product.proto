@@ -92,15 +92,14 @@ message Product {
   // [id][google.cloud.retail.v2beta.Product.id], with the same parent branch
   // with this product. Otherwise, an error is thrown.
   //
-  // The primary product may be empty during the creation, but cannot be updated
-  // from a non-empty string to an empty one. Otherwise an INVALID_ARGUMENT
-  // error is returned.
+  // For [Type.PRIMARY][] [Product][google.cloud.retail.v2beta.Product]s, this
+  // field can only be empty or set to the same value as
+  // [id][google.cloud.retail.v2beta.Product.id].
   //
-  // Should only be set for [Type.VARIANT][]
-  // [Product][google.cloud.retail.v2beta.Product]s. A maximum of 2000 products
-  // are allowed to share the same [Type.PRIMARY][]
-  // [Product][google.cloud.retail.v2beta.Product]. Otherwise, an
-  // INVALID_ARGUMENT error is returned.
+  // For [Type.VARIANT][] [Product][google.cloud.retail.v2beta.Product]s, this
+  // field cannot be empty. A maximum of 2000 products are allowed to share the
+  // same [Type.PRIMARY][] [Product][google.cloud.retail.v2beta.Product].
+  // Otherwise, an INVALID_ARGUMENT error is returned.
   //
   // Google Merchant Center Property
   // [item_group_id](https://support.google.com/merchants/answer/6324507).
@@ -111,9 +110,9 @@ message Product {
   // more](/recommendations-ai/docs/catalog#item-group-id).
   string primary_product_id = 4;
 
-  // Required. Product categories. This field is repeated for supporting one
-  // product belonging to several parallel categories. Each value is either the
-  // full path of the category, or the [category
+  // Product categories. This field is repeated for supporting one product
+  // belonging to several parallel categories. Each value is either the full
+  // path of the category, or the [category
   //
   // ID](https:
   // //www.google.com/basepages/producttype/taxonomy-with-ids.en-US.txt).
@@ -121,8 +120,8 @@ message Product {
   // quality.
   //
   // To represent full path of category, use '>' sign to separate different
-  // hierarchies. If '>' is part of the category name, you should escape it with
-  // '\x3E'.
+  // hierarchies. If '>' is part of the category name, please replace it with
+  // other character(s).
   //
   // For example, if a shoes product belongs to both
   // ["Shoes & Accessories" -> "Shoes"] and
@@ -134,6 +133,10 @@ message Product {
   //        "Sports & Fitness > Athletic Clothing > Shoes"
   //      ]
   //
+  // Must be set for [Type.PRIMARY][]
+  // [Product][google.cloud.retail.v2beta.Product] otherwise an INVALID_ARGUMENT
+  // error is returned.
+  //
   // At most 250 values are allowed per
   // [Product][google.cloud.retail.v2beta.Product]. Empty values are not
   // allowed. Each value must be a UTF-8 encoded string with a length limit of
@@ -144,7 +147,7 @@ message Product {
   // [google_product_category](https:
   // //support.google.com/merchants/answer/6324436).
   // Schema.org property [Product.category] (https://schema.org/category).
-  repeated string categories = 7 [(google.api.field_behavior) = REQUIRED];
+  repeated string categories = 7;
 
   // Required. Product title.
   //
@@ -165,19 +168,6 @@ message Product {
   // [description](https://support.google.com/merchants/answer/6324468).
   // schema.org property [Product.description](https://schema.org/description).
   string description = 10;
-
-  // Language of the title/description and other string attributes. Use language
-  // tags defined by [BCP 47][https://www.rfc-editor.org/rfc/bcp/bcp47.txt].
-  //
-  // The model automatically detects the text language. The
-  // [Product][google.cloud.retail.v2beta.Product] can include text in different
-  // languages, but duplicating [Product][google.cloud.retail.v2beta.Product]s
-  // to provide text in multiple languages can result in degraded model
-  // performance.
-  //
-  // Currently, recommendation supports all language codes, while the only
-  // supported language code for search is "en-US".
-  string language_code = 11;
 
   // Highly encouraged. Extra product attributes to be included. For example,
   // for products, this could include the store name, vendor, style, color, etc.
@@ -249,37 +239,10 @@ message Product {
 
   // Product images for the product.
   //
+  // A maximum of 300 images are allowed.
+  //
   // Google Merchant Center property
   // [image_link](https://support.google.com/merchants/answer/6324350).
   // Schema.org property [Product.image](https://schema.org/image).
   repeated Image images = 23;
-
-  // Indicates which fields in the [variants][] are retrievable in [Search][].
-  // If not set or empty, the following fields are returned:
-  //
-  // * [name][google.cloud.retail.v2beta.Product.name]
-  // * [availability][google.cloud.retail.v2beta.Product.availability]
-  // * [color_info][]
-  //
-  // Supported fields:
-  //
-  // * [name][google.cloud.retail.v2beta.Product.name]
-  // * [availability][google.cloud.retail.v2beta.Product.availability]
-  // * [color_info][]
-  // * [gtin][]
-  // * [price_info][google.cloud.retail.v2beta.Product.price_info]
-  // * [sizes][]
-  // * [materials][]
-  // * [patterns][]
-  // * [conditions][]
-  // * [images][google.cloud.retail.v2beta.Product.images]
-  // * [attributes][google.cloud.retail.v2beta.Product.attributes]
-  //
-  // To mark custom attributes as retrievable, include paths of the form
-  // "attributes.key" where "key" is the key of a custom attribute, as
-  // specified in [attributes][google.cloud.retail.v2beta.Product.attributes].
-  //
-  // Maximum number of paths is 10. Otherwise, an INVALID_ARGUMENT error is
-  // returned.
-  google.protobuf.FieldMask variant_retrievable_fields = 30;
 }
