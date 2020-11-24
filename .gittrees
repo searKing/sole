@@ -5,7 +5,7 @@
 	disabled = false
 [subtree "third_party/github.com/searKing/golang"]
 	prefix = third_party/github.com/searKing/golang
-	url = https://github.com/github.com/searKing/golang.git
+	url = https://github.com/searKing/golang.git
 	branch = master
 	disabled = false
 [subtree "third_party/github.com/grpc-ecosystem/grpc-gateway"]
