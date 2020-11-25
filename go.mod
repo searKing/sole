@@ -15,7 +15,6 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/kardianos/service v1.1.0
 	github.com/mitchellh/mapstructure v1.3.2
-	github.com/mwitkow/go-proto-validators v0.3.0
 	github.com/olekukonko/tablewriter v0.0.5-0.20200416053754-163badb3bac6
 	github.com/opentracing/opentracing-go v1.1.1-0.20190913142402-a7454ce5950e
 	github.com/ory/graceful v0.1.1
