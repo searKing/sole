@@ -4,7 +4,7 @@
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>searKing {{.Name}} {{.Version}}</title>
+    <title>{{.Name}} {{.Version}}</title>
     {{if .BaseUrl}}
     <base id="webBase" href="{{.BaseUrl}}">
     {{end}}
@@ -16,7 +16,7 @@
 
 <div class="container">
     <header class="wrapper clearfix text-center">
-        <h1>searKing {{.Name}} {{.Version}}</h1>
+        <h1>{{.Name}} {{.Version}}</h1>
     </header>
     <p>{{.Description}}</p>
 </div>
@@ -24,7 +24,7 @@
 <main role="main" class="container">
     <div class="d-flex align-items-center p-3 my-3 text-white-50 rounded shadow-sm" style="background-color: purple">
         <div class="lh-100">
-            <h6 class="mb-0 text-white lh-100">searKing Sole API</h6>
+            <h6 class="mb-0 text-white lh-100">{{.Name}} API</h6>
             <small>Since 2019</small>
         </div>
     </div>
