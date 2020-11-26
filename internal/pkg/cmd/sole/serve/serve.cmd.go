@@ -40,7 +40,7 @@ To learn more about each individual command, run:
 	// Here you will define your flags and configuration settings.
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
-	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "",
+	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", viper.DefaultConfigPath(),
 		fmt.Sprintf("Config file (default is %q)", viper.DefaultConfigPath()))
 	serveCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		provider.InitGlobalProvider(provider.NewProvider(cmd.Context(), cfgFile))
