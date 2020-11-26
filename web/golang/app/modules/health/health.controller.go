@@ -13,7 +13,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/x/healthx"
 	"github.com/ory/x/logrusx"
-	"github.com/ory/x/serverx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/searKing/golang/pkg/net/http"
 	"github.com/searKing/sole/internal/pkg/provider"
@@ -36,7 +35,6 @@ func (d *Controller) init() {
 	logger := logrusx.New("", "")
 	logger.Logger = c.Logger()
 	w := herodot.NewJSONWriter(logger)
-	w.ErrorEnhancer = serverx.ErrorEnhancerRFC6749
 	d.h = healthx.NewHandler(w, c.Proto().GetAppInfo().GetBuildVersion(), healthx.ReadyCheckers{
 		"database": provider.GlobalProvider().SqlDBPing,
 		//"zookeeper": ctx.ServiceDiscoveryConnection.Ping,
