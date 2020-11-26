@@ -6,6 +6,7 @@ package provider
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"sync/atomic"
@@ -46,6 +47,7 @@ func NewProvider(ctx context.Context, cfgFile string) *Provider {
 	}
 	provider.watchSignal()
 	if err := provider.reload(); err != nil {
+		log.Fatal(err)
 		return nil
 	}
 	return provider
