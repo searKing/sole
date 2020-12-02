@@ -17,6 +17,8 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	log.SetPrefix(fmt.Sprintf("[%s] ", viper.ServiceName))
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	rand.Seed(time.Now().UnixNano())
