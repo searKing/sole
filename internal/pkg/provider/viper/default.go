@@ -6,6 +6,7 @@ package viper
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -18,6 +19,9 @@ var (
 	Version         = "dev-master"
 	BuildTime       = "undefined"
 	GitHash         = "undefined"
+	GoVersion       = runtime.Version()
+	Compiler        = runtime.Compiler
+	Platform        = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 	ForceDisableTls bool
 )
 
@@ -34,6 +38,9 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetAppInfo().BuildVersion = Version
 	proto.GetAppInfo().BuildTime = BuildTime
 	proto.GetAppInfo().BuildHash = GitHash
+	proto.GetAppInfo().GoVersion = GoVersion
+	proto.GetAppInfo().Compiler = Compiler
+	proto.GetAppInfo().Platform = Platform
 
 	proto.Service = &viper.Service{}
 	proto.GetService().Name = ServiceName

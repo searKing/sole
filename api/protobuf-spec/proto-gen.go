@@ -7,3 +7,4 @@ package protobuf_spec
 //go:generate bash scripts/proto-gen.sh ./v1
 //go:generate bash scripts/swagger-mix.sh ./v1
 //go:generate bash scripts/swagger-deploy.sh ./v1 "../../web/webapp/static/swagger"
+//go:generate bash scripts/swagger-deploy.sh ./v1 "../../api/openapi-spec"

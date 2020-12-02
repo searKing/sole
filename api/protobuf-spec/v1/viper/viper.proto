@@ -21,6 +21,9 @@ message AppInfo {
   string build_version = 1; // 编译版本
   string build_hash = 2; // 源码hash
   string build_time = 3; // 编译时间
+  string go_version = 4; // Go语言版本
+  string compiler = 5; // Go编译器
+  string platform = 6; // Go编译平台
 }
 
 message Service {
