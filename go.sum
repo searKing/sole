@@ -1125,8 +1125,6 @@ github.com/ory/go-convenience v0.1.0 h1:zouLKfF2GoSGnJwGq+PE/nJAE6dj2Zj5QlTgmMTs
 github.com/ory/go-convenience v0.1.0/go.mod h1:uEY/a60PL5c12nYz4V5cHY03IBmwIAEm8TWB0yn9KNs=
 github.com/ory/gojsonreference v0.0.0-20190720135523-6b606c2d8ee8/go.mod h1:wsH1C4nIeeQClDtD5AH7kF1uTS6zWyqfjVDTmB0Em7A=
 github.com/ory/gojsonschema v1.1.1-0.20190919112458-f254ca73d5e9/go.mod h1:BNZpdJgB74KOLSsWFvzw6roXg1I6O51WO8roMmW+T7Y=
-github.com/ory/graceful v0.1.1 h1:zx+8tDObLPrG+7Tc8jKYlXsqWnLtOQA1IZ/FAAKHMXU=
-github.com/ory/graceful v0.1.1/go.mod h1:zqu70l95WrKHF4AZ6tXHvAqAvpY6M7g6ttaAVcMm7KU=
 github.com/ory/herodot v0.6.2/go.mod h1:3BOneqcyBsVybCPAJoi92KN2BpJHcmDqAMcAAaJiJow=
 github.com/ory/herodot v0.7.0/go.mod h1:YXKOfAXYdQojDP5sD8m0ajowq3+QXNdtxA+QiUXBwn0=
 github.com/ory/herodot v0.8.3/go.mod h1:rvLjxOAlU5omtmgjCfazQX2N82EpMfl3BytBWc1jjsk=
@@ -1260,10 +1258,11 @@ github.com/santhosh-tekuri/jsonschema v1.2.4/go.mod h1:TEAUOeZSmIxTTuHatJzrvARHi
 github.com/santhosh-tekuri/jsonschema/v2 v2.1.0/go.mod h1:yzJzKUGV4RbWqWIBBP4wSOBqavX5saE02yirLS0OTyg=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
-github.com/searKing/golang v0.0.86 h1:bpy7WAfORYf0vAWA1093qVN9Hvm8zpuYtGiLer04E7A=
-github.com/searKing/golang v0.0.86/go.mod h1:XjljxvMrx0dRIKdRp1l2kPFLep7FKyfe/s6xTY8J9H0=
-github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201124163458-6acfa84558e5 h1:VSWCIG0YjmFDOlrMitXagD6uvKYy7OHuMH0TtJ96VNk=
-github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201124163458-6acfa84558e5/go.mod h1:1ug/Cmfu29VYGyZplUQxmxtUHxtjMTw9xIMbR/rJr6o=
+github.com/searKing/golang v0.0.92/go.mod h1:XjljxvMrx0dRIKdRp1l2kPFLep7FKyfe/s6xTY8J9H0=
+github.com/searKing/golang v0.0.94 h1:/mwoVlNWqnP+47gOkqVg81L2LLjbiaEQZEfwYCbJdL4=
+github.com/searKing/golang v0.0.94/go.mod h1:FTdYs2DeMvn3LNJ6TB/33pZYEZaQK6CEE0jGOOjZG5U=
+github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201206181733-bec929009a62 h1:LDZXWAPNaelYT+0HWE3XwqrpuL2Uy5yCEto3katIn6Y=
+github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201206181733-bec929009a62/go.mod h1:kVfRzEHAT137yyxlcdXYVJ66dE/fvIQxUUCfS6wweRY=
 github.com/segmentio/analytics-go v3.0.1+incompatible/go.mod h1:C7CYBtQWk4vRk2RyLu0qOcbHJ18E3F1HV2C/8JvKN48=
 github.com/segmentio/analytics-go v3.1.0+incompatible/go.mod h1:C7CYBtQWk4vRk2RyLu0qOcbHJ18E3F1HV2C/8JvKN48=
 github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c/go.mod h1:kJ9mm9YmoWSkk+oQ+5Cj8DEoRCX2JT6As4kEtIIOp1M=
@@ -1750,6 +1749,7 @@ golang.org/x/time v0.0.0-20170424234030-8be79e1e0910/go.mod h1:tRJNPiyCQ0inRvYxb
 golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/time v0.0.0-20181108054448-85acf8d2951c/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/time v0.0.0-20190308202827-9d24e82272b4/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
+golang.org/x/time v0.0.0-20191024005414-555d28b269f0 h1:/5xXl8Y5W96D+TtHSlonuFqGHIWVuyCkGJLwGh9JJFs=
 golang.org/x/time v0.0.0-20191024005414-555d28b269f0/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/tools v0.0.0-20180221164845-07fd8470d635/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20180525024113-a5b4c53f6e8b/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

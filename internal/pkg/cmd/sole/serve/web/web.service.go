@@ -5,12 +5,12 @@
 package web
 
 import (
+	"context"
 	"fmt"
-	"sync"
 
 	"github.com/common-nighthawk/go-figure"
+	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/sole/internal/pkg/banner"
-	"github.com/searKing/sole/internal/pkg/net/graceful"
 	"github.com/searKing/sole/internal/pkg/provider"
 )
 
@@ -24,14 +24,12 @@ func service() {
 	_, grpcBackend := Setup()
 	start, shutdown := ServeGRPC(grpcBackend)
 
-	var wg sync.WaitGroup
-	err := graceful.Graceful(&wg, []graceful.GracefulFunc{{
+	err := graceful.Graceful(context.Background(), graceful.Handler{
 		Name:         "frontend",
 		StartFunc:    start,
 		ShutdownFunc: shutdown,
-	}})
+	})
 	if err != nil {
 		c.Logger().WithError(err).Fatal("Could not gracefully run servers")
 	}
-	wg.Wait()
 }

@@ -5,10 +5,10 @@
 package all
 
 import (
-	"sync"
+	"context"
 
+	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/sole/internal/pkg/cmd/sole/serve/web"
-	"github.com/searKing/sole/internal/pkg/net/graceful"
 	"github.com/searKing/sole/internal/pkg/provider"
 )
 
@@ -18,8 +18,7 @@ func service() {
 	startWeb, shutdownWeb := web.ServeGRPC(grpcBackend)
 	//startServiceDiscovery, shutdownServiceDiscovery := service_discovery.Serve()
 
-	var wg sync.WaitGroup
-	err := graceful.Graceful(&wg, []graceful.GracefulFunc{{
+	err := graceful.Graceful(context.Background(), graceful.Handler{
 		Name:         "frontend",
 		StartFunc:    startWeb,
 		ShutdownFunc: shutdownWeb,
@@ -27,9 +26,8 @@ func service() {
 		//	Name:         "service_discovery",
 		//	StartFunc:    startServiceDiscovery,
 		//	ShutdownFunc: shutdownServiceDiscovery,
-	}})
+	})
 	if err != nil {
 		provider.GlobalProvider().Logger().WithError(err).Fatal("Could not gracefully run servers")
 	}
-	wg.Wait()
 }

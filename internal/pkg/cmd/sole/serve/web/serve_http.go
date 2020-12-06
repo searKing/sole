@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ory/graceful"
+	http_ "github.com/searKing/golang/go/net/http"
+	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/sole/internal/pkg/net/serve"
 )
 
@@ -29,7 +30,7 @@ func init() {
 }
 
 func ServeHTTP(handler http.Handler, address string, tlsConfig *tls.Config) (graceful.StartFunc, graceful.ShutdownFunc) {
-	var srv = graceful.WithDefaults(&http.Server{
+	var srv = http_.ServerWithDefaults(&http.Server{
 		Addr:         address,
 		Handler:      handler,
 		ReadTimeout:  DefaultReadTimeout,

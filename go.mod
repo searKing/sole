@@ -30,7 +30,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5-0.20200416053754-163badb3bac6
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/ory/go-acc v0.2.6 // indirect
-	github.com/ory/graceful v0.1.1
 	github.com/ory/herodot v0.9.1
 	github.com/ory/x v0.0.164
 	github.com/pborman/uuid v1.2.1
@@ -42,8 +41,8 @@ require (
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/rubenv/sql-migrate v0.0.0-20200616145509-8d140a17f351
-	github.com/searKing/golang v0.0.86
-	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201124163458-6acfa84558e5
+	github.com/searKing/golang v0.0.94
+	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20201206181733-bec929009a62
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cobra v1.1.1

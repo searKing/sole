@@ -9,7 +9,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/ory/graceful"
+	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/sole/internal/pkg/provider"
 )
 
@@ -36,7 +36,7 @@ func Serve(addr string, srv Server) (graceful.StartFunc, graceful.ShutdownFunc) 
 		_ = provider.GlobalProvider().Tracer().Close()
 	})
 
-	return func() error {
+	return func(ctx context.Context) error {
 			logger := provider.GlobalProvider().Logger()
 			webInfo := provider.GlobalProvider().Proto().GetWeb()
 

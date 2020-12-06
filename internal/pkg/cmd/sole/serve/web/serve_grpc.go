@@ -5,7 +5,7 @@
 package web
 
 import (
-	"github.com/ory/graceful"
+	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/grpc"
 	"github.com/searKing/sole/internal/pkg/net/serve"
 	"github.com/searKing/sole/internal/pkg/provider"
