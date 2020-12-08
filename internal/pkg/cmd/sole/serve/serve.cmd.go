@@ -29,7 +29,9 @@ To learn more about each individual command, run:
 - %[1]s help serve all
 - %[1]s help serve web
 `, viper.ServiceName),
-		Run: nil,
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          nil,
 	}
 
 	serveCmd.AddCommand(all.New())

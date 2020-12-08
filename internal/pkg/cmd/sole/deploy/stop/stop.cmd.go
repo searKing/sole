@@ -22,6 +22,8 @@ To learn more about each individual command, run:
 
 - %[1]s help deploy stop
 `, viper.ServiceName),
-		Run: controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 }

@@ -25,6 +25,8 @@ This command does not work with the "memory" database. Both services (administra
 connection to be able to synchronize.
 
 `,
-		Run: controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 }

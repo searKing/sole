@@ -29,6 +29,8 @@ To learn more about each individual command, run:
 - %[1]s help deploy start
 - %[1]s help deploy stop
 `, viper.ServiceName),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
 	}
 	deployCmd.AddCommand(install.New())
 	deployCmd.AddCommand(uninstall.New())

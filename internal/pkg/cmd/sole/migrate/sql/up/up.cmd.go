@@ -26,6 +26,8 @@ This decreases risk of failure and decreases time required.
 
 Before running this command on an existing database, create a back up!
 `, viper.ServiceName),
-		Run: controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 }

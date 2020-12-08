@@ -28,6 +28,8 @@ This decreases risk of failure and decreases time required.
 
 Before running this command on an existing database, create a back up!
 `, viper.ServiceName),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
 	}
 	sqlCmd.AddCommand(up.New())
 	sqlCmd.AddCommand(down.New())

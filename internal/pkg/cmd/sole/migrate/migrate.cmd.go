@@ -28,7 +28,9 @@ This decreases risk of failure and decreases time required.
 
 Before running this command on an existing database, create a back up!
 `, viper.ServiceName),
-		Run: nil,
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          nil,
 	}
 
 	// Here you will define your flags and configuration settings.

@@ -23,6 +23,8 @@ To learn more about each individual command, run:
 
 - %[1]s help install
 `, viper.ServiceName),
-		Run: controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 }

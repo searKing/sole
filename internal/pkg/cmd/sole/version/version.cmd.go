@@ -13,7 +13,9 @@ func New() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Display this binary's version, build time and git hash of this build",
-		Run:   controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 	return versionCmd
 }

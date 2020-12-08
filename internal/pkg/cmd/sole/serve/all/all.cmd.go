@@ -29,6 +29,8 @@ service possible controls are listed below. This command exposes exposes command
 the controls section.
 
 `, viper.ServiceName),
-		Run: controller(),
+		// stop printing usage when the command errors
+		SilenceUsage: true,
+		Run:          controller(),
 	}
 }
