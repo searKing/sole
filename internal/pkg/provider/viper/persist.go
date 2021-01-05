@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -17,7 +17,7 @@ import (
 // persistConfig writes config using into .use.<name>.yaml
 func persistConfig() error {
 	// persist using config
-	f := viper.ConfigFileUsed() // /root/.sole.yaml
+	f := viper.ConfigFileUsed() // ./conf/.sole.yaml
 	if f == "" {
 		log.Printf("[WARN] persist skiped, for no config file used\n")
 		return nil

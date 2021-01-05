@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -22,6 +22,13 @@ func New(c KeyProvider) *Pasta {
 	return &Pasta{keyProvider: c}
 }
 
+func NewFromKey(systemSecret []byte, rotatedSystemSecrets [][]byte) *Pasta {
+	return &Pasta{keyProvider: &innerKeyCipherProvider{
+		systemSecret:         systemSecret,
+		rotatedSystemSecrets: rotatedSystemSecrets,
+	}}
+}
+
 func (c *Pasta) keys() [][]byte {
 	return append([][]byte{c.keyProvider.GetSystemSecret()}, c.keyProvider.GetRotatedSystemSecrets()...)
 }
@@ -32,4 +39,17 @@ func (c *Pasta) Encrypt(plaintext []byte) (string, error) {
 
 func (c *Pasta) Decrypt(ciphertext string) (p []byte, err error) {
 	return cryptopasta.Decrypt(ciphertext, c.keys()...)
+}
+
+type innerKeyCipherProvider struct {
+	systemSecret         []byte
+	rotatedSystemSecrets [][]byte
+}
+
+func (c *innerKeyCipherProvider) GetRotatedSystemSecrets() [][]byte {
+	return c.rotatedSystemSecrets
+}
+
+func (c *innerKeyCipherProvider) GetSystemSecret() []byte {
+	return c.systemSecret
 }

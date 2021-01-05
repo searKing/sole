@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -14,10 +14,11 @@ import (
 	"github.com/rs/cors"
 	gincors "github.com/rs/cors/wrapper/gin"
 	gin2 "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func (p *Provider) GetCORS() gin.HandlerFunc {
-	logger := p.Logger().WithField("module", "provider.web.cors")
+	logger := logrus.WithField("module", "provider.web.cors")
 	corsInfo := p.Proto().GetWeb().GetCors()
 	if corsInfo == nil || !corsInfo.Enable {
 		return gin2.NopHandlerFunc

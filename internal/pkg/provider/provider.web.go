@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -15,14 +15,12 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	"github.com/searKing/golang/go/net/addr"
+	"github.com/sirupsen/logrus"
 	"github.com/uber/jaeger-client-go/utils"
 )
 
 func (p *Provider) HTTPScheme() string {
-	if p.Proto().GetWeb().GetForceDisableTls() {
-		return "http"
-	}
-	return "https"
+	return "http"
 }
 
 func (p *Provider) GetBackendBindHostPort() string {
@@ -52,7 +50,7 @@ func (p *Provider) GetBackendServeHostPort() string {
 	timeout, err := ptypes.Duration(resolvers.GetTimeout())
 	if err != nil {
 		timeout := 0 * time.Second
-		p.Logger().WithField("timeout", timeout).
+		logrus.WithField("timeout", timeout).
 			WithError(errors.WithStack(err)).
 			Warnf("malformed timeout, use %s instead", timeout)
 	}

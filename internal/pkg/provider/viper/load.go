@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -12,11 +12,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"github.com/searKing/golang/go/error/multi"
+	errors_ "github.com/searKing/golang/go/errors"
 	os_ "github.com/searKing/golang/go/os"
 	proto_ "github.com/searKing/golang/third_party/github.com/golang/protobuf/proto"
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
@@ -24,25 +23,25 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Reload load config from file and protos, and save to a using file
+// Load load config from file and protos, and save to a using file
 // load sequence: protos..., file, env, replace if member has been set
 // that is, later cfg appeared, higher priority cfg has
-func Reload(cfgFile string, onConfigChange func(in fsnotify.Event), protos ...*viper_.ViperProto) (*viper_.ViperProto, error) {
-	viper.Reset()
-	mergeConfig(protos...)
+func Load(cfgFile string, protos ...*viper_.ViperProto) (*viper_.ViperProto, error) {
+	// read default config from protobuf
+	mergeConfigFromProto(protos...)
 	// read from file
 	if cfgFile != "" {
-		if err := mergeConfigFromFile(cfgFile, onConfigChange); err != nil {
+		if err := mergeConfigFromFile(cfgFile); err != nil {
 			err = errors.WithMessage(err, "load config proto from the file failed")
-			log.Printf("[WARN] %s\n", err)
+			log.Fatalf("[WARN] %s\n", err)
 			return nil, err
 		}
-
 	}
 	// read in environment variables that match
 	mergeConfigFromENV()
 
-	return loadConfig()
+	// dump config
+	return dumpConfig()
 }
 
 // anyToViperProtoHookFunc returns a DecodeHookFunc that converts
@@ -65,8 +64,8 @@ func anyToViperProtoHookFunc() mapstructure.DecodeHookFunc {
 	}
 }
 
-// loadConfig persists and returns the latest config viper proto
-func loadConfig() (*viper_.ViperProto, error) {
+// dumpConfig persists and returns the latest config viper proto
+func dumpConfig() (*viper_.ViperProto, error) {
 	var using viper_.ViperProto
 	// config file -> ViperProto
 	if err := viper.Unmarshal(&using, func(decoderConfig *mapstructure.DecoderConfig) {
@@ -84,14 +83,7 @@ func loadConfig() (*viper_.ViperProto, error) {
 }
 
 // read from file
-func mergeConfigFromFile(cfgFile string, onConfigFileChange func(in fsnotify.Event)) error {
-	// If a config file is found, read it in.
-	if onConfigFileChange != nil {
-		defer func() {
-			viper.WatchConfig()
-			viper.OnConfigChange(onConfigFileChange)
-		}()
-	}
+func mergeConfigFromFile(cfgFile string) error {
 	if cfgFile != "" {
 		// enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
@@ -104,6 +96,7 @@ func mergeConfigFromFile(cfgFile string, onConfigFileChange func(in fsnotify.Eve
 	return viper.MergeInConfig()
 }
 
+// read from env
 func mergeConfigFromENV() {
 	// read in environment variables that match
 	viper.AutomaticEnv()            // read in environment variables that match
@@ -111,9 +104,10 @@ func mergeConfigFromENV() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 }
 
+// read from protobuf
 // merge protos into viper one by one, replace if member has been set
 // that is, later proto appeared, higher priority proto has
-func mergeConfig(protos ...*viper_.ViperProto) {
+func mergeConfigFromProto(protos ...*viper_.ViperProto) {
 	viper.SetConfigType("yaml")
 	defer viper.SetConfigType("")
 	var marshalErrs []error
@@ -138,10 +132,10 @@ func mergeConfig(protos ...*viper_.ViperProto) {
 	}
 	if len(marshalErrs) > 0 {
 		log.Printf("[WARN] %s\n",
-			errors.WithMessage(multi.New(marshalErrs...), "marshal config proto failed"))
+			errors.WithMessage(errors_.Multi(marshalErrs...), "marshal config proto failed"))
 	}
 	if len(mergeErrs) > 0 {
 		log.Printf("[WARN] %s\n",
-			errors.WithMessage(multi.New(mergeErrs...), "merge config proto failed"))
+			errors.WithMessage(errors_.Multi(mergeErrs...), "merge config proto failed"))
 	}
 }

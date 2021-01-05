@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -6,51 +6,23 @@ package provider
 
 import (
 	"context"
-	"log"
-	"os"
-	"os/signal"
-	"sync/atomic"
-	"syscall"
+	"net/http"
 
-	"github.com/fsnotify/fsnotify"
-	atomic_ "github.com/searKing/golang/go/sync/atomic"
+	"github.com/jmoiron/sqlx"
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/pkg/crypto/pasta"
 )
 
-//go:generate go-atomicvalue -type "proto<*github.com/searKing/sole/api/v1/viper.ViperProto>"
-type proto atomic.Value
-
 type Provider struct {
-	proto                 proto
-	configPath            string
-	reloadOnConfigChanged bool
+	proto *viper_.ViperProto
 
-	modulesEnabled           atomic_.Bool
-	logger                   logger
-	tracer                   tracer
-	systemSecret             systemSecret
-	sqlDB                    sqlDB
-	keyManager               keyManager
-	tlsConfig                tlsConfig
-	keyCipher                keyCipher
-	prometheusMetricsManager prometheusMetricsManager
+	sqlDB *sqlx.DB
+
+	keyCipher *pasta.Pasta
+
+	corsHandler func(handler http.Handler) http.Handler
 
 	ctx context.Context
-}
-
-// NewProvider returns a provider with default proto
-func NewProvider(ctx context.Context, cfgFile string) *Provider {
-	provider := &Provider{
-		ctx:        ctx,
-		configPath: cfgFile,
-	}
-	provider.watchSignal()
-	if err := provider.reload(); err != nil {
-		log.Fatal(err)
-		return nil
-	}
-	return provider
 }
 
 func (p *Provider) Context() context.Context {
@@ -61,102 +33,24 @@ func (p *Provider) Context() context.Context {
 }
 
 func (p *Provider) Proto() *viper_.ViperProto {
-	return p.proto.Load()
+	return p.proto
 }
 
-// onConfigChange refreshes proto, and is triggered when the config file has been loaded or changed.
-// reload params and all modules
-func (p *Provider) onConfigChange(in fsnotify.Event) {
-	p.Logger().WithField("notify_event", in.String()).Infof("ignore config file changed")
-	if !p.reloadOnConfigChanged {
-		return
+func (p *Provider) KeyCipher() *pasta.Pasta {
+	return p.keyCipher
+}
+
+func (p *Provider) SqlDB() *sqlx.DB {
+	return p.sqlDB
+}
+
+func (p *Provider) SqlDBPing() error {
+	dsn := p.Proto().GetDatabase().GetDsn()
+	switch dsn {
+	case "memory":
+		// ignore
+		return nil
+	default:
+		return p.SqlDB().PingContext(p.Context())
 	}
-	_ = syscall.Kill(syscall.Getpid(), syscall.SIGHUP)
-}
-
-func (p *Provider) watchSignal() {
-	if !p.reloadOnConfigChanged {
-		return
-	}
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGHUP)
-	go func() {
-		defer signal.Stop(ch)
-		for {
-			select {
-			case <-p.Context().Done():
-				return
-			case sig, ok := <-ch:
-				if !ok {
-					return
-				}
-				err := p.reload()
-				if err != nil {
-					p.Logger().WithField("signal", sig.String()).WithError(err).Error("reload")
-					return
-				}
-			}
-		}
-	}()
-}
-
-func (p *Provider) TestConfig() error {
-	_, err := p.test()
-	return err
-}
-
-func (p *Provider) test() (*viper_.ViperProto, error) {
-	tmp, err := viper.Reload(p.configPath, p.onConfigChange, viper.NewDefaultViperProto())
-	if err != nil {
-		p.Logger().WithField("config_path", p.configPath).WithError(err).Error("test")
-		return nil, err
-	}
-	return tmp, nil
-}
-
-func (p *Provider) reload() error {
-	tmp, err := p.test()
-	if err != nil {
-		p.Logger().WithError(err).Error("reload")
-		return err
-	}
-
-	p.proto.Store(tmp)
-	p.RegisterServeModules()
-	return nil
-}
-
-func (p *Provider) EnableServeModule() {
-	if p.modulesEnabled.CAS(false, true) {
-		p.RegisterServeModules()
-	}
-}
-
-func (p *Provider) EnableMigrateDependencyModules() {
-	if p.modulesEnabled.CAS(false, true) {
-		p.RegisterMigrateModules()
-	}
-}
-
-func (p *Provider) RegisterServeModules() {
-	if !p.modulesEnabled.Load() {
-		return
-	}
-	p.updateLogger()
-	p.updateTracing()
-	p.updateSystemSecret()
-	p.updateKeyCipher()
-	p.updateSqlDB()
-	p.updateKeyManager()
-	p.updateTLSConfig()
-	p.updatePrometheusMetricsManager()
-}
-
-func (p *Provider) RegisterMigrateModules() {
-	if !p.modulesEnabled.Load() {
-		return
-	}
-	p.updateLogger()
-	p.updateSqlDB()
-	p.updateKeyManager()
 }

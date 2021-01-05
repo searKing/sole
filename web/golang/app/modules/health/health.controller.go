@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/searKing/golang/pkg/net/http"
 	"github.com/searKing/sole/internal/pkg/provider"
+	"github.com/sirupsen/logrus"
 )
 
 type Controller struct {
@@ -33,7 +34,7 @@ func (d *Controller) init() {
 	//dependency.ExpectDependency(c.Logger(), map[string]interface{}{"service_discovery": c.ServiceDiscoveryConnection})
 
 	logger := logrusx.New("", "")
-	logger.Logger = c.Logger()
+	logger.Logger = logrus.StandardLogger()
 	w := herodot.NewJSONWriter(logger)
 	d.h = healthx.NewHandler(w, c.Proto().GetAppInfo().GetBuildVersion(), healthx.ReadyCheckers{
 		"database": provider.GlobalProvider().SqlDBPing,
