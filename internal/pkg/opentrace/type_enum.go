@@ -57,7 +57,7 @@ func ParseTypeString(s string) (Type, error) {
 	if val, ok := _Type_name_to_values[s]; ok {
 		return val, nil
 	}
-	return 0, fmt.Errorf("Type does not belong to Type values", s)
+	return 0, fmt.Errorf("%[1]s does not belong to Type values", s)
 }
 
 // TypeValues returns all values of the enum
@@ -120,7 +120,7 @@ func (i Type) MarshalJSON() ([]byte, error) {
 func (i *Type) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
-		return fmt.Errorf("Type should be a string, got Type", data)
+		return fmt.Errorf("Type should be a string, got %[1]s", data)
 	}
 
 	var err error
