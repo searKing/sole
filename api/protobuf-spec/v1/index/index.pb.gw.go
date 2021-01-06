@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -22,6 +21,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Suppress "imported and not used" errors
@@ -33,7 +33,7 @@ var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
 func request_IndexService_HomePage_0(ctx context.Context, marshaler runtime.Marshaler, client IndexServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.HomePage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -42,7 +42,7 @@ func request_IndexService_HomePage_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func local_request_IndexService_HomePage_0(ctx context.Context, marshaler runtime.Marshaler, server IndexServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.HomePage(ctx, &protoReq)
@@ -51,7 +51,7 @@ func local_request_IndexService_HomePage_0(ctx context.Context, marshaler runtim
 }
 
 func request_IndexService_HomePage_1(ctx context.Context, marshaler runtime.Marshaler, client IndexServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.HomePage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -60,7 +60,7 @@ func request_IndexService_HomePage_1(ctx context.Context, marshaler runtime.Mars
 }
 
 func local_request_IndexService_HomePage_1(ctx context.Context, marshaler runtime.Marshaler, server IndexServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.HomePage(ctx, &protoReq)

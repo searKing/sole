@@ -4,11 +4,11 @@ package health
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,13 +20,13 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HealthServiceClient interface {
 	// 节点启动状态检测
-	Alive(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AliveResponse, error)
+	Alive(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AliveResponse, error)
 	// 节点就绪状态监测
-	Ready(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ReadyResponse, error)
+	Ready(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ReadyResponse, error)
 	// 服务版本查询
-	Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	// Prometheus监控
-	MetricsPrometheus(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	MetricsPrometheus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type healthServiceClient struct {
@@ -37,7 +37,7 @@ func NewHealthServiceClient(cc grpc.ClientConnInterface) HealthServiceClient {
 	return &healthServiceClient{cc}
 }
 
-func (c *healthServiceClient) Alive(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*AliveResponse, error) {
+func (c *healthServiceClient) Alive(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*AliveResponse, error) {
 	out := new(AliveResponse)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.health.HealthService/Alive", in, out, opts...)
 	if err != nil {
@@ -46,7 +46,7 @@ func (c *healthServiceClient) Alive(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
-func (c *healthServiceClient) Ready(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ReadyResponse, error) {
+func (c *healthServiceClient) Ready(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ReadyResponse, error) {
 	out := new(ReadyResponse)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.health.HealthService/Ready", in, out, opts...)
 	if err != nil {
@@ -55,7 +55,7 @@ func (c *healthServiceClient) Ready(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
-func (c *healthServiceClient) Version(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
+func (c *healthServiceClient) Version(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.health.HealthService/Version", in, out, opts...)
 	if err != nil {
@@ -64,7 +64,7 @@ func (c *healthServiceClient) Version(ctx context.Context, in *empty.Empty, opts
 	return out, nil
 }
 
-func (c *healthServiceClient) MetricsPrometheus(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+func (c *healthServiceClient) MetricsPrometheus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
 	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.health.HealthService/MetricsPrometheus", in, out, opts...)
 	if err != nil {
@@ -78,13 +78,13 @@ func (c *healthServiceClient) MetricsPrometheus(ctx context.Context, in *empty.E
 // for forward compatibility
 type HealthServiceServer interface {
 	// 节点启动状态检测
-	Alive(context.Context, *empty.Empty) (*AliveResponse, error)
+	Alive(context.Context, *emptypb.Empty) (*AliveResponse, error)
 	// 节点就绪状态监测
-	Ready(context.Context, *empty.Empty) (*ReadyResponse, error)
+	Ready(context.Context, *emptypb.Empty) (*ReadyResponse, error)
 	// 服务版本查询
-	Version(context.Context, *empty.Empty) (*VersionResponse, error)
+	Version(context.Context, *emptypb.Empty) (*VersionResponse, error)
 	// Prometheus监控
-	MetricsPrometheus(context.Context, *empty.Empty) (*httpbody.HttpBody, error)
+	MetricsPrometheus(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error)
 	mustEmbedUnimplementedHealthServiceServer()
 }
 
@@ -92,16 +92,16 @@ type HealthServiceServer interface {
 type UnimplementedHealthServiceServer struct {
 }
 
-func (UnimplementedHealthServiceServer) Alive(context.Context, *empty.Empty) (*AliveResponse, error) {
+func (UnimplementedHealthServiceServer) Alive(context.Context, *emptypb.Empty) (*AliveResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Alive not implemented")
 }
-func (UnimplementedHealthServiceServer) Ready(context.Context, *empty.Empty) (*ReadyResponse, error) {
+func (UnimplementedHealthServiceServer) Ready(context.Context, *emptypb.Empty) (*ReadyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ready not implemented")
 }
-func (UnimplementedHealthServiceServer) Version(context.Context, *empty.Empty) (*VersionResponse, error) {
+func (UnimplementedHealthServiceServer) Version(context.Context, *emptypb.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
 }
-func (UnimplementedHealthServiceServer) MetricsPrometheus(context.Context, *empty.Empty) (*httpbody.HttpBody, error) {
+func (UnimplementedHealthServiceServer) MetricsPrometheus(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MetricsPrometheus not implemented")
 }
 func (UnimplementedHealthServiceServer) mustEmbedUnimplementedHealthServiceServer() {}
@@ -118,7 +118,7 @@ func RegisterHealthServiceServer(s grpc.ServiceRegistrar, srv HealthServiceServe
 }
 
 func _HealthService_Alive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -130,13 +130,13 @@ func _HealthService_Alive_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/sole.api.v1.health.HealthService/Alive",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).Alive(ctx, req.(*empty.Empty))
+		return srv.(HealthServiceServer).Alive(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _HealthService_Ready_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -148,13 +148,13 @@ func _HealthService_Ready_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/sole.api.v1.health.HealthService/Ready",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).Ready(ctx, req.(*empty.Empty))
+		return srv.(HealthServiceServer).Ready(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _HealthService_Version_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -166,13 +166,13 @@ func _HealthService_Version_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/sole.api.v1.health.HealthService/Version",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).Version(ctx, req.(*empty.Empty))
+		return srv.(HealthServiceServer).Version(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _HealthService_MetricsPrometheus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func _HealthService_MetricsPrometheus_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/sole.api.v1.health.HealthService/MetricsPrometheus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HealthServiceServer).MetricsPrometheus(ctx, req.(*empty.Empty))
+		return srv.(HealthServiceServer).MetricsPrometheus(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

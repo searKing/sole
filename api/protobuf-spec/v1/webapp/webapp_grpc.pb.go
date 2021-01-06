@@ -4,11 +4,11 @@ package webapp
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WebAppServiceClient interface {
 	// 静态文件下载
-	File(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	File(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type webAppServiceClient struct {
@@ -31,7 +31,7 @@ func NewWebAppServiceClient(cc grpc.ClientConnInterface) WebAppServiceClient {
 	return &webAppServiceClient{cc}
 }
 
-func (c *webAppServiceClient) File(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+func (c *webAppServiceClient) File(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
 	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.webapp.WebAppService/File", in, out, opts...)
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *webAppServiceClient) File(ctx context.Context, in *empty.Empty, opts ..
 // for forward compatibility
 type WebAppServiceServer interface {
 	// 静态文件下载
-	File(context.Context, *empty.Empty) (*httpbody.HttpBody, error)
+	File(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error)
 	mustEmbedUnimplementedWebAppServiceServer()
 }
 
@@ -53,7 +53,7 @@ type WebAppServiceServer interface {
 type UnimplementedWebAppServiceServer struct {
 }
 
-func (UnimplementedWebAppServiceServer) File(context.Context, *empty.Empty) (*httpbody.HttpBody, error) {
+func (UnimplementedWebAppServiceServer) File(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method File not implemented")
 }
 func (UnimplementedWebAppServiceServer) mustEmbedUnimplementedWebAppServiceServer() {}
@@ -70,7 +70,7 @@ func RegisterWebAppServiceServer(s grpc.ServiceRegistrar, srv WebAppServiceServe
 }
 
 func _WebAppService_File_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func _WebAppService_File_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/sole.api.v1.webapp.WebAppService/File",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WebAppServiceServer).File(ctx, req.(*empty.Empty))
+		return srv.(WebAppServiceServer).File(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

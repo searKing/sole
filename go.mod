@@ -39,8 +39,7 @@ require (
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/rubenv/sql-migrate v0.0.0-20190212093014-1007f53448d7
-	github.com/searKing/golang v1.0.99
-	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210105162923-f24b8595d9dd
+	github.com/searKing/golang v1.0.101
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cobra v1.1.1
@@ -66,3 +65,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.0
 	gopkg.in/yaml.v2 v2.3.0
 )
+
+replace github.com/searKing/golang v1.0.99 => ../../../github.com/searKing/golang

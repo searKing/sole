@@ -6,6 +6,7 @@ package golang
 
 import (
 	"github.com/gin-gonic/gin"
+
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/searKing/sole/internal/pkg/opentrace"
 	"github.com/searKing/sole/internal/pkg/prometheus"

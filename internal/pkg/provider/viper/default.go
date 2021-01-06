@@ -6,6 +6,7 @@ package viper
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -21,11 +22,16 @@ var (
 	Version   = "v0.0.0-master+$Format:%h$" // git describe --long --tags --dirty --tags --always
 	BuildTime = "1970-01-01T00:00:00Z"      // build date in ISO8601 format, output of $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 	GitHash   = "$Format:%H$"               // sha1 from git, output of $(git rev-parse HEAD)
+	GoVersion       = runtime.Version()
+	Compiler        = runtime.Compiler
+	Platform        = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
+	ForceDisableTls bool
 )
 
 const (
 	ServiceName        = "sole"
-	ServiceDescription = "sole is a cloud native high throughput message transfer proxy."
+	ServiceDescription = "sole is a cloud native high throughput service manager server, " +
+		"allowing you to manage all services."
 )
 
 func NewDefaultViperProto() *viper.ViperProto {
@@ -35,6 +41,9 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetAppInfo().BuildVersion = Version
 	proto.GetAppInfo().BuildTime = BuildTime
 	proto.GetAppInfo().BuildHash = GitHash
+	proto.GetAppInfo().GoVersion = GoVersion
+	proto.GetAppInfo().Compiler = Compiler
+	proto.GetAppInfo().Platform = Platform
 
 	proto.Service = &viper.Service{}
 	proto.GetService().Name = ServiceName
@@ -52,8 +61,13 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetLog().ReportCaller = true
 
 	proto.Web = &viper.Web{}
+	proto.GetWeb().ForceDisableTls = ForceDisableTls
 	proto.GetWeb().BindAddr = &viper.Web_Net{}
-	proto.GetWeb().GetBindAddr().Port = 80
+	if proto.GetWeb().ForceDisableTls {
+		proto.GetWeb().GetBindAddr().Port = 80
+	} else {
+		proto.GetWeb().GetBindAddr().Port = 443
+	}
 
 	proto.Database = &viper.Database{}
 	proto.GetDatabase().Dsn = "memory"
@@ -63,5 +77,6 @@ func NewDefaultViperProto() *viper.ViperProto {
 
 // DefaultConfigPath returns config file's default path
 func DefaultConfigPath() string {
+	// 	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yaml", ServiceName))
 	return filepath_.Pathify(fmt.Sprintf("./conf/%s.yaml", ServiceName))
 }

@@ -53,6 +53,7 @@ To learn more about each individual command, run:
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
+	serveCmd.PersistentFlags().BoolVar(&viper.ForceDisableTls, "dangerous-force-disable-tls", false, "Disable HTTP/2 over TLS (HTTPS) and serve HTTP instead. Never use this in production.")
 
 	return serveCmd
 }

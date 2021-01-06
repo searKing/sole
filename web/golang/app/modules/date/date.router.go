@@ -9,8 +9,9 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
-	"github.com/searKing/sole/api/protobuf-spec/v1/date"
 	grpc_ "google.golang.org/grpc"
+
+	"github.com/searKing/sole/api/protobuf-spec/v1/date"
 )
 
 func Router(router *grpc.Gateway) *grpc.Gateway {

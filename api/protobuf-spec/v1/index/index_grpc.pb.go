@@ -4,11 +4,11 @@ package index
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IndexServiceClient interface {
 	// 主页
-	HomePage(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	HomePage(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type indexServiceClient struct {
@@ -31,7 +31,7 @@ func NewIndexServiceClient(cc grpc.ClientConnInterface) IndexServiceClient {
 	return &indexServiceClient{cc}
 }
 
-func (c *indexServiceClient) HomePage(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+func (c *indexServiceClient) HomePage(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
 	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/sole.api.v1.index.IndexService/HomePage", in, out, opts...)
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *indexServiceClient) HomePage(ctx context.Context, in *empty.Empty, opts
 // for forward compatibility
 type IndexServiceServer interface {
 	// 主页
-	HomePage(context.Context, *empty.Empty) (*httpbody.HttpBody, error)
+	HomePage(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error)
 	mustEmbedUnimplementedIndexServiceServer()
 }
 
@@ -53,7 +53,7 @@ type IndexServiceServer interface {
 type UnimplementedIndexServiceServer struct {
 }
 
-func (UnimplementedIndexServiceServer) HomePage(context.Context, *empty.Empty) (*httpbody.HttpBody, error) {
+func (UnimplementedIndexServiceServer) HomePage(context.Context, *emptypb.Empty) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HomePage not implemented")
 }
 func (UnimplementedIndexServiceServer) mustEmbedUnimplementedIndexServiceServer() {}
@@ -70,7 +70,7 @@ func RegisterIndexServiceServer(s grpc.ServiceRegistrar, srv IndexServiceServer)
 }
 
 func _IndexService_HomePage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func _IndexService_HomePage_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/sole.api.v1.index.IndexService/HomePage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IndexServiceServer).HomePage(ctx, req.(*empty.Empty))
+		return srv.(IndexServiceServer).HomePage(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

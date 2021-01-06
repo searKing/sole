@@ -5,6 +5,7 @@
 package webserver
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 	"runtime/debug"
@@ -25,6 +26,8 @@ type WebHandler interface {
 
 type Config struct {
 	CORS *cors.Config
+
+	TlsConfig *tls.Config
 
 	ServiceRegistryBackend *consul.ServiceRegistryServer
 
@@ -133,7 +136,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		logrus.StandardLogger().WriterLevel(logrus.InfoLevel),
 		logrus.StandardLogger().WriterLevel(logrus.WarnLevel),
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
-	opts := grpc.WithDefaultMarsherOption()
+	opts := grpc.WithDefault()
 	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
 
 	{
@@ -146,7 +149,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		}
 	}
 
-	grpcBackend := grpc.NewGateway(c.BindAddress, opts...)
+	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
 	ginBackend := gin.Default()
 
 	s := &WebServer{
