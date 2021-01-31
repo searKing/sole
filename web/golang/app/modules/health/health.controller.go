@@ -10,17 +10,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/julienschmidt/httprouter"
-	"github.com/ory/herodot"
-	"github.com/ory/x/healthx"
-	"github.com/ory/x/logrusx"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/searKing/golang/pkg/net/http"
-	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/sirupsen/logrus"
 )
 
 type Controller struct {
-	h *healthx.Handler
+	//h *healthx.Handler
 }
 
 func NewController() *Controller {
@@ -30,21 +24,21 @@ func NewController() *Controller {
 }
 
 func (d *Controller) init() {
-	c := provider.GlobalProvider()
+	//c := provider.GlobalProvider()
 	//dependency.ExpectDependency(c.Logger(), map[string]interface{}{"service_discovery": c.ServiceDiscoveryConnection})
 
-	logger := logrusx.New("", "")
-	logger.Logger = logrus.StandardLogger()
-	w := herodot.NewJSONWriter(logger)
-	d.h = healthx.NewHandler(w, c.Proto().GetAppInfo().GetBuildVersion(), healthx.ReadyCheckers{
-		"database": provider.GlobalProvider().SqlDBPing,
-		//"zookeeper": ctx.ServiceDiscoveryConnection.Ping,
-	})
+	//logger := logrusx.New("", "")
+	//logger.Logger = logrus.StandardLogger()
+	//w := herodot.NewJSONWriter(logger)
+	//d.h = healthx.NewHandler(w, c.Proto().GetAppInfo().GetBuildVersion(), healthx.ReadyCheckers{
+	//	"database": provider.GlobalProvider().SqlDBPing,
+	//	//"zookeeper": ctx.ServiceDiscoveryConnection.Ping,
+	//})
 }
 
 func (d *Controller) Health() gin.HandlerFunc {
 	router := httprouter.New()
-	d.h.SetRoutes(router, true)
+	//d.h.SetRoutes(router, true)
 	return gin.WrapF(router.ServeHTTP)
 }
 
@@ -53,13 +47,13 @@ func (d *Controller) MetricsPrometheus() gin.HandlerFunc {
 }
 
 func (d *Controller) Alive() gin.HandlerFunc {
-	return gin.WrapH(http.WrapHTTPRouterF(d.h.Alive))
+	return func(ctx *gin.Context) {}
 }
 
 func (d *Controller) Ready(shareErrors bool) gin.HandlerFunc {
-	return gin.WrapH(http.WrapHTTPRouterF(d.h.Ready(shareErrors)))
+	return func(ctx *gin.Context) {}
 }
 
 func (d *Controller) Version() gin.HandlerFunc {
-	return gin.WrapH(http.WrapHTTPRouterF(d.h.Version))
+	return func(ctx *gin.Context) {}
 }

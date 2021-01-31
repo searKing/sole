@@ -88,9 +88,11 @@ func mergeConfigFromFile(cfgFile string) error {
 		// enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
 		log.Printf("[INFO] Using config file: %s\n", cfgFile)
-		if err := os_.CreateAllIfNotExist(cfgFile, 0666); err != nil {
+		file, err := os_.CreateAllIfNotExist(cfgFile)
+		if err != nil {
 			return fmt.Errorf("create %s %w", cfgFile, err)
 		}
+		defer file.Close()
 	}
 
 	return viper.MergeInConfig()

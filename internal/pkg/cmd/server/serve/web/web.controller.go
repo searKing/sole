@@ -7,8 +7,9 @@ package web
 import (
 	"context"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 func isDSNAllowedOrDie(dsn string) {

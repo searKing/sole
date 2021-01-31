@@ -9,12 +9,12 @@ import (
 	"encoding/json"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/ory/x/sqlcon"
 	"github.com/pkg/errors"
 	"github.com/searKing/golang/go/util/object"
+	"gopkg.in/square/go-jose.v2"
+
 	"github.com/searKing/sole/pkg/crypto/pasta"
 	"github.com/searKing/sole/pkg/database/orm"
-	"gopkg.in/square/go-jose.v2"
 )
 
 type Provider interface {
@@ -87,7 +87,7 @@ func (m *SQLManager) AddKey(ctx context.Context, setId string, key *jose.JSONWeb
 			Version: version,
 		},
 	}); err != nil {
-		return sqlcon.HandleError(err)
+		return err
 	}
 	return nil
 }
@@ -104,14 +104,14 @@ func (m *SQLManager) AddKeySet(ctx context.Context, setId string, keys *jose.JSO
 		if re := tx.Rollback(); re != nil {
 			return errors.Wrap(err, re.Error())
 		}
-		return sqlcon.HandleError(err)
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
 		if re := tx.Rollback(); re != nil {
 			return errors.Wrap(err, re.Error())
 		}
-		return sqlcon.HandleError(err)
+		return err
 	}
 	return nil
 }
@@ -136,7 +136,7 @@ func (m *SQLManager) addKeySet(ctx context.Context, tx *sqlx.Tx, cipher *pasta.P
 				Version: version,
 			},
 		}); err != nil {
-			return sqlcon.HandleError(err)
+			return err
 		}
 	}
 
@@ -148,7 +148,7 @@ func (m *SQLManager) GetKey(ctx context.Context, setId, keyId string) (*jose.JSO
 	object.RequireNonNull(m.provider)
 	var d sqlData
 	if err := m.db.GetContext(ctx, &d, m.db.Rebind(queryKey), setId, keyId); err != nil {
-		return nil, sqlcon.HandleError(err)
+		return nil, err
 	}
 
 	key, err := m.provider.KeyCipher().Decrypt(d.KeyData)
@@ -171,7 +171,7 @@ func (m *SQLManager) GetKeySet(ctx context.Context, setId string) (*jose.JSONWeb
 	object.RequireNonNull(m.provider)
 	var ds []sqlData
 	if err := m.db.SelectContext(ctx, &ds, m.db.Rebind(queryKeySet), setId); err != nil {
-		return nil, sqlcon.HandleError(err)
+		return nil, err
 	}
 
 	if len(ds) == 0 {
@@ -202,7 +202,7 @@ func (m *SQLManager) GetKeySet(ctx context.Context, setId string) (*jose.JSONWeb
 func (m *SQLManager) DeleteKey(ctx context.Context, setId, keyId string) error {
 	object.RequireNonNull(m.db)
 	if _, err := m.db.ExecContext(ctx, m.db.Rebind(deleteKey), setId, keyId); err != nil {
-		return sqlcon.HandleError(err)
+		return err
 	}
 	return nil
 }
@@ -218,21 +218,21 @@ func (m *SQLManager) DeleteKeySet(ctx context.Context, setId string) error {
 		if re := tx.Rollback(); re != nil {
 			return errors.Wrap(err, re.Error())
 		}
-		return sqlcon.HandleError(err)
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
 		if re := tx.Rollback(); re != nil {
 			return errors.Wrap(err, re.Error())
 		}
-		return sqlcon.HandleError(err)
+		return err
 	}
 	return nil
 }
 
 func (m *SQLManager) deleteKeySet(ctx context.Context, tx *sqlx.Tx, setId string) error {
 	if _, err := tx.ExecContext(ctx, m.db.Rebind(deleteKeySet), setId); err != nil {
-		return sqlcon.HandleError(err)
+		return err
 	}
 	return nil
 }

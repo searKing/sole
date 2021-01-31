@@ -5,10 +5,11 @@
 package server
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve"
 	"github.com/searKing/sole/internal/pkg/cmd/server/version"
 	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/spf13/cobra"
 )
 
 // This represents the base command when called without any sub commands

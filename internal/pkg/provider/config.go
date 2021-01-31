@@ -96,7 +96,7 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	}
 
 	if c.Sql != nil {
-		sqlDB = c.Sql.Complete().New()
+		sqlDB = c.Sql.Complete().New(ctx)
 	}
 	return &Provider{
 		proto:       c.proto,

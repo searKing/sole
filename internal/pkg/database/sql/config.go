@@ -5,16 +5,20 @@
 package sql
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
-	"github.com/ory/x/sqlcon"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/searKing/sole/pkg/database/dsn"
 	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/golang/third_party/github.com/go-sql-driver/mysql"
+	"github.com/searKing/golang/third_party/github.com/golang/go/database/sql"
+
+	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 type Config struct {
@@ -45,22 +49,20 @@ func NewConfig() *Config {
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
 func (o *Config) Complete() CompletedConfig {
-	o.installSqlDBOrDie()
-
 	return CompletedConfig{&completedConfig{o}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
-func (c completedConfig) New() *sqlx.DB {
-	return c.installSqlDBOrDie()
+func (c completedConfig) New(ctx context.Context) *sqlx.DB {
+	return c.installSqlDBOrDie(ctx)
 }
 
-func (c *Config) installSqlDBOrDie() *sqlx.DB {
-	var options []sqlcon.OptionModifier
+func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
+	var options []sql.DBOption
 	if opentracing.IsGlobalTracerRegistered() {
-		options = append(options, sqlcon.WithDistributedTracing(), sqlcon.WithOmitArgsFromTraceSpans())
+		options = append(options, sql.WithDistributedTracing(), sql.WithOmitArgsFromTraceSpans())
 	}
 
 	dsnUrl := c.Dsn
@@ -76,7 +78,7 @@ func (c *Config) installSqlDBOrDie() *sqlx.DB {
 	maxWait := c.MaxWait
 	failAfter := c.FailAfter
 
-	schema, sdnConfig, err := dsn.ParseDSN(dsnUrl)
+	schema, sdnConfig, err := mysql.ParseDSN(dsnUrl)
 	if err != nil {
 		logrus.WithField("dsn", dsnUrl).
 			Fatalf(`malformed DSN, must set as %s `, "schema://[user[:password]@][net[(addr)]]/dbname[?param1=value1&paramN=valueN]")
@@ -85,9 +87,9 @@ func (c *Config) installSqlDBOrDie() *sqlx.DB {
 	if sdnConfig.DBName != "" {
 		dbName := sdnConfig.DBName
 		sdnConfig.DBName = ""
-		trimDatabaseDSN := dsn.GetDSN(schema, sdnConfig)
-		connection, _ := sqlcon.NewSQLConnection(trimDatabaseDSN, nil, options...)
-		db, err := connection.GetDatabaseRetry(maxWait, failAfter)
+		trimDatabaseDSN := mysql.GetDSN(schema, sdnConfig)
+		connection, _ := sql.Open(trimDatabaseDSN, options...)
+		db, err := connection.GetDatabaseRetry(ctx, maxWait, failAfter)
 		if err != nil {
 			logrus.WithField("dsn", dsnUrl).
 				WithField("max_wait", maxWait).
@@ -107,8 +109,8 @@ func (c *Config) installSqlDBOrDie() *sqlx.DB {
 		}
 	}
 
-	connection, _ := sqlcon.NewSQLConnection(dsnUrl, nil, options...)
-	db, err := connection.GetDatabaseRetry(maxWait, failAfter)
+	connection, _ := sql.Open(dsnUrl, options...)
+	db, err := connection.GetDatabaseRetry(ctx, maxWait, failAfter)
 	if err != nil {
 		logrus.WithField("dsn", dsnUrl).
 			WithField("max_wait", maxWait).

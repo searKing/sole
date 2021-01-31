@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/sirupsen/logrus"
+
 	"github.com/searKing/sole/internal/pkg/net/cors"
 	"github.com/searKing/sole/web/golang"
-	"github.com/sirupsen/logrus"
 )
 
 func (s *ServerRunOptions) completeWebServer() error {

@@ -7,8 +7,9 @@ package all
 import (
 	"fmt"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/spf13/cobra"
+
+	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 // represent the all command

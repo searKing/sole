@@ -7,11 +7,12 @@ package serve
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/all"
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/web"
 	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/spf13/cobra"
 )
 
 // represent the serve command

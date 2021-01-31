@@ -5,8 +5,9 @@
 package pasta
 
 import (
-	"github.com/searKing/sole/pkg/crypto/pasta"
 	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/pkg/crypto/pasta"
 )
 
 type Config struct {
