@@ -9,8 +9,8 @@ import (
 
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 
-	"github.com/searKing/sole/pkg/modules/opentrace"
-	"github.com/searKing/sole/pkg/modules/prometheus"
+	"github.com/searKing/sole/pkg/opentrace"
+	"github.com/searKing/sole/pkg/prometheus"
 	"github.com/searKing/sole/web/golang/app/configs/values"
 	"github.com/searKing/sole/web/golang/app/modules/date"
 	"github.com/searKing/sole/web/golang/app/modules/debug"

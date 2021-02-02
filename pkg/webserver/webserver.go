@@ -15,9 +15,9 @@ import (
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/sirupsen/logrus"
 
-	"github.com/searKing/sole/pkg/modules/consul"
+	"github.com/searKing/sole/pkg/consul"
 
-	"github.com/searKing/sole/pkg/modules/webserver/healthz"
+	"github.com/searKing/sole/pkg/webserver/healthz"
 )
 
 type WebServer struct {

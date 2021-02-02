@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server"
-	"github.com/searKing/sole/pkg/modules/logs"
+	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/runtime/profile"
 )
 

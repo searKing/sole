@@ -17,11 +17,11 @@ import (
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/searKing/sole/pkg/modules/crypto/pasta"
-	"github.com/searKing/sole/pkg/modules/database/sql"
-	"github.com/searKing/sole/pkg/modules/logs"
-	"github.com/searKing/sole/pkg/modules/net/cors"
-	"github.com/searKing/sole/pkg/modules/opentrace"
+	pasta2 "github.com/searKing/sole/pkg/crypto/pasta"
+	"github.com/searKing/sole/pkg/database/sql"
+	"github.com/searKing/sole/pkg/logs"
+	"github.com/searKing/sole/pkg/net/cors"
+	"github.com/searKing/sole/pkg/opentrace"
 )
 
 //go:generate go-option -type=Config
@@ -34,7 +34,7 @@ type Config struct {
 	OpenTracer *opentrace.Config
 
 	CORS      *cors.Config
-	KeyCipher *pasta.Config
+	KeyCipher *pasta2.Config
 	Sql       *sql.Config
 }
 
@@ -44,7 +44,7 @@ func NewConfig() *Config {
 		Logs:       logs.NewConfig(),
 		OpenTracer: opentrace.NewConfig(),
 		CORS:       cors.NewConfig(),
-		KeyCipher:  pasta.NewConfig(),
+		KeyCipher:  pasta2.NewConfig(),
 		Sql:        sql.NewConfig(),
 	}
 }

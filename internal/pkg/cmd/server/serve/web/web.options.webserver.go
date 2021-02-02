@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 
-	"github.com/searKing/sole/pkg/modules/net/cors"
+	"github.com/searKing/sole/pkg/net/cors"
 	"github.com/searKing/sole/web/golang"
 )
 

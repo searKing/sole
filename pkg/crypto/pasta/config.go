@@ -6,8 +6,6 @@ package pasta
 
 import (
 	"github.com/sirupsen/logrus"
-
-	"github.com/searKing/sole/pkg/crypto/pasta"
 )
 
 type Config struct {
@@ -42,7 +40,7 @@ func (o *Config) Complete() CompletedConfig {
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
-func (c completedConfig) New() *pasta.Pasta {
+func (c completedConfig) New() *Pasta {
 	return c.installKeyCipherOrDie()
 }
 
@@ -52,9 +50,9 @@ func (c *Config) installSystemSecretOrDie() {
 	secret := c.SystemSecret
 	if len(secret) == 0 {
 		logger.Warnf("Configuration secrets.system is not set, generating a temporary, random secret...")
-		secretBytes := pasta.GenerateSecret(32)
+		secretBytes := GenerateSecret(32)
 		logger.Warnf("Generated secret: %s", string(secretBytes))
-		secretBytes = pasta.HashByteSecret(secretBytes)
+		secretBytes = HashByteSecret(secretBytes)
 
 		logger.Warnln("Do not use generate secrets in production. The secret will be leaked to the logs.")
 		c.SystemSecret = secretBytes
@@ -63,7 +61,7 @@ func (c *Config) installSystemSecretOrDie() {
 
 	if len(secret) >= 16 {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.SystemSecret = pasta.HashByteSecret(secret)
+		c.SystemSecret = HashByteSecret(secret)
 		return
 	}
 
@@ -79,11 +77,11 @@ func (c *Config) installRotatedSystemSecret() {
 	}
 	for _, secret := range secrets[1:] {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.RotatedSystemSecrets = append(c.RotatedSystemSecrets, pasta.HashByteSecret(secret))
+		c.RotatedSystemSecrets = append(c.RotatedSystemSecrets, HashByteSecret(secret))
 	}
 }
 
 // installKeyCipherOrDie allows you to generate a key cipher.
-func (c *Config) installKeyCipherOrDie() *pasta.Pasta {
-	return pasta.NewFromKey(c.SystemSecret, c.RotatedSystemSecrets)
+func (c *Config) installKeyCipherOrDie() *Pasta {
+	return NewFromKey(c.SystemSecret, c.RotatedSystemSecrets)
 }

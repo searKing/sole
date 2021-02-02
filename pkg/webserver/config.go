@@ -16,10 +16,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/grpclog"
 
-	"github.com/searKing/sole/pkg/modules/consul"
+	"github.com/searKing/sole/pkg/consul"
 
-	"github.com/searKing/sole/pkg/modules/net/cors"
-	"github.com/searKing/sole/pkg/modules/webserver/healthz"
+	"github.com/searKing/sole/pkg/net/cors"
+	"github.com/searKing/sole/pkg/webserver/healthz"
 )
 
 type WebHandler interface {
