@@ -9,17 +9,16 @@ import (
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve"
 	"github.com/searKing/sole/internal/pkg/cmd/server/version"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	version_ "github.com/searKing/sole/internal/pkg/version"
 )
 
 // This represents the base command when called without any sub commands
 func NewCommand() *cobra.Command {
-
 	// This represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
-		Use:     viper.ServiceName,
-		Short:   viper.ServiceDescription,
-		Version: viper.Version,
+		Use:     version_.ServiceName,
+		Short:   version_.ServiceDescription,
+		Version: version_.Version,
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		//Run: func(cmd *cobra.Command, args []string) {},

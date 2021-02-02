@@ -12,7 +12,7 @@ import (
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/all"
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/web"
 	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/internal/pkg/version"
 )
 
 // represent the serve command
@@ -29,7 +29,7 @@ To learn more about each individual command, run:
 
 - %[1]s help serve all
 - %[1]s help serve web
-`, viper.ServiceName),
+`, version.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          nil,
@@ -43,8 +43,8 @@ To learn more about each individual command, run:
 	// Here you will define your flags and configuration settings.
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
-	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", viper.DefaultConfigPath(),
-		fmt.Sprintf("Config file (default is %q)", viper.DefaultConfigPath()))
+	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", provider.DefaultConfigPath(),
+		fmt.Sprintf("Config file (default is %q)", provider.DefaultConfigPath()))
 	serveCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		cfg := provider.NewConfig()
 		cfg.ConfigFile = cfgFile
@@ -54,7 +54,7 @@ To learn more about each individual command, run:
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
-	serveCmd.PersistentFlags().BoolVar(&viper.ForceDisableTls, "dangerous-force-disable-tls", false, "Disable HTTP/2 over TLS (HTTPS) and serve HTTP instead. Never use this in production.")
+	serveCmd.PersistentFlags().BoolVar(&provider.ForceDisableTls, "dangerous-force-disable-tls", false, "Disable HTTP/2 over TLS (HTTPS) and serve HTTP instead. Never use this in production.")
 
 	return serveCmd
 }

@@ -8,12 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/searKing/golang/go/errors"
 	"github.com/searKing/golang/go/runtime"
 	"github.com/sirupsen/logrus"
-
-	viper_ "github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 func init() {
@@ -29,7 +28,7 @@ func init() {
 
 // InitLog initializes logs the way we want for kubernetes.
 func InitLog() {
-	log.SetPrefix(fmt.Sprintf("[%s] ", viper_.ServiceName))
+	log.SetPrefix(fmt.Sprintf("[%s] ", os.Args[0]))
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	//log.SetFlags(0)
 }

@@ -7,10 +7,11 @@ package sql
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/searKing/sole/internal/pkg/cmd/server/migrate/sql/down"
 	"github.com/searKing/sole/internal/pkg/cmd/server/migrate/sql/up"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/spf13/cobra"
+	"github.com/searKing/sole/internal/pkg/provider"
 )
 
 // represent the all command
@@ -27,7 +28,7 @@ This decreases risk of failure and decreases time required.
 ### WARNING ###
 
 Before running this command on an existing database, create a back up!
-`, viper.ServiceName),
+`, provider.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 	}

@@ -5,12 +5,12 @@
 package logs
 
 import (
+	"os"
+	"path/filepath"
 	"time"
 
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
-
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 type Config struct {
@@ -39,7 +39,7 @@ func NewConfig() *Config {
 		ReportCaller:   true,
 		Level:          logrus.InfoLevel,
 		Formatter:      &logrus.TextFormatter{CallerPrettyfier: logrus_.ShortCallerPrettyfier},
-		Path:           "./log/" + viper.ServiceName,
+		Path:           "./log/" + filepath.Base(os.Args[0]),
 		RotateDuration: 24 * time.Hour,
 		RotateMaxAge:   7 * 24 * time.Hour,
 		RotateMaxCount: 0,

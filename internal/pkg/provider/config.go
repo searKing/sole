@@ -16,7 +16,8 @@ import (
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/internal/pkg/version"
+	"github.com/searKing/sole/pkg/viper"
 	pasta2 "github.com/searKing/sole/pkg/crypto/pasta"
 	"github.com/searKing/sole/pkg/database/sql"
 	"github.com/searKing/sole/pkg/logs"
@@ -121,11 +122,12 @@ func (c completedConfig) Apply(ctx context.Context) error {
 
 // installViperProtoOrDie allows you to load config from default, config path、env and so on, but dies on failure.
 func (c *Config) installViperProtoOrDie() {
-	tmp, err := viper.Load(c.ConfigFile, viper.NewDefaultViperProto())
+	var v viper_.ViperProto
+	err := viper.Load(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto())
 	if err != nil {
-		logrus.WithError(err).WithField("config_path", c.ConfigFile).Error("load")
+		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load")
 	}
-	c.proto = tmp
+	c.proto = &v
 }
 
 func (c *Config) completeLogs() {
@@ -260,7 +262,7 @@ func (c *Config) completeSqlDBOrDie() {
 		return
 	case "":
 		logrus.Fatalf(`config.database.dsn is not set, use "export %s_DATABASE_DSN=memory" for an in memory storage or the documented database adapters.`,
-			strings.ToUpper(viper.ServiceName))
+			strings.ToUpper(version.ServiceName))
 	}
 
 	maxWait, err := ptypes.Duration(c.proto.GetDatabase().GetMaxWaitDuration())

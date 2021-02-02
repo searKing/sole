@@ -7,7 +7,6 @@ package sql
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -17,8 +16,6 @@ import (
 
 	"github.com/searKing/golang/third_party/github.com/go-sql-driver/mysql"
 	"github.com/searKing/golang/third_party/github.com/golang/go/database/sql"
-
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 type Config struct {
@@ -71,8 +68,7 @@ func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
 		// ignore
 		return nil
 	case "":
-		logrus.Fatalf(`config.database.dsn is not set, use "export %s_DATABASE_DSN=memory" for an in memory storage or the documented database adapters.`,
-			strings.ToUpper(viper.ServiceName))
+		logrus.Fatalf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`)
 	}
 
 	maxWait := c.MaxWait

@@ -5,21 +5,20 @@
 package viper
 
 import (
-	"log"
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	filepath_ "github.com/searKing/golang/go/path/filepath"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-// persistConfig writes config using into .use.<name>.yaml
-func persistConfig() error {
+// PersistConfig writes config using into .use.<name>.yaml
+func PersistConfig() error {
 	// persist using config
 	f := viper.ConfigFileUsed() // ./conf/.sole.yaml
 	if f == "" {
-		log.Printf("[WARN] persist skiped, for no config file used\n")
+		logrus.Warnf("persist skiped, for no config file used")
 		return nil
 	}
 	dir := filepath.Dir(f)
@@ -31,8 +30,8 @@ func persistConfig() error {
 
 	err := viper.WriteConfigAs(configFileUsing)
 	if err != nil {
-		log.Printf("[WARN] %s\n",
-			errors.WithMessagef(err, "write using config file [%s] failed...", filepath_.Pathify(configFileUsing)))
+		logrus.WithField("file", filepath_.Pathify(configFileUsing)).WithError(err).Errorf("write using config file")
+		return err
 	}
-	return err
+	return nil
 }

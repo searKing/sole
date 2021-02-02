@@ -7,8 +7,9 @@ package up
 import (
 	"fmt"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/spf13/cobra"
+
+	"github.com/searKing/sole/internal/pkg/provider"
 )
 
 // represent the up command
@@ -25,7 +26,7 @@ This decreases risk of failure and decreases time required.
 ### WARNING ###
 
 Before running this command on an existing database, create a back up!
-`, viper.ServiceName),
+`, provider.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		//Run:          controller(),

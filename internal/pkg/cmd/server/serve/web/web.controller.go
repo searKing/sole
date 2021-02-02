@@ -9,7 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/internal/pkg/version"
 )
 
 func isDSNAllowedOrDie(dsn string) {
@@ -21,7 +21,7 @@ func isDSNAllowedOrDie(dsn string) {
 // Run runs the specified APIServer.  This should never exit.
 func Run(ctx context.Context, completeOptions CompletedServerRunOptions) error {
 	// To help debugging, immediately log version
-	logrus.Infof("Version: %+v", viper.Version)
+	logrus.Infof("Version: %+v", version.Version)
 	//isDSNAllowedOrDie(completeOptions.Provider.Proto().GetDatabase().GetDsn())
 
 	server, err := completeOptions.WebServerOptions.Complete().New("sole")

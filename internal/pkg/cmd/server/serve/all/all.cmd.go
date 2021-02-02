@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/internal/pkg/version"
 )
 
 // represent the all command
@@ -29,7 +29,7 @@ you can also set environments by prepending key value pairs: "KEY=VALUE KEY2=VAL
 service possible controls are listed below. This command exposes exposes command line flags, which are listed below
 the controls section.
 
-`, viper.ServiceName),
+`, version.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),

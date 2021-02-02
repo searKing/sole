@@ -7,12 +7,13 @@ package deploy
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/install"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/start"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/stop"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/uninstall"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
-	"github.com/spf13/cobra"
+	"github.com/searKing/sole/internal/pkg/provider"
 )
 
 // represent the deploy command
@@ -28,7 +29,7 @@ To learn more about each individual command, run:
 - %[1]s help deploy uninstall
 - %[1]s help deploy start
 - %[1]s help deploy stop
-`, viper.ServiceName),
+`, provider.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 	}

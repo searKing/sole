@@ -7,8 +7,9 @@ package uninstall
 import (
 	"fmt"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/spf13/cobra"
+
+	"github.com/searKing/sole/internal/pkg/provider"
 )
 
 // represent the uninstall command
@@ -22,7 +23,7 @@ greater rights. Will return an error if the service is not present.
 To learn more about each individual command, run:
 
 - %[1]s help uninstall
-`, viper.ServiceName),
+`, provider.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),

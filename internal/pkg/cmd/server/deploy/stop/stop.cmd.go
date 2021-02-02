@@ -7,8 +7,9 @@ package stop
 import (
 	"fmt"
 
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/spf13/cobra"
+
+	"github.com/searKing/sole/internal/pkg/provider"
 )
 
 // represent the stop command
@@ -21,7 +22,7 @@ func New() *cobra.Command {
 To learn more about each individual command, run:
 
 - %[1]s help deploy stop
-`, viper.ServiceName),
+`, provider.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),
