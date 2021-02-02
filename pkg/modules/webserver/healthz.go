@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/searKing/sole/internal/pkg/webserver/healthz"
+	"github.com/searKing/sole/pkg/modules/webserver/healthz"
 )
 
 // AddHealthChecks adds HealthCheck(s) to health endpoints (healthz, livez, readyz) but

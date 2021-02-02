@@ -38,3 +38,5 @@ http:
     #
     - selector: sole.api.v1.webapp.WebAppService.File
       get: '/webapp'
+    - selector: sole.api.v1.webapp.WebAppService.File
+      get: '/proxy/*filepath'

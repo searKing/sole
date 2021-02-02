@@ -5,9 +5,10 @@
 package web
 
 import (
-	"github.com/searKing/sole/internal/pkg/consul"
+	"github.com/searKing/sole/pkg/modules/consul"
+
 	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/searKing/sole/internal/pkg/webserver"
+	"github.com/searKing/sole/pkg/modules/webserver"
 )
 
 // ServerRunOptions runs a kubernetes api server.

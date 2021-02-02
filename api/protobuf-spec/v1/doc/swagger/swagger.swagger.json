@@ -4,6 +4,11 @@
     "title": "Swagger服务 API",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "SwaggerService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

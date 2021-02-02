@@ -8,14 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
-	"github.com/searKing/sole/internal/pkg/opentrace"
-	"github.com/searKing/sole/internal/pkg/prometheus"
+
+	"github.com/searKing/sole/pkg/modules/opentrace"
+	"github.com/searKing/sole/pkg/modules/prometheus"
 	"github.com/searKing/sole/web/golang/app/configs/values"
 	"github.com/searKing/sole/web/golang/app/modules/date"
 	"github.com/searKing/sole/web/golang/app/modules/debug"
 	"github.com/searKing/sole/web/golang/app/modules/doc/swagger"
 	"github.com/searKing/sole/web/golang/app/modules/health"
 	"github.com/searKing/sole/web/golang/app/modules/index"
+	"github.com/searKing/sole/web/golang/app/modules/proxy"
 	"github.com/searKing/sole/web/golang/app/modules/webapp"
 	"github.com/searKing/sole/web/golang/app/shared/middlewares"
 )
@@ -34,22 +36,24 @@ func (h *Handler) SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway) {
 	ginRouter.Use(opentrace.GinHttpTrace(values.HealthMetricsPrometheusPath))
 
 	middlewares.MiddlewaresRouter(ginRouter)
-	index.Router(ginRouter)
-	debug.Router(ginRouter, "")
-	health.Router(ginRouter)
+	index.SetRouter(ginRouter)
+	debug.SetRouter(ginRouter, "")
+	health.SetRouter(ginRouter)
 	// webapp static files
-	webapp.Router(ginRouter)
+	webapp.SetRouter(ginRouter)
 	// doc
-	swagger.Router(ginRouter)
+	swagger.SetRouter(ginRouter)
 	// API
 	apiRouter := ginRouter.Group(values.APIPathPrefix)
-	index.Router(apiRouter)
-	debug.Router(apiRouter, values.APIPathPrefix)
-	health.Router(apiRouter)
+	index.SetRouter(apiRouter)
+	debug.SetRouter(apiRouter, values.APIPathPrefix)
+	health.SetRouter(apiRouter)
 
-	date.Router(grpcRouter)
+	date.SetRouter(grpcRouter)
 
-	//// NOTE: It might be required to set Router.HandleMethodNotAllowed to false to avoid problems.
+	proxy.SetRouter(ginRouter)
+
+	//// NOTE: It might be required to set SetRouter.HandleMethodNotAllowed to false to avoid problems.
 	//r.HandleMethodNotAllowed = false
 	//r.NotFound = Routes(h.c, values.PathPrefix)
 }

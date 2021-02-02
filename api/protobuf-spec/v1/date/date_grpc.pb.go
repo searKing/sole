@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // DateServiceClient is the client API for DateService service.
@@ -64,7 +65,7 @@ type UnsafeDateServiceServer interface {
 }
 
 func RegisterDateServiceServer(s grpc.ServiceRegistrar, srv DateServiceServer) {
-	s.RegisterService(&_DateService_serviceDesc, srv)
+	s.RegisterService(&DateService_ServiceDesc, srv)
 }
 
 func _DateService_Now_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -85,7 +86,10 @@ func _DateService_Now_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-var _DateService_serviceDesc = grpc.ServiceDesc{
+// DateService_ServiceDesc is the grpc.ServiceDesc for DateService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DateService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "sole.api.v1.date.DateService",
 	HandlerType: (*DateServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

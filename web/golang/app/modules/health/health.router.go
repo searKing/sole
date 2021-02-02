@@ -9,7 +9,7 @@ import (
 	"github.com/searKing/sole/web/golang/app/configs/values"
 )
 
-func Router(router gin.IRouter) gin.IRouter {
+func SetRouter(router gin.IRouter) gin.IRouter {
 	health := NewController()
 	router.GET(values.HealthAliveCheckPath, health.Alive())
 	router.GET(values.HealthReadyCheckPath, health.Ready(true))

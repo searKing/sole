@@ -69,7 +69,10 @@ mixed_swagger_json="swagger.json"
 mixed_swagger_yaml="swagger.yaml"
 
 printf "%s generating" "${mixed_swagger_json}"
-swagger -q generate spec -o "${tmpdir}/${mixed_swagger_json}" "${tmpdir}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
+swagger -q generate spec -o "${tmpdir}/${mixed_swagger_json}" "${tmpdir}" || exit
+#classifier: unknown swagger annotation “extendee" ？ exclude protoc-gen-openapiv2/options
+#swagger -q generate spec -o "${tmpdir}/${mixed_swagger_json}" "${tmpdir}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
+
 #swagger -q init spec --format="json" && cp swagger.json "${mixed_swagger_json}" || exit
 printf "\r\033[K%s generated" "${mixed_swagger_json}"
 

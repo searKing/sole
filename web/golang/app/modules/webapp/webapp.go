@@ -27,7 +27,7 @@ var (
 	ExcludedPathPrefixes = []string{"/WEB-INF/", "/META-INF/"}
 )
 
-func Router(router gin.IRouter) gin.IRouter {
+func SetRouter(router gin.IRouter) gin.IRouter {
 	router.StaticFS(values.WebApp, Dir(RelativeFileStoragePathPrefix))
 	return router
 }

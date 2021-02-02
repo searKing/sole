@@ -4,6 +4,11 @@
     "title": "主页HomePage API",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "IndexService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

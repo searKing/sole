@@ -13,6 +13,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // IndexServiceClient is the client API for IndexService service.
@@ -66,7 +67,7 @@ type UnsafeIndexServiceServer interface {
 }
 
 func RegisterIndexServiceServer(s grpc.ServiceRegistrar, srv IndexServiceServer) {
-	s.RegisterService(&_IndexService_serviceDesc, srv)
+	s.RegisterService(&IndexService_ServiceDesc, srv)
 }
 
 func _IndexService_HomePage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -87,7 +88,10 @@ func _IndexService_HomePage_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-var _IndexService_serviceDesc = grpc.ServiceDesc{
+// IndexService_ServiceDesc is the grpc.ServiceDesc for IndexService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var IndexService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "sole.api.v1.index.IndexService",
 	HandlerType: (*IndexServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

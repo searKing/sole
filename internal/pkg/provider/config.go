@@ -12,15 +12,16 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/jmoiron/sqlx"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
-	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/internal/pkg/crypto/pasta"
-	"github.com/searKing/sole/internal/pkg/database/sql"
-	"github.com/searKing/sole/internal/pkg/logs"
-	"github.com/searKing/sole/internal/pkg/net/cors"
-	"github.com/searKing/sole/internal/pkg/opentrace"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/sirupsen/logrus"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
+
+	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
+	"github.com/searKing/sole/internal/pkg/provider/viper"
+	"github.com/searKing/sole/pkg/modules/crypto/pasta"
+	"github.com/searKing/sole/pkg/modules/database/sql"
+	"github.com/searKing/sole/pkg/modules/logs"
+	"github.com/searKing/sole/pkg/modules/net/cors"
+	"github.com/searKing/sole/pkg/modules/opentrace"
 )
 
 //go:generate go-option -type=Config

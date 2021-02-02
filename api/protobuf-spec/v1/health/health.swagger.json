@@ -4,6 +4,11 @@
     "title": "健康监测服务 API",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "HealthService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

@@ -13,9 +13,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
-	"github.com/searKing/sole/internal/pkg/consul"
-	"github.com/searKing/sole/internal/pkg/webserver/healthz"
 	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/pkg/modules/consul"
+
+	"github.com/searKing/sole/pkg/modules/webserver/healthz"
 )
 
 type WebServer struct {

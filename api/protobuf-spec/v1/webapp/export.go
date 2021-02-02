@@ -7,4 +7,5 @@ package webapp
 // export some private fields
 var (
 	Pattern_WebAppService_File_0 = pattern_WebAppService_File_0
+	Pattern_WebAppService_Proxy_1 = pattern_WebAppService_File_1
 )

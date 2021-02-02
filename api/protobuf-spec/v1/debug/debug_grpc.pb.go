@@ -13,6 +13,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // DebugServiceClient is the client API for DebugService service.
@@ -82,7 +83,7 @@ type UnsafeDebugServiceServer interface {
 }
 
 func RegisterDebugServiceServer(s grpc.ServiceRegistrar, srv DebugServiceServer) {
-	s.RegisterService(&_DebugService_serviceDesc, srv)
+	s.RegisterService(&DebugService_ServiceDesc, srv)
 }
 
 func _DebugService_PProf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -121,7 +122,10 @@ func _DebugService_ExpVar_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-var _DebugService_serviceDesc = grpc.ServiceDesc{
+// DebugService_ServiceDesc is the grpc.ServiceDesc for DebugService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DebugService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "sole.api.v1.debug.DebugService",
 	HandlerType: (*DebugServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

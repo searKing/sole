@@ -13,11 +13,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
-	"github.com/searKing/sole/internal/pkg/consul"
-	"github.com/searKing/sole/internal/pkg/net/cors"
-	"github.com/searKing/sole/internal/pkg/webserver/healthz"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/grpclog"
+
+	"github.com/searKing/sole/pkg/modules/consul"
+
+	"github.com/searKing/sole/pkg/modules/net/cors"
+	"github.com/searKing/sole/pkg/modules/webserver/healthz"
 )
 
 type WebHandler interface {

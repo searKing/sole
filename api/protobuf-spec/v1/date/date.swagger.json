@@ -4,6 +4,11 @@
     "title": "日期查询 API",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "DateService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

@@ -14,7 +14,7 @@ import (
 	"github.com/searKing/sole/api/protobuf-spec/v1/date"
 )
 
-func Router(router *grpc.Gateway) *grpc.Gateway {
+func SetRouter(router *grpc.Gateway) *grpc.Gateway {
 	s := Controller{}
 	router.RegisterGRPCFunc(func(srv *grpc_.Server) {
 		date.RegisterDateServiceServer(srv, &s)

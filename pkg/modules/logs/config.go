@@ -8,8 +8,9 @@ import (
 	"time"
 
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
-	"github.com/searKing/sole/internal/pkg/provider/viper"
 	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/internal/pkg/provider/viper"
 )
 
 type Config struct {
