@@ -37,7 +37,8 @@ STACK_ABS_DIR=$(pwd)
 # masking all out put info!
 
 g_protos_dir="$1"
-g_proto_headers="-I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
+g_proto_headers="-I ."
+g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
 g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
 g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../"
 
