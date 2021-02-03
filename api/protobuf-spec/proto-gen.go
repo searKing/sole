@@ -4,6 +4,10 @@
 
 package protobuf_spec
 
+////go:generate bash -c "mkdir -p ./scripts"
+////go:generate bash -c "curl -s -L -o ./scripts/proto-gen.sh https://raw.githubusercontent.com/searKing/sole/master/api/protobuf-spec/scripts/proto-gen.sh"
+////go:generate bash -c "chmod a+x ./scripts/proto-gen.sh"
+
 //go:generate bash scripts/proto-gen.sh ./v1
 //go:generate bash scripts/swagger-mix.sh ./v1
 //go:generate bash scripts/swagger-deploy.sh ./v1 "../../web/webapp/static/swagger"

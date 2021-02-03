@@ -47,7 +47,7 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.Web = &viper.Web{}
 	proto.GetWeb().ForceDisableTls = ForceDisableTls
 	proto.GetWeb().BindAddr = &viper.Web_Net{}
-	if proto.GetWeb().ForceDisableTls {
+	if proto.GetWeb().GetForceDisableTls() || proto.GetWeb().GetTls() == nil {
 		proto.GetWeb().GetBindAddr().Port = 80
 	} else {
 		proto.GetWeb().GetBindAddr().Port = 443

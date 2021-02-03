@@ -49,7 +49,7 @@ func (p *Provider) GetBackendServeHostPort() string {
 	resolvers := p.Proto().GetWeb().GetLocalIpResolver()
 	timeout, err := ptypes.Duration(resolvers.GetTimeout())
 	if err != nil {
-		timeout := 0 * time.Second
+		timeout = 0 * time.Second
 		logrus.WithField("timeout", timeout).
 			WithError(errors.WithStack(err)).
 			Warnf("malformed timeout, use %s instead", timeout)

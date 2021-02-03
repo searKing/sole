@@ -12,13 +12,13 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/jmoiron/sqlx"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
+	"github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/sirupsen/logrus"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/internal/pkg/version"
-	"github.com/searKing/sole/pkg/viper"
-	pasta2 "github.com/searKing/sole/pkg/crypto/pasta"
+	"github.com/searKing/sole/pkg/crypto/pasta"
 	"github.com/searKing/sole/pkg/database/sql"
 	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/net/cors"
@@ -35,7 +35,7 @@ type Config struct {
 	OpenTracer *opentrace.Config
 
 	CORS      *cors.Config
-	KeyCipher *pasta2.Config
+	KeyCipher *pasta.Config
 	Sql       *sql.Config
 }
 
@@ -45,7 +45,7 @@ func NewConfig() *Config {
 		Logs:       logs.NewConfig(),
 		OpenTracer: opentrace.NewConfig(),
 		CORS:       cors.NewConfig(),
-		KeyCipher:  pasta2.NewConfig(),
+		KeyCipher:  pasta.NewConfig(),
 		Sql:        sql.NewConfig(),
 	}
 }
@@ -123,10 +123,15 @@ func (c completedConfig) Apply(ctx context.Context) error {
 // installViperProtoOrDie allows you to load config from default, config path、env and so on, but dies on failure.
 func (c *Config) installViperProtoOrDie() {
 	var v viper_.ViperProto
-	err := viper.Load(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto())
-	if err != nil {
-		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load")
+
+	if err := viper.LoadGlobalConfig(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto()); err != nil {
+		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load config")
 	}
+
+	if err := viper.PersistGlobalConfig(); err != nil {
+		logrus.WithError(err).WithField("config_path", c.ConfigFile).Warnf("persist config ignored")
+	}
+
 	c.proto = &v
 }
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/searKing/sole/internal/pkg/provider"
+	"github.com/searKing/sole/internal/pkg/version"
 )
 
 // represent the install command
@@ -23,7 +23,7 @@ greater rights. Will return an error if it is already installed.
 To learn more about each individual command, run:
 
 - %[1]s help install
-`, provider.ServiceName),
+`, version.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),
