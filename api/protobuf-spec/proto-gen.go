@@ -4,6 +4,7 @@
 
 package protobuf_spec
 
+// example to get latest scripts
 ////go:generate bash -c "mkdir -p ./scripts"
 ////go:generate bash -c "curl -s -L -o ./scripts/proto-gen.sh https://raw.githubusercontent.com/searKing/sole/master/api/protobuf-spec/scripts/proto-gen.sh"
 ////go:generate bash -c "chmod a+x ./scripts/proto-gen.sh"
