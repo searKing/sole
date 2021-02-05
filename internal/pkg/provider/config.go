@@ -137,6 +137,7 @@ func (c *Config) installViperProtoOrDie() {
 
 func (c *Config) completeLogs() {
 	log := c.proto.GetLog()
+	c.Logs.Path = log.GetPath()
 	c.Logs.ReportCaller = log.GetReportCaller()
 
 	if log.GetFormat() == viper_.Log_json {
