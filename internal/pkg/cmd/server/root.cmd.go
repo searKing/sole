@@ -18,7 +18,7 @@ func NewCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     version_.ServiceName,
 		Short:   version_.ServiceDescription,
-		Version: version_.Version,
+		Version: version_.GetVersion().String(),
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		//Run: func(cmd *cobra.Command, args []string) {},

@@ -21,7 +21,7 @@ func isDSNAllowedOrDie(dsn string) {
 // Run runs the specified APIServer.  This should never exit.
 func Run(ctx context.Context, completeOptions CompletedServerRunOptions) error {
 	// To help debugging, immediately log version
-	logrus.Infof("Version: %+v", version.Version)
+	logrus.Infof("Version: %+v", version.GetVersion())
 	//isDSNAllowedOrDie(completeOptions.Provider.Proto().GetDatabase().GetDsn())
 
 	server, err := completeOptions.WebServerOptions.Complete().New("sole")
