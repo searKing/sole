@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/grpclog"
@@ -152,7 +153,10 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	}
 
 	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
-	ginBackend := gin.Default()
+	ginBackend := gin.New()
+	ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
+	ginBackend.Use(gin_.RecoveryWithWriter(logrus.StandardLogger().Writer()))
+	ginBackend.Use(gin_.UseHTTPPreflight())
 
 	s := &WebServer{
 		ServiceRegistryBackend: c.ServiceRegistryBackend,

@@ -26,8 +26,8 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v0.0.120
-	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210203120302-bf08e7fe0986
+	github.com/searKing/golang v0.0.122
+	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210204114018-1eb8f0941b11
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -42,7 +42,7 @@ require (
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/tools v0.1.0 // indirect
 	google.golang.org/api v0.38.0
-	google.golang.org/genproto v0.0.0-20210201184850-646a494a81ea
+	google.golang.org/genproto v0.0.0-20210204154452-deb828366460
 	google.golang.org/grpc v1.35.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.25.0
