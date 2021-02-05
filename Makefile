@@ -28,7 +28,7 @@ build-vendor:
 .PHONY: generate
 generate:
 	@echo "  >  "$@"ing $(DESTDIR)"
-	go generate github.com/searKing/sole/api/protobuf-spec
+	$(MAKE) -C api/protobuf-spec generate
 
 .PHONY: install
 install: install-mod
