@@ -25,9 +25,6 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetAppInfo().BuildVersion = version.Version
 	proto.GetAppInfo().BuildTime = version.BuildTime
 	proto.GetAppInfo().BuildHash = version.GitHash
-	proto.GetAppInfo().GoVersion = version.GoVersion
-	proto.GetAppInfo().Compiler = version.Compiler
-	proto.GetAppInfo().Platform = version.Platform
 
 	proto.Service = &viper.Service{}
 	proto.GetService().Name = version.ServiceName
