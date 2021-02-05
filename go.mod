@@ -26,7 +26,7 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v0.0.124
+	github.com/searKing/golang v0.0.125
 	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210204114018-1eb8f0941b11
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
