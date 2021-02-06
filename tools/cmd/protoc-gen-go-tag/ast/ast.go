@@ -14,6 +14,7 @@ import (
 
 	"github.com/searKing/golang/go/reflect"
 	strings_ "github.com/searKing/golang/go/strings"
+
 	"github.com/searKing/golang/tools/cmd/protoc-gen-go-tag/tag"
 )
 
@@ -118,9 +119,9 @@ func (g *GoFile) genDecl(node ast.Node) bool {
 			if field.Tag == nil {
 				field.Tag = &ast.BasicLit{}
 			}
-			goTag := field.Tag.Value
+			goTagFieldValue := field.Tag.Value
 
-			goTags, err := reflect.ParseAstStructTag(goTag)
+			goTags, err := reflect.ParseAstStructTag(goTagFieldValue)
 			if err != nil {
 				g.goGenerator.protoGenerator.Error(fmt.Errorf("malformed struct tag in field extension: %w", err))
 				continue
@@ -148,7 +149,7 @@ func (g *GoFile) genDecl(node ast.Node) bool {
 				var keys = []string{"protobuf", "json"}
 				keys = append(keys, strings_.SliceTrim(goTags.OrderKeys(), "protobuf", "json")...)
 				newGoTag := goTags.SelectAstString(keys...)
-				if newGoTag != goTag {
+				if newGoTag != goTagFieldValue {
 					g.fileChanged = true
 					field.Tag.Value = newGoTag
 				}
