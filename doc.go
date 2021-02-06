@@ -5,6 +5,6 @@
 package sole
 
 // example to get latest .git-subtree.sh
-////go:generate bash -c "curl -s -C - -L -o .git-subtree.sh https://raw.githubusercontent.com/searKing/sole/master/.git-subtree.sh"
+////go:generate bash -c "curl -s -L -o .git-subtree.sh https://raw.githubusercontent.com/searKing/sole/master/.git-subtree.sh"
 ////go:generate bash -c "chmod a+x .git-subtree.sh"
 //go:generate bash -c "./.git-subtree.sh tidy -u"
