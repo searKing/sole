@@ -13,6 +13,7 @@ import (
 
 	"github.com/searKing/golang/go/reflect"
 	strings_ "github.com/searKing/golang/go/strings"
+
 	pb "github.com/searKing/golang/tools/cmd/protoc-gen-go-tag/tag"
 )
 
@@ -42,6 +43,7 @@ func (si *StructInfo) FindField(name string) (FieldInfo, bool) {
 	return FieldInfo{}, false
 }
 
+// WalkDescriptorProto returns all struct infos of dp， which contains FieldTag.
 func WalkDescriptorProto(g *protogen.Plugin, dp *descriptor.DescriptorProto, typeNames []string) []StructInfo {
 	var ss []StructInfo
 
@@ -111,9 +113,10 @@ func Rewrite(g *protogen.Plugin) {
 			protoFiles = append(protoFiles, f)
 		}
 	}
-	if len(protoFiles) == 0 {
-		return
-	}
+	// FIXME: always generate *.pb.go, to replace protoc-go, avoid "Tried to write the same file twice"
+	//if len(protoFiles) == 0 {
+	//	return
+	//}
 	// g.Response() will generate files, so skip this step
 	//if len(g.Response().GetFile()) == 0 {
 	//	return
