@@ -7,9 +7,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
+	"os"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server"
 	"github.com/searKing/sole/pkg/logs"
@@ -20,6 +22,10 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	logs.InitLog()
+	logrus.WithTime(time.Now()).WithField("cmdline", os.Args).Infof("boosting")
+	defer func() {
+		logrus.WithTime(time.Now()).WithField("cmdline", os.Args).Infof("exited")
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -31,6 +37,7 @@ func main() {
 %s`, rootCmd.HelpTemplate(), profile.HelpMessage()))
 	}
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		log.Fatal(err)
+		logrus.WithError(err).Fatalf("exited.")
+		return
 	}
 }
