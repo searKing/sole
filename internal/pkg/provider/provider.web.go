@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/searKing/golang/go/net/addr"
 	"github.com/sirupsen/logrus"
-	"github.com/uber/jaeger-client-go/utils"
 )
 
 func (p *Provider) HTTPScheme() string {
@@ -87,7 +86,7 @@ func resolveLocalUrl(scheme, hostport, path string) *url.URL {
 		localHost := "localhost"
 
 		// use local ip
-		localIP, err := utils.HostIP()
+		localIP, err := addr.ListenIP()
 		if err == nil && len(localIP) > 0 {
 			localHost = localIP.String()
 		}
