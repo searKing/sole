@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/pkg/crypto/pasta"
@@ -17,6 +18,8 @@ type Provider struct {
 	proto *viper_.ViperProto
 
 	sqlDB *sqlx.DB
+
+	redis redis.UniversalClient
 
 	keyCipher *pasta.Pasta
 

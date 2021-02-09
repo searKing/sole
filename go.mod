@@ -2,12 +2,11 @@ module github.com/searKing/sole
 
 go 1.14
 
-//replace github.com/searKing/golang v0.0.127 => ../../../github.com/searKing/golang
 
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.6.3
+	github.com/go-redis/redis/v8 v8.5.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.2.0
@@ -50,3 +49,6 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0
+//replace github.com/searKing/golang v0.0.127 => ../../../github.com/searKing/golang

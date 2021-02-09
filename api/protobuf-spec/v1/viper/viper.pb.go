@@ -253,6 +253,7 @@ type ViperProto struct {
 	Web      *Web      `protobuf:"bytes,6,opt,name=web,proto3" json:"web,omitempty"`
 	Database *Database `protobuf:"bytes,7,opt,name=database,proto3" json:"database,omitempty"`
 	Consul   *Consul   `protobuf:"bytes,8,opt,name=consul,proto3" json:"consul,omitempty"`
+	Redis    *Redis    `protobuf:"bytes,9,opt,name=redis,proto3" json:"redis,omitempty"`
 }
 
 func (x *ViperProto) Reset() {
@@ -339,6 +340,13 @@ func (x *ViperProto) GetDatabase() *Database {
 func (x *ViperProto) GetConsul() *Consul {
 	if x != nil {
 		return x.Consul
+	}
+	return nil
+}
+
+func (x *ViperProto) GetRedis() *Redis {
+	if x != nil {
+		return x.Redis
 	}
 	return nil
 }
@@ -888,6 +896,242 @@ func (x *Consul) GetAddress() string {
 	return ""
 }
 
+type Redis struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Either a single address or a seed list of host:port addresses
+	// of cluster/sentinel nodes.
+	Addrs []string `protobuf:"bytes,1,rep,name=addrs,proto3" json:"addrs,omitempty"`
+	// Database to be selected after connecting to the server.
+	// Only single-node and failover clients.
+	Db int64 `protobuf:"varint,2,opt,name=db,proto3" json:"db,omitempty"`
+	// Use the specified Username to authenticate the current connection
+	// with one of the connections defined in the ACL list when connecting
+	// to a Redis 6.0 instance, or greater, that is using the Redis ACL system.
+	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	// Optional password. Must match the password specified in the
+	// requirepass server configuration option (if connecting to a Redis 5.0 instance, or lower),
+	// or the User Password when connecting to a Redis 6.0 instance, or greater,
+	// that is using the Redis ACL system.
+	Password         string `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
+	SentinelPassword string `protobuf:"bytes,5,opt,name=sentinel_password,json=sentinelPassword,proto3" json:"sentinel_password,omitempty"`
+	// Maximum number of retries before giving up.
+	// Default is 3 retries.
+	MaxRetries         int64                `protobuf:"varint,6,opt,name=max_retries,json=maxRetries,proto3" json:"max_retries,omitempty"`
+	MinRetryBackoff    *durationpb.Duration `protobuf:"bytes,7,opt,name=min_retry_backoff,json=minRetryBackoff,proto3" json:"min_retry_backoff,omitempty"`
+	MaxRetryBackoff    *durationpb.Duration `protobuf:"bytes,8,opt,name=max_retry_backoff,json=maxRetryBackoff,proto3" json:"max_retry_backoff,omitempty"`
+	DialTimeout        *durationpb.Duration `protobuf:"bytes,9,opt,name=dial_timeout,json=dialTimeout,proto3" json:"dial_timeout,omitempty"`
+	ReadTimeout        *durationpb.Duration `protobuf:"bytes,10,opt,name=read_timeout,json=readTimeout,proto3" json:"read_timeout,omitempty"`
+	WriteTimeout       *durationpb.Duration `protobuf:"bytes,11,opt,name=write_timeout,json=writeTimeout,proto3" json:"write_timeout,omitempty"`
+	PoolSize           int64                `protobuf:"varint,12,opt,name=pool_size,json=poolSize,proto3" json:"pool_size,omitempty"`
+	MinIdleConns       int64                `protobuf:"varint,13,opt,name=min_idle_conns,json=minIdleConns,proto3" json:"min_idle_conns,omitempty"`
+	MaxConnAge         *durationpb.Duration `protobuf:"bytes,14,opt,name=max_conn_age,json=maxConnAge,proto3" json:"max_conn_age,omitempty"`
+	PoolTimeout        *durationpb.Duration `protobuf:"bytes,15,opt,name=pool_timeout,json=poolTimeout,proto3" json:"pool_timeout,omitempty"`
+	IdleTimeout        *durationpb.Duration `protobuf:"bytes,16,opt,name=idle_timeout,json=idleTimeout,proto3" json:"idle_timeout,omitempty"`
+	IdleCheckFrequency *durationpb.Duration `protobuf:"bytes,17,opt,name=idle_check_frequency,json=idleCheckFrequency,proto3" json:"idle_check_frequency,omitempty"`
+	// Only cluster clients.
+	MaxRedirects int64 `protobuf:"varint,18,opt,name=max_redirects,json=maxRedirects,proto3" json:"max_redirects,omitempty"`
+	ReadOnly     bool  `protobuf:"varint,19,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
+	// Allows routing read-only commands to the closest master or slave node.
+	// This option only works with NewFailoverClusterClient.
+	RouteByLatency bool `protobuf:"varint,20,opt,name=route_by_latency,json=routeByLatency,proto3" json:"route_by_latency,omitempty"`
+	// Allows routing read-only commands to the random master or slave node.
+	// This option only works with NewFailoverClusterClient.
+	RouteRandomly bool `protobuf:"varint,21,opt,name=route_randomly,json=routeRandomly,proto3" json:"route_randomly,omitempty"` // Route all commands to slave read-only nodes.
+	// The sentinel master name.
+	// Only failover clients.
+	// The master name.
+	MasterName string `protobuf:"bytes,22,opt,name=master_name,json=masterName,proto3" json:"master_name,omitempty"`
+}
+
+func (x *Redis) Reset() {
+	*x = Redis{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_viper_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Redis) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Redis) ProtoMessage() {}
+
+func (x *Redis) ProtoReflect() protoreflect.Message {
+	mi := &file_viper_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Redis.ProtoReflect.Descriptor instead.
+func (*Redis) Descriptor() ([]byte, []int) {
+	return file_viper_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Redis) GetAddrs() []string {
+	if x != nil {
+		return x.Addrs
+	}
+	return nil
+}
+
+func (x *Redis) GetDb() int64 {
+	if x != nil {
+		return x.Db
+	}
+	return 0
+}
+
+func (x *Redis) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Redis) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *Redis) GetSentinelPassword() string {
+	if x != nil {
+		return x.SentinelPassword
+	}
+	return ""
+}
+
+func (x *Redis) GetMaxRetries() int64 {
+	if x != nil {
+		return x.MaxRetries
+	}
+	return 0
+}
+
+func (x *Redis) GetMinRetryBackoff() *durationpb.Duration {
+	if x != nil {
+		return x.MinRetryBackoff
+	}
+	return nil
+}
+
+func (x *Redis) GetMaxRetryBackoff() *durationpb.Duration {
+	if x != nil {
+		return x.MaxRetryBackoff
+	}
+	return nil
+}
+
+func (x *Redis) GetDialTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.DialTimeout
+	}
+	return nil
+}
+
+func (x *Redis) GetReadTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.ReadTimeout
+	}
+	return nil
+}
+
+func (x *Redis) GetWriteTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.WriteTimeout
+	}
+	return nil
+}
+
+func (x *Redis) GetPoolSize() int64 {
+	if x != nil {
+		return x.PoolSize
+	}
+	return 0
+}
+
+func (x *Redis) GetMinIdleConns() int64 {
+	if x != nil {
+		return x.MinIdleConns
+	}
+	return 0
+}
+
+func (x *Redis) GetMaxConnAge() *durationpb.Duration {
+	if x != nil {
+		return x.MaxConnAge
+	}
+	return nil
+}
+
+func (x *Redis) GetPoolTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.PoolTimeout
+	}
+	return nil
+}
+
+func (x *Redis) GetIdleTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.IdleTimeout
+	}
+	return nil
+}
+
+func (x *Redis) GetIdleCheckFrequency() *durationpb.Duration {
+	if x != nil {
+		return x.IdleCheckFrequency
+	}
+	return nil
+}
+
+func (x *Redis) GetMaxRedirects() int64 {
+	if x != nil {
+		return x.MaxRedirects
+	}
+	return 0
+}
+
+func (x *Redis) GetReadOnly() bool {
+	if x != nil {
+		return x.ReadOnly
+	}
+	return false
+}
+
+func (x *Redis) GetRouteByLatency() bool {
+	if x != nil {
+		return x.RouteByLatency
+	}
+	return false
+}
+
+func (x *Redis) GetRouteRandomly() bool {
+	if x != nil {
+		return x.RouteRandomly
+	}
+	return false
+}
+
+func (x *Redis) GetMasterName() string {
+	if x != nil {
+		return x.MasterName
+	}
+	return ""
+}
+
 type Tracing_Jaeger struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -900,7 +1144,7 @@ type Tracing_Jaeger struct {
 func (x *Tracing_Jaeger) Reset() {
 	*x = Tracing_Jaeger{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[9]
+		mi := &file_viper_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -913,7 +1157,7 @@ func (x *Tracing_Jaeger) String() string {
 func (*Tracing_Jaeger) ProtoMessage() {}
 
 func (x *Tracing_Jaeger) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[9]
+	mi := &file_viper_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -956,7 +1200,7 @@ type Tracing_Jaeger_Reporter struct {
 func (x *Tracing_Jaeger_Reporter) Reset() {
 	*x = Tracing_Jaeger_Reporter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[10]
+		mi := &file_viper_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -969,7 +1213,7 @@ func (x *Tracing_Jaeger_Reporter) String() string {
 func (*Tracing_Jaeger_Reporter) ProtoMessage() {}
 
 func (x *Tracing_Jaeger_Reporter) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[10]
+	mi := &file_viper_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1015,7 +1259,7 @@ type Tracing_Jaeger_Sampler struct {
 func (x *Tracing_Jaeger_Sampler) Reset() {
 	*x = Tracing_Jaeger_Sampler{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[11]
+		mi := &file_viper_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1028,7 +1272,7 @@ func (x *Tracing_Jaeger_Sampler) String() string {
 func (*Tracing_Jaeger_Sampler) ProtoMessage() {}
 
 func (x *Tracing_Jaeger_Sampler) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[11]
+	mi := &file_viper_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1077,7 +1321,7 @@ type Web_Net struct {
 func (x *Web_Net) Reset() {
 	*x = Web_Net{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[12]
+		mi := &file_viper_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1090,7 +1334,7 @@ func (x *Web_Net) String() string {
 func (*Web_Net) ProtoMessage() {}
 
 func (x *Web_Net) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[12]
+	mi := &file_viper_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1133,7 +1377,7 @@ type Web_LocalIpResolver struct {
 func (x *Web_LocalIpResolver) Reset() {
 	*x = Web_LocalIpResolver{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[13]
+		mi := &file_viper_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1146,7 +1390,7 @@ func (x *Web_LocalIpResolver) String() string {
 func (*Web_LocalIpResolver) ProtoMessage() {}
 
 func (x *Web_LocalIpResolver) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[13]
+	mi := &file_viper_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1203,7 +1447,7 @@ type Web_TLS struct {
 func (x *Web_TLS) Reset() {
 	*x = Web_TLS{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[14]
+		mi := &file_viper_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1216,7 +1460,7 @@ func (x *Web_TLS) String() string {
 func (*Web_TLS) ProtoMessage() {}
 
 func (x *Web_TLS) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[14]
+	mi := &file_viper_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1319,7 +1563,7 @@ type Web_CORS struct {
 func (x *Web_CORS) Reset() {
 	*x = Web_CORS{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[15]
+		mi := &file_viper_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1332,7 +1576,7 @@ func (x *Web_CORS) String() string {
 func (*Web_CORS) ProtoMessage() {}
 
 func (x *Web_CORS) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[15]
+	mi := &file_viper_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1431,7 +1675,7 @@ type Web_TLS_KeyPair struct {
 func (x *Web_TLS_KeyPair) Reset() {
 	*x = Web_TLS_KeyPair{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_viper_proto_msgTypes[16]
+		mi := &file_viper_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1444,7 +1688,7 @@ func (x *Web_TLS_KeyPair) String() string {
 func (*Web_TLS_KeyPair) ProtoMessage() {}
 
 func (x *Web_TLS_KeyPair) ProtoReflect() protoreflect.Message {
-	mi := &file_viper_proto_msgTypes[16]
+	mi := &file_viper_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1485,7 +1729,7 @@ var file_viper_proto_rawDesc = []byte{
 	0x72, 0x4b, 0x69, 0x6e, 0x67, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x74, 0x6f, 0x6f,
 	0x6c, 0x73, 0x2f, 0x63, 0x6d, 0x64, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x2d, 0x67, 0x65,
 	0x6e, 0x2d, 0x67, 0x6f, 0x2d, 0x74, 0x61, 0x67, 0x2f, 0x74, 0x61, 0x67, 0x2f, 0x74, 0x61, 0x67,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa2, 0x03, 0x0a, 0x0a, 0x56, 0x69, 0x70, 0x65, 0x72,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd2, 0x03, 0x0a, 0x0a, 0x56, 0x69, 0x70, 0x65, 0x72,
 	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x31, 0x0a, 0x06, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x73, 0x6f, 0x6c, 0x65, 0x2e, 0x61, 0x70, 0x69,
 	0x2e, 0x76, 0x31, 0x2e, 0x76, 0x69, 0x70, 0x65, 0x72, 0x2e, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74,
@@ -1511,7 +1755,10 @@ var file_viper_proto_rawDesc = []byte{
 	0x64, 0x61, 0x74, 0x61, 0x62, 0x61, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x73,
 	0x75, 0x6c, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x73, 0x6f, 0x6c, 0x65, 0x2e,
 	0x61, 0x70, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x76, 0x69, 0x70, 0x65, 0x72, 0x2e, 0x43, 0x6f, 0x6e,
-	0x73, 0x75, 0x6c, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x22, 0x20, 0x0a, 0x06, 0x53,
+	0x73, 0x75, 0x6c, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x73, 0x75, 0x6c, 0x12, 0x2e, 0x0a, 0x05, 0x72,
+	0x65, 0x64, 0x69, 0x73, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x73, 0x6f, 0x6c,
+	0x65, 0x2e, 0x61, 0x70, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x76, 0x69, 0x70, 0x65, 0x72, 0x2e, 0x52,
+	0x65, 0x64, 0x69, 0x73, 0x52, 0x05, 0x72, 0x65, 0x64, 0x69, 0x73, 0x22, 0x20, 0x0a, 0x06, 0x53,
 	0x65, 0x63, 0x72, 0x65, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x18,
 	0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d, 0x22, 0x6c, 0x0a,
 	0x07, 0x41, 0x70, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x23, 0x0a, 0x0d, 0x62, 0x75, 0x69, 0x6c,
@@ -1702,10 +1949,74 @@ var file_viper_proto_rawDesc = []byte{
 	0x6c, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x2d, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x65, 0x61, 0x72, 0x4b, 0x69, 0x6e, 0x67, 0x2f, 0x73, 0x6f, 0x6c,
-	0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x69, 0x70, 0x65, 0x72, 0x3b, 0x76,
-	0x69, 0x70, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xfa, 0x07, 0x0a, 0x05, 0x52, 0x65, 0x64, 0x69, 0x73, 0x12,
+	0x14, 0x0a, 0x05, 0x61, 0x64, 0x64, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05,
+	0x61, 0x64, 0x64, 0x72, 0x73, 0x12, 0x0e, 0x0a, 0x02, 0x64, 0x62, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x02, 0x64, 0x62, 0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d,
+	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x2b, 0x0a,
+	0x11, 0x73, 0x65, 0x6e, 0x74, 0x69, 0x6e, 0x65, 0x6c, 0x5f, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f,
+	0x72, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x73, 0x65, 0x6e, 0x74, 0x69, 0x6e,
+	0x65, 0x6c, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x6d, 0x61,
+	0x78, 0x5f, 0x72, 0x65, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x0a, 0x6d, 0x61, 0x78, 0x52, 0x65, 0x74, 0x72, 0x69, 0x65, 0x73, 0x12, 0x45, 0x0a, 0x11, 0x6d,
+	0x69, 0x6e, 0x5f, 0x72, 0x65, 0x74, 0x72, 0x79, 0x5f, 0x62, 0x61, 0x63, 0x6b, 0x6f, 0x66, 0x66,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x74, 0x72, 0x79, 0x42, 0x61, 0x63, 0x6b, 0x6f,
+	0x66, 0x66, 0x12, 0x45, 0x0a, 0x11, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x65, 0x74, 0x72, 0x79, 0x5f,
+	0x62, 0x61, 0x63, 0x6b, 0x6f, 0x66, 0x66, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0f, 0x6d, 0x61, 0x78, 0x52, 0x65, 0x74,
+	0x72, 0x79, 0x42, 0x61, 0x63, 0x6b, 0x6f, 0x66, 0x66, 0x12, 0x3c, 0x0a, 0x0c, 0x64, 0x69, 0x61,
+	0x6c, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x64, 0x69, 0x61, 0x6c,
+	0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x3c, 0x0a, 0x0c, 0x72, 0x65, 0x61, 0x64, 0x5f,
+	0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x72, 0x65, 0x61, 0x64, 0x54, 0x69,
+	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x3e, 0x0a, 0x0d, 0x77, 0x72, 0x69, 0x74, 0x65, 0x5f, 0x74,
+	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44,
+	0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0c, 0x77, 0x72, 0x69, 0x74, 0x65, 0x54, 0x69,
+	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x73, 0x69,
+	0x7a, 0x65, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x70, 0x6f, 0x6f, 0x6c, 0x53, 0x69,
+	0x7a, 0x65, 0x12, 0x24, 0x0a, 0x0e, 0x6d, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x6c, 0x65, 0x5f, 0x63,
+	0x6f, 0x6e, 0x6e, 0x73, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0c, 0x6d, 0x69, 0x6e, 0x49,
+	0x64, 0x6c, 0x65, 0x43, 0x6f, 0x6e, 0x6e, 0x73, 0x12, 0x3b, 0x0a, 0x0c, 0x6d, 0x61, 0x78, 0x5f,
+	0x63, 0x6f, 0x6e, 0x6e, 0x5f, 0x61, 0x67, 0x65, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x6d, 0x61, 0x78, 0x43, 0x6f,
+	0x6e, 0x6e, 0x41, 0x67, 0x65, 0x12, 0x3c, 0x0a, 0x0c, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x74, 0x69,
+	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x70, 0x6f, 0x6f, 0x6c, 0x54, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x12, 0x3c, 0x0a, 0x0c, 0x69, 0x64, 0x6c, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x0b, 0x69, 0x64, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75,
+	0x74, 0x12, 0x4b, 0x0a, 0x14, 0x69, 0x64, 0x6c, 0x65, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x5f,
+	0x66, 0x72, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x79, 0x18, 0x11, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x12, 0x69, 0x64, 0x6c, 0x65,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x46, 0x72, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x23,
+	0x0a, 0x0d, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x65, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x73, 0x18,
+	0x12, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0c, 0x6d, 0x61, 0x78, 0x52, 0x65, 0x64, 0x69, 0x72, 0x65,
+	0x63, 0x74, 0x73, 0x12, 0x1b, 0x0a, 0x09, 0x72, 0x65, 0x61, 0x64, 0x5f, 0x6f, 0x6e, 0x6c, 0x79,
+	0x18, 0x13, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x72, 0x65, 0x61, 0x64, 0x4f, 0x6e, 0x6c, 0x79,
+	0x12, 0x28, 0x0a, 0x10, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x5f, 0x62, 0x79, 0x5f, 0x6c, 0x61, 0x74,
+	0x65, 0x6e, 0x63, 0x79, 0x18, 0x14, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x72, 0x6f, 0x75, 0x74,
+	0x65, 0x42, 0x79, 0x4c, 0x61, 0x74, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x25, 0x0a, 0x0e, 0x72, 0x6f,
+	0x75, 0x74, 0x65, 0x5f, 0x72, 0x61, 0x6e, 0x64, 0x6f, 0x6d, 0x6c, 0x79, 0x18, 0x15, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x0d, 0x72, 0x6f, 0x75, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x64, 0x6f, 0x6d, 0x6c,
+	0x79, 0x12, 0x1f, 0x0a, 0x0b, 0x6d, 0x61, 0x73, 0x74, 0x65, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x16, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6d, 0x61, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61,
+	0x6d, 0x65, 0x42, 0x2d, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x73, 0x65, 0x61, 0x72, 0x4b, 0x69, 0x6e, 0x67, 0x2f, 0x73, 0x6f, 0x6c, 0x65, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x69, 0x70, 0x65, 0x72, 0x3b, 0x76, 0x69, 0x70, 0x65,
+	0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1721,7 +2032,7 @@ func file_viper_proto_rawDescGZIP() []byte {
 }
 
 var file_viper_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_viper_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_viper_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_viper_proto_goTypes = []interface{}{
 	(Log_Level)(0),                   // 0: sole.api.v1.viper.Log.Level
 	(Log_Format)(0),                  // 1: sole.api.v1.viper.Log.Format
@@ -1736,15 +2047,16 @@ var file_viper_proto_goTypes = []interface{}{
 	(*Web)(nil),                      // 10: sole.api.v1.viper.Web
 	(*Database)(nil),                 // 11: sole.api.v1.viper.Database
 	(*Consul)(nil),                   // 12: sole.api.v1.viper.Consul
-	(*Tracing_Jaeger)(nil),           // 13: sole.api.v1.viper.Tracing.Jaeger
-	(*Tracing_Jaeger_Reporter)(nil),  // 14: sole.api.v1.viper.Tracing.Jaeger.Reporter
-	(*Tracing_Jaeger_Sampler)(nil),   // 15: sole.api.v1.viper.Tracing.Jaeger.Sampler
-	(*Web_Net)(nil),                  // 16: sole.api.v1.viper.Web.Net
-	(*Web_LocalIpResolver)(nil),      // 17: sole.api.v1.viper.Web.LocalIpResolver
-	(*Web_TLS)(nil),                  // 18: sole.api.v1.viper.Web.TLS
-	(*Web_CORS)(nil),                 // 19: sole.api.v1.viper.Web.CORS
-	(*Web_TLS_KeyPair)(nil),          // 20: sole.api.v1.viper.Web.TLS.KeyPair
-	(*durationpb.Duration)(nil),      // 21: google.protobuf.Duration
+	(*Redis)(nil),                    // 13: sole.api.v1.viper.Redis
+	(*Tracing_Jaeger)(nil),           // 14: sole.api.v1.viper.Tracing.Jaeger
+	(*Tracing_Jaeger_Reporter)(nil),  // 15: sole.api.v1.viper.Tracing.Jaeger.Reporter
+	(*Tracing_Jaeger_Sampler)(nil),   // 16: sole.api.v1.viper.Tracing.Jaeger.Sampler
+	(*Web_Net)(nil),                  // 17: sole.api.v1.viper.Web.Net
+	(*Web_LocalIpResolver)(nil),      // 18: sole.api.v1.viper.Web.LocalIpResolver
+	(*Web_TLS)(nil),                  // 19: sole.api.v1.viper.Web.TLS
+	(*Web_CORS)(nil),                 // 20: sole.api.v1.viper.Web.CORS
+	(*Web_TLS_KeyPair)(nil),          // 21: sole.api.v1.viper.Web.TLS.KeyPair
+	(*durationpb.Duration)(nil),      // 22: google.protobuf.Duration
 }
 var file_viper_proto_depIdxs = []int32{
 	5,  // 0: sole.api.v1.viper.ViperProto.secret:type_name -> sole.api.v1.viper.Secret
@@ -1755,31 +2067,41 @@ var file_viper_proto_depIdxs = []int32{
 	10, // 5: sole.api.v1.viper.ViperProto.web:type_name -> sole.api.v1.viper.Web
 	11, // 6: sole.api.v1.viper.ViperProto.database:type_name -> sole.api.v1.viper.Database
 	12, // 7: sole.api.v1.viper.ViperProto.consul:type_name -> sole.api.v1.viper.Consul
-	0,  // 8: sole.api.v1.viper.Log.level:type_name -> sole.api.v1.viper.Log.Level
-	1,  // 9: sole.api.v1.viper.Log.format:type_name -> sole.api.v1.viper.Log.Format
-	21, // 10: sole.api.v1.viper.Log.rotation_duration:type_name -> google.protobuf.Duration
-	21, // 11: sole.api.v1.viper.Log.rotation_max_age:type_name -> google.protobuf.Duration
-	2,  // 12: sole.api.v1.viper.Tracing.type:type_name -> sole.api.v1.viper.Tracing.Type
-	13, // 13: sole.api.v1.viper.Tracing.jaeger:type_name -> sole.api.v1.viper.Tracing.Jaeger
-	16, // 14: sole.api.v1.viper.Web.bind_addr:type_name -> sole.api.v1.viper.Web.Net
-	16, // 15: sole.api.v1.viper.Web.advertise_addr:type_name -> sole.api.v1.viper.Web.Net
-	18, // 16: sole.api.v1.viper.Web.tls:type_name -> sole.api.v1.viper.Web.TLS
-	19, // 17: sole.api.v1.viper.Web.cors:type_name -> sole.api.v1.viper.Web.CORS
-	17, // 18: sole.api.v1.viper.Web.local_ip_resolver:type_name -> sole.api.v1.viper.Web.LocalIpResolver
-	21, // 19: sole.api.v1.viper.Database.max_wait_duration:type_name -> google.protobuf.Duration
-	21, // 20: sole.api.v1.viper.Database.fail_after_duration:type_name -> google.protobuf.Duration
-	14, // 21: sole.api.v1.viper.Tracing.Jaeger.reporter:type_name -> sole.api.v1.viper.Tracing.Jaeger.Reporter
-	15, // 22: sole.api.v1.viper.Tracing.Jaeger.sampler:type_name -> sole.api.v1.viper.Tracing.Jaeger.Sampler
-	3,  // 23: sole.api.v1.viper.Tracing.Jaeger.Sampler.type:type_name -> sole.api.v1.viper.Tracing.Jaeger.Sampler.Type
-	21, // 24: sole.api.v1.viper.Web.LocalIpResolver.timeout:type_name -> google.protobuf.Duration
-	20, // 25: sole.api.v1.viper.Web.TLS.key_pair_base64:type_name -> sole.api.v1.viper.Web.TLS.KeyPair
-	20, // 26: sole.api.v1.viper.Web.TLS.key_pair_path:type_name -> sole.api.v1.viper.Web.TLS.KeyPair
-	21, // 27: sole.api.v1.viper.Web.CORS.max_age:type_name -> google.protobuf.Duration
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	13, // 8: sole.api.v1.viper.ViperProto.redis:type_name -> sole.api.v1.viper.Redis
+	0,  // 9: sole.api.v1.viper.Log.level:type_name -> sole.api.v1.viper.Log.Level
+	1,  // 10: sole.api.v1.viper.Log.format:type_name -> sole.api.v1.viper.Log.Format
+	22, // 11: sole.api.v1.viper.Log.rotation_duration:type_name -> google.protobuf.Duration
+	22, // 12: sole.api.v1.viper.Log.rotation_max_age:type_name -> google.protobuf.Duration
+	2,  // 13: sole.api.v1.viper.Tracing.type:type_name -> sole.api.v1.viper.Tracing.Type
+	14, // 14: sole.api.v1.viper.Tracing.jaeger:type_name -> sole.api.v1.viper.Tracing.Jaeger
+	17, // 15: sole.api.v1.viper.Web.bind_addr:type_name -> sole.api.v1.viper.Web.Net
+	17, // 16: sole.api.v1.viper.Web.advertise_addr:type_name -> sole.api.v1.viper.Web.Net
+	19, // 17: sole.api.v1.viper.Web.tls:type_name -> sole.api.v1.viper.Web.TLS
+	20, // 18: sole.api.v1.viper.Web.cors:type_name -> sole.api.v1.viper.Web.CORS
+	18, // 19: sole.api.v1.viper.Web.local_ip_resolver:type_name -> sole.api.v1.viper.Web.LocalIpResolver
+	22, // 20: sole.api.v1.viper.Database.max_wait_duration:type_name -> google.protobuf.Duration
+	22, // 21: sole.api.v1.viper.Database.fail_after_duration:type_name -> google.protobuf.Duration
+	22, // 22: sole.api.v1.viper.Redis.min_retry_backoff:type_name -> google.protobuf.Duration
+	22, // 23: sole.api.v1.viper.Redis.max_retry_backoff:type_name -> google.protobuf.Duration
+	22, // 24: sole.api.v1.viper.Redis.dial_timeout:type_name -> google.protobuf.Duration
+	22, // 25: sole.api.v1.viper.Redis.read_timeout:type_name -> google.protobuf.Duration
+	22, // 26: sole.api.v1.viper.Redis.write_timeout:type_name -> google.protobuf.Duration
+	22, // 27: sole.api.v1.viper.Redis.max_conn_age:type_name -> google.protobuf.Duration
+	22, // 28: sole.api.v1.viper.Redis.pool_timeout:type_name -> google.protobuf.Duration
+	22, // 29: sole.api.v1.viper.Redis.idle_timeout:type_name -> google.protobuf.Duration
+	22, // 30: sole.api.v1.viper.Redis.idle_check_frequency:type_name -> google.protobuf.Duration
+	15, // 31: sole.api.v1.viper.Tracing.Jaeger.reporter:type_name -> sole.api.v1.viper.Tracing.Jaeger.Reporter
+	16, // 32: sole.api.v1.viper.Tracing.Jaeger.sampler:type_name -> sole.api.v1.viper.Tracing.Jaeger.Sampler
+	3,  // 33: sole.api.v1.viper.Tracing.Jaeger.Sampler.type:type_name -> sole.api.v1.viper.Tracing.Jaeger.Sampler.Type
+	22, // 34: sole.api.v1.viper.Web.LocalIpResolver.timeout:type_name -> google.protobuf.Duration
+	21, // 35: sole.api.v1.viper.Web.TLS.key_pair_base64:type_name -> sole.api.v1.viper.Web.TLS.KeyPair
+	21, // 36: sole.api.v1.viper.Web.TLS.key_pair_path:type_name -> sole.api.v1.viper.Web.TLS.KeyPair
+	22, // 37: sole.api.v1.viper.Web.CORS.max_age:type_name -> google.protobuf.Duration
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_viper_proto_init() }
@@ -1897,7 +2219,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Tracing_Jaeger); i {
+			switch v := v.(*Redis); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1909,7 +2231,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Tracing_Jaeger_Reporter); i {
+			switch v := v.(*Tracing_Jaeger); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1921,7 +2243,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Tracing_Jaeger_Sampler); i {
+			switch v := v.(*Tracing_Jaeger_Reporter); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1933,7 +2255,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Web_Net); i {
+			switch v := v.(*Tracing_Jaeger_Sampler); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1945,7 +2267,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Web_LocalIpResolver); i {
+			switch v := v.(*Web_Net); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1957,7 +2279,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Web_TLS); i {
+			switch v := v.(*Web_LocalIpResolver); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1969,7 +2291,7 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Web_CORS); i {
+			switch v := v.(*Web_TLS); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1981,6 +2303,18 @@ func file_viper_proto_init() {
 			}
 		}
 		file_viper_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Web_CORS); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_viper_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Web_TLS_KeyPair); i {
 			case 0:
 				return &v.state
@@ -1999,7 +2333,7 @@ func file_viper_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_viper_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -19,10 +19,12 @@ import (
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/crypto/pasta"
+	redis_ "github.com/searKing/sole/pkg/database/redis"
 	"github.com/searKing/sole/pkg/database/sql"
 	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/net/cors"
 	"github.com/searKing/sole/pkg/opentrace"
+	"github.com/searKing/sole/pkg/protobuf"
 )
 
 //go:generate go-option -type=Config
@@ -37,6 +39,7 @@ type Config struct {
 	CORS      *cors.Config
 	KeyCipher *pasta.Config
 	Sql       *sql.Config
+	Redis     *redis_.Config
 }
 
 // NewConfig returns a Config struct with the default values
@@ -47,6 +50,7 @@ func NewConfig() *Config {
 		CORS:       cors.NewConfig(),
 		KeyCipher:  pasta.NewConfig(),
 		Sql:        sql.NewConfig(),
+		Redis:      redis_.NewConfig(),
 	}
 }
 
@@ -61,6 +65,7 @@ func (o *Config) Complete(options ...ConfigOption) CompletedConfig {
 	o.completeCors()
 	o.completeKeyCipherOrDie()
 	o.completeSqlDBOrDie()
+	o.completeRedis()
 
 	return CompletedConfig{&completedConfig{o}}
 }
@@ -103,6 +108,7 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	return &Provider{
 		proto:       c.proto,
 		sqlDB:       sqlDB,
+		redis:       c.Redis.Complete().New(),
 		keyCipher:   c.KeyCipher.Complete().New(),
 		corsHandler: corsHandler,
 		ctx:         ctx,
@@ -271,19 +277,33 @@ func (c *Config) completeSqlDBOrDie() {
 			strings.ToUpper(version.ServiceName))
 	}
 
-	maxWait, err := ptypes.Duration(c.proto.GetDatabase().GetMaxWaitDuration())
-	if err != nil {
-		maxWait = sqlConfig.MaxWait
-		logrus.WithField("max_wait", c.proto.GetDatabase().GetMaxWaitDuration()).
-			WithError(err).
-			Warnf("malformed max_wait, use %s instead", maxWait)
-	}
+	sqlConfig.MaxWait = protobuf.DurationOrDefault(c.proto.GetDatabase().GetMaxWaitDuration(), sqlConfig.MaxWait, "max_wait")
+	sqlConfig.FailAfter = protobuf.DurationOrDefault(c.proto.GetDatabase().GetFailAfterDuration(), sqlConfig.FailAfter, "fail_after")
+}
 
-	failAfter, err := ptypes.Duration(c.proto.GetDatabase().GetFailAfterDuration())
-	if err != nil {
-		failAfter = sqlConfig.FailAfter
-		logrus.WithField("fail_after", c.proto.GetDatabase().GetFailAfterDuration()).
-			WithError(err).
-			Warnf("malformed fail_after, use %s instead", failAfter)
-	}
+func (c *Config) completeRedis() {
+	redisConfig := c.Redis
+	redis := c.proto.GetRedis()
+	redisConfig.Addrs = redis.GetAddrs()
+	redisConfig.DB = int(redis.GetDb())
+	redisConfig.Username = redis.GetUsername()
+	redisConfig.Password = redis.GetPassword()
+	redisConfig.SentinelPassword = redis.GetSentinelPassword()
+	redisConfig.MaxRetries = int(redis.GetMaxRetries())
+	redisConfig.MinRetryBackoff = protobuf.DurationOrDefault(redis.GetMinRetryBackoff(), redisConfig.MinRetryBackoff, "min_retry_backoff")
+	redisConfig.MaxRetryBackoff = protobuf.DurationOrDefault(redis.GetMaxRetryBackoff(), redisConfig.MaxRetryBackoff, "max_retry_backoff")
+	redisConfig.DialTimeout = protobuf.DurationOrDefault(redis.GetDialTimeout(), redisConfig.DialTimeout, "dial_timeout")
+	redisConfig.ReadTimeout = protobuf.DurationOrDefault(redis.GetReadTimeout(), redisConfig.ReadTimeout, "read_timeout")
+	redisConfig.WriteTimeout = protobuf.DurationOrDefault(redis.GetWriteTimeout(), redisConfig.WriteTimeout, "write_timeout")
+	redisConfig.PoolSize = int(redis.GetPoolSize())
+	redisConfig.MinIdleConns = int(redis.GetMinIdleConns())
+	redisConfig.MaxConnAge = protobuf.DurationOrDefault(redis.GetMaxConnAge(), redisConfig.MaxConnAge, "max_conn_age")
+	redisConfig.PoolTimeout = protobuf.DurationOrDefault(redis.GetPoolTimeout(), redisConfig.PoolTimeout, "pool_timeout")
+	redisConfig.IdleTimeout = protobuf.DurationOrDefault(redis.GetIdleTimeout(), redisConfig.IdleTimeout, "idle_timeout")
+	redisConfig.IdleCheckFrequency = protobuf.DurationOrDefault(redis.GetIdleCheckFrequency(), redisConfig.IdleCheckFrequency, "idle_check_frequency")
+	redisConfig.MaxRedirects = int(redis.GetMaxRedirects())
+	redisConfig.ReadOnly = redis.GetReadOnly()
+	redisConfig.RouteByLatency = redis.GetRouteByLatency()
+	redisConfig.RouteRandomly = redis.GetRouteRandomly()
+	redisConfig.MasterName = redis.GetMasterName()
 }
