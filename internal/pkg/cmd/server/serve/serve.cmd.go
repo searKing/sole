@@ -5,6 +5,7 @@
 package serve
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ import (
 )
 
 // represent the serve command
-func New() *cobra.Command {
+func New(ctx context.Context) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Parent command for starting public and administrative HTTP/2 and GRPC APIs",
@@ -35,8 +36,8 @@ To learn more about each individual command, run:
 		Run:          nil,
 	}
 
-	serveCmd.AddCommand(all.New())
-	serveCmd.AddCommand(web.New())
+	serveCmd.AddCommand(all.New(ctx))
+	serveCmd.AddCommand(web.New(ctx))
 	// Here you will define your flags and configuration settings.
 
 	var cfgFile string

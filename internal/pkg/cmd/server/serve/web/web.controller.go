@@ -7,7 +7,9 @@ package web
 import (
 	"context"
 
+	"github.com/searKing/golang/go/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 
 	"github.com/searKing/sole/internal/pkg/version"
 )
@@ -35,4 +37,22 @@ func Run(ctx context.Context, completeOptions CompletedServerRunOptions) error {
 	}
 
 	return prepared.Run(ctx)
+}
+
+func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		s := NewServerRunOptions()
+
+		// set default options
+		completedOptions, err := Complete(s)
+		if err != nil {
+			return err
+		}
+
+		// validate options
+		if err := errors.Multi(completedOptions.Validate()...); err != nil {
+			return err
+		}
+		return Run(ctx, completedOptions)
+	}
 }

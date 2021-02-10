@@ -5,6 +5,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve"
@@ -13,7 +15,7 @@ import (
 )
 
 // This represents the base command when called without any sub commands
-func NewCommand() *cobra.Command {
+func NewCommand(ctx context.Context) *cobra.Command {
 	// This represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
 		Use:     version_.ServiceName,
@@ -27,7 +29,7 @@ func NewCommand() *cobra.Command {
 		SilenceUsage: true,
 	}
 	rootCmd.AddCommand(version.New())
-	rootCmd.AddCommand(serve.New())
+	rootCmd.AddCommand(serve.New(ctx))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

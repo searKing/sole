@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	context_ "github.com/searKing/golang/go/context"
 	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server"
@@ -29,7 +30,8 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	rootCmd := server.NewCommand()
+	ctx = context_.WithShutdownSignal(ctx)
+	rootCmd := server.NewCommand(ctx)
 	// profile
 	{
 		defer profile.Profile().Stop()

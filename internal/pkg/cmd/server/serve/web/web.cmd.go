@@ -5,14 +5,12 @@
 package web
 
 import (
-	context_ "github.com/searKing/golang/go/context"
-	"github.com/searKing/golang/go/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
 )
 
 // represent the web command
-func New() *cobra.Command {
+func New(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "web",
 		Short: "Serves Administrative and Public HTTP/2 and GRPC APIs",
@@ -30,20 +28,6 @@ connection to be able to synchronize.
 `,
 		// stop printing usage when the command errors
 		SilenceUsage: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			s := NewServerRunOptions()
-
-			// set default options
-			completedOptions, err := Complete(s)
-			if err != nil {
-				return err
-			}
-
-			// validate options
-			if err := errors.Multi(completedOptions.Validate()...); err != nil {
-				return err
-			}
-			return Run(context_.WithShutdownSignal(context.Background()), completedOptions)
-		},
+		RunE:         CommandE(ctx),
 	}
 }

@@ -5,11 +5,25 @@
 package all
 
 import (
+	"context"
+	"sync"
+
+	"github.com/searKing/golang/go/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/searKing/sole/internal/pkg/cmd/server/serve/web"
 )
 
-func controller() func(cmd *cobra.Command, args []string) {
-	return func(cmd *cobra.Command, args []string) {
-		//service()
+func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		var errs []error
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs = append(errs, web.CommandE(ctx)(cmd, args))
+		}()
+		wg.Wait()
+		return errors.Multi(errs...)
 	}
 }

@@ -5,6 +5,7 @@
 package all
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ import (
 )
 
 // represent the all command
-func New() *cobra.Command {
+func New(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "all",
 		Short: "Serves both public, administrative HTTP/2 and GRPC APIs",
@@ -32,6 +33,6 @@ the controls section.
 `, version.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
-		Run:          controller(),
+		RunE:         CommandE(ctx),
 	}
 }

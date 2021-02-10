@@ -13,6 +13,9 @@ import (
 )
 
 func DurationOrDefault(timeout *durationpb.Duration, def time.Duration, msg string) time.Duration {
+	if timeout == nil {
+		return def
+	}
 	d, err := ptypes.Duration(timeout)
 	if err != nil {
 		logrus.WithField("timeout", timeout).

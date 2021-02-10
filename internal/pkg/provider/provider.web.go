@@ -10,12 +10,10 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/pkg/errors"
 	"github.com/searKing/golang/go/net/addr"
-	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/pkg/protobuf"
 )
 
 func (p *Provider) HTTPScheme() string {
@@ -46,14 +44,8 @@ func (p *Provider) GetBackendServeHostPort() string {
 			p.Proto().GetWeb().GetBindAddr().GetPort())
 	}
 	resolvers := p.Proto().GetWeb().GetLocalIpResolver()
-	timeout, err := ptypes.Duration(resolvers.GetTimeout())
-	if err != nil {
-		timeout = 0 * time.Second
-		logrus.WithField("timeout", timeout).
-			WithError(errors.WithStack(err)).
-			Warnf("malformed timeout, use %s instead", timeout)
-	}
-	ip, err := addr.ServeIP(resolvers.GetNetworks(), resolvers.GetAddresses(), timeout)
+	ip, err := addr.ServeIP(resolvers.GetNetworks(), resolvers.GetAddresses(),
+		protobuf.DurationOrDefault(resolvers.GetTimeout(), 0, "timeout"))
 	if err != nil {
 		return getHostPort("localhost",
 			p.Proto().GetWeb().GetBindAddr().GetPort())
