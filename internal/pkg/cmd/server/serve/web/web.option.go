@@ -5,6 +5,11 @@
 package web
 
 import (
+	"context"
+
+	"github.com/sirupsen/logrus"
+
+	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/consul"
 
 	"github.com/searKing/sole/internal/pkg/provider"
@@ -16,6 +21,16 @@ type ServerRunOptions struct {
 	Provider         *provider.Provider
 	WebServerOptions *webserver.Config
 	ServiceRegistry  *consul.Config
+}
+
+type completedServerRunOptions struct {
+	*ServerRunOptions
+}
+
+// CompletedServerRunOptions is a private wrapper that enforces a call of Complete() before Run can be invoked.
+type CompletedServerRunOptions struct {
+	// Embed a private pointer that cannot be instantiated outside of this package.
+	*completedServerRunOptions
 }
 
 func NewServerRunOptions() *ServerRunOptions {
@@ -33,13 +48,8 @@ func (s *ServerRunOptions) Validate() []error {
 	return errs
 }
 
-// CompletedServerRunOptions is a private wrapper that enforces a call of Complete() before Run can be invoked.
-type CompletedServerRunOptions struct {
-	*ServerRunOptions
-}
-
 // Complete set default ServerRunOptions.
-func Complete(s *ServerRunOptions) (CompletedServerRunOptions, error) {
+func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 	var options CompletedServerRunOptions
 	if err := s.completeDiscovery(); err != nil {
 		return options, err
@@ -50,4 +60,23 @@ func Complete(s *ServerRunOptions) (CompletedServerRunOptions, error) {
 
 	options.ServerRunOptions = s
 	return options, nil
+}
+
+// Run runs the specified APIServer.  This should never exit.
+func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
+	// To help debugging, immediately log version
+	logrus.Infof("Version: %+v", version.GetVersion())
+	//isDSNAllowedOrDie(completeOptions.Provider.Proto().GetDatabase().GetDsn())
+
+	server, err := s.WebServerOptions.Complete().New("sole")
+	if err != nil {
+		return err
+	}
+
+	prepared, err := server.PrepareRun()
+	if err != nil {
+		return err
+	}
+
+	return prepared.Run(ctx)
 }

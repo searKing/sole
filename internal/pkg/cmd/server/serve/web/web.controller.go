@@ -10,8 +10,6 @@ import (
 	"github.com/searKing/golang/go/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/version"
 )
 
 func isDSNAllowedOrDie(dsn string) {
@@ -20,31 +18,12 @@ func isDSNAllowedOrDie(dsn string) {
 	}
 }
 
-// Run runs the specified APIServer.  This should never exit.
-func Run(ctx context.Context, completeOptions CompletedServerRunOptions) error {
-	// To help debugging, immediately log version
-	logrus.Infof("Version: %+v", version.GetVersion())
-	//isDSNAllowedOrDie(completeOptions.Provider.Proto().GetDatabase().GetDsn())
-
-	server, err := completeOptions.WebServerOptions.Complete().New("sole")
-	if err != nil {
-		return err
-	}
-
-	prepared, err := server.PrepareRun()
-	if err != nil {
-		return err
-	}
-
-	return prepared.Run(ctx)
-}
-
 func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		s := NewServerRunOptions()
 
 		// set default options
-		completedOptions, err := Complete(s)
+		completedOptions, err := s.Complete()
 		if err != nil {
 			return err
 		}
@@ -53,6 +32,6 @@ func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error
 		if err := errors.Multi(completedOptions.Validate()...); err != nil {
 			return err
 		}
-		return Run(ctx, completedOptions)
+		return completedOptions.Run(ctx)
 	}
 }
