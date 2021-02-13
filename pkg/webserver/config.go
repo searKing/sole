@@ -37,7 +37,8 @@ type Config struct {
 	WebHandlers []WebHandler
 
 	// done values in this values for this map are ignored.
-	PostStartHooks map[string]PostStartHookConfigEntry
+	PostStartHooks   map[string]PostStartHookConfigEntry
+	PreShutdownHooks map[string]preShutdownHookEntry
 
 	// BindAddress is the host name to use for bind (local internet) facing URLs (e.g. Loopback)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
@@ -113,6 +114,31 @@ func (c *Config) AddPostStartHookOrDie(name string, hook PostStartHookFunc) {
 	}
 }
 
+// AddPreShutdownHook allows you to add a PreShutdownHook.
+func (s *Config) AddPreShutdownHook(name string, hook PreShutdownHookFunc) error {
+	if len(name) == 0 {
+		return fmt.Errorf("missing name")
+	}
+	if hook == nil {
+		return nil
+	}
+
+	if _, exists := s.PreShutdownHooks[name]; exists {
+		return fmt.Errorf("unable to add %q because it is already registered", name)
+	}
+
+	s.PreShutdownHooks[name] = preShutdownHookEntry{hook: hook}
+
+	return nil
+}
+
+// AddPreShutdownHookOrDie allows you to add a PostStartHook, but dies on failure
+func (s *Config) AddPreShutdownHookOrDie(name string, hook PreShutdownHookFunc) {
+	if err := s.AddPreShutdownHook(name, hook); err != nil {
+		logrus.Fatalf("Error registering PreShutdownHook %q: %v", name, err)
+	}
+}
+
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
@@ -176,6 +202,11 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	// add poststarthooks that were preconfigured.  Using the add method will give us an error if the same name has already been registered.
 	for name, preconfiguredPostStartHook := range c.PostStartHooks {
 		if err := s.AddPostStartHook(name, preconfiguredPostStartHook.hook); err != nil {
+			return nil, err
+		}
+	}
+	for name, preconfiguredPreShutdownHook := range c.PreShutdownHooks {
+		if err := s.AddPreShutdownHook(name, preconfiguredPreShutdownHook.hook); err != nil {
 			return nil, err
 		}
 	}
