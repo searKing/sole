@@ -76,7 +76,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
   #  go_option="--go_out=paths=source_relative:."
-  cpp_option="--cpp_out=paths=source_relative:."
+  cpp_option="--cpp_out=."
   go_grpc_option="--go-grpc_out=paths=source_relative:."
   grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
   openapiv2_option="--openapiv2_out=logtostderr=true"
