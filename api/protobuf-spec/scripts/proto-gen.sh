@@ -36,6 +36,9 @@ STACK_ABS_DIR=$(pwd)
 # You also need Go and Git installed.
 # masking all out put info!
 
+# 打印脚本入参
+echo "$0" "$*"
+
 g_protos_dir="$1"
 g_proto_headers="-I ."
 g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
@@ -73,6 +76,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
   #  go_option="--go_out=paths=source_relative:."
+  cpp_option="--cpp_out=paths=source_relative:."
   go_grpc_option="--go-grpc_out=paths=source_relative:."
   grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
   openapiv2_option="--openapiv2_out=logtostderr=true"
@@ -91,7 +95,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
+  protoc -I . ${g_proto_headers} "${cpp_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
   printf "\r\033[K%s compilied " "${proto_file}"
 
   popd 1>/dev/null 2>&1 || exit
