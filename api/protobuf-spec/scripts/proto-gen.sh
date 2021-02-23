@@ -9,7 +9,6 @@ set -o pipefail
 set -o errexit
 set -o nounset
 # set -o xtrace
-
 # 获取输入参数
 THIS_BASE_PARAM="$*"
 # 获取当前脚本的相对路径文件名称
@@ -40,6 +39,12 @@ STACK_ABS_DIR=$(pwd)
 echo "$0" "$*"
 
 g_protos_dir="$1"
+g_with_cpp="${2:-OFF}"
+g_with_go="${2:-OFF}"
+g_with_go_tag="${2:-ON}"
+g_with_go_grpc="${2:-ON}"
+g_with_go_grpc_gateway="${2:-ON}"
+g_with_openapiv2="${2:-ON}"
 g_proto_headers="-I ."
 g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
 g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
@@ -50,8 +55,40 @@ function die() {
   exit 1
 }
 
+if [ "$g_with_go_tag"x == "ON"x ]; then
+  g_with_go="OFF"
+fi
+
 # Sanity check that the right tools are accessible.
-for tool in protoc protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2 protoc-gen-go-tag; do
+for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2; do
+  case $tool in
+  "protoc-gen-go")
+    if [ "${g_with_go}"x != "ON"x ]; then
+      continue
+    fi
+    ;;
+  "protoc-gen-go-tag")
+    if [ "${g_with_go_tag}"x != "ON"x ]; then
+      continue
+    fi
+    ;;
+  "protoc-gen-go-grpc")
+    if [ "${g_with_go_grpc}"x != "ON"x ]; then
+      continue
+    fi
+    ;;
+  "protoc-gen-grpc-gateway")
+    if [ "${g_with_go_grpc_gateway}"x != "ON"x ]; then
+      continue
+    fi
+    ;;
+  "protoc-gen-openapiv2")
+    if [ "${g_with_openapiv2}"x != "ON"x ]; then
+      continue
+    fi
+    ;;
+  esac
+
   # http://google.github.io/proto-lens/installing-protoc.html
   # https://github.com/grpc/grpc-go
   # https://www.grpc.io/docs/languages/go/quickstart/
@@ -74,28 +111,56 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   proto_dir="$(dirname "${proto_file}")"
   pushd "${proto_dir}" 1>/dev/null 2>&1 || exit
 
+  cpp_option=""
+  go_option=""
+  cpp_option=""
+  go_grpc_option=""
+  grpc_gateway_option=""
+  openapiv2_option=""
+  go_tag_option=""
+
+  if [ "${g_with_cpp}"x == "ON"x ]; then
+    cpp_option="--cpp_out=."
+  fi
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
-  #  go_option="--go_out=paths=source_relative:."
-  cpp_option="--cpp_out=."
-  go_grpc_option="--go-grpc_out=paths=source_relative:."
-  grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
-  openapiv2_option="--openapiv2_out=logtostderr=true"
-  go_tag_option="--go-tag_out=paths=source_relative:."
+  if [ "${g_with_go}"x == "ON"x ]; then
+    go_option="--go_out=paths=source_relative:."
+  fi
+  if [ "${g_with_go_tag}"x == "ON"x ]; then
+    go_tag_option="--go-tag_out=paths=source_relative:."
+  fi
+  if [ "${g_with_go_grpc}"x == "ON"x ]; then
+    go_grpc_option="--go-grpc_out=paths=source_relative:."
+  fi
+  if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+    grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
+  fi
+  if [ "${g_with_openapiv2}"x == "ON"x ]; then
+    openapiv2_option="--openapiv2_out=logtostderr=true"
+  fi
 
   api_conf_yaml="${proto_base_name}.yaml"
   if [[ -f "${api_conf_yaml}" ]]; then
-    grpc_gateway_option="${grpc_gateway_option},grpc_api_configuration=${api_conf_yaml}"
-    openapiv2_option="${openapiv2_option},grpc_api_configuration=${api_conf_yaml}"
+    if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+      grpc_gateway_option="${grpc_gateway_option},grpc_api_configuration=${api_conf_yaml}"
+    fi
+    if [ "${g_with_openapiv2}"x == "ON"x ]; then
+      openapiv2_option="${openapiv2_option},grpc_api_configuration=${api_conf_yaml}"
+    fi
   fi
-  grpc_gateway_option="${grpc_gateway_option},paths=source_relative:."
-  openapiv2_option="${openapiv2_option}:."
+  if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+    grpc_gateway_option="${grpc_gateway_option},paths=source_relative:."
+  fi
+  if [ "${g_with_openapiv2}"x == "ON"x ]; then
+    openapiv2_option="${openapiv2_option}:."
+  fi
 
   service_openapiv2_json="${proto_base_name}.openapiv2.json"
   [[ -f "${service_openapiv2_json}" ]] && rm -f "${service_openapiv2_json}"
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} "${cpp_option}" "${go_grpc_option}" "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
+  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} *.proto || exit
   printf "\r\033[K%s compilied " "${proto_file}"
 
   popd 1>/dev/null 2>&1 || exit
