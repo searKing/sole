@@ -2,7 +2,6 @@ module github.com/searKing/sole
 
 go 1.14
 
-
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/gin-gonic/gin v1.6.3
@@ -40,7 +39,6 @@ require (
 	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/tools v0.1.0 // indirect
-	google.golang.org/api v0.30.0
 	google.golang.org/genproto v0.0.0-20210204154452-deb828366460
 	google.golang.org/grpc v1.35.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
@@ -51,4 +49,5 @@ require (
 )
 
 replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0
+
 //replace github.com/searKing/golang v0.0.127 => ../../../github.com/searKing/golang
