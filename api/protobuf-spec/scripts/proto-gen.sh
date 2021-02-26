@@ -46,11 +46,31 @@ g_with_go_grpc="${2:-ON}"
 g_with_go_grpc_gateway="${2:-ON}"
 g_with_openapiv2="${2:-ON}"
 g_proto_headers="-I ."
-g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
-if [ "${g_with_go_grpc_gateway}"x != "ON"x ] || [ "${g_with_openapiv2}"x != "ON"x ]; then
-  g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
+
+# Directory and file names that begin with "." or "_" are ignored
+# by the go tool, as are directories named "testdata".
+# See: https://github.com/golang/go/issues/30058#issuecomment-459888562
+# Also See: https://github.com/golang/go/wiki/Modules
+if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../third_party/" ]; then
+  g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/"
 fi
-g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../"
+if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../.third_party/" ]; then
+  g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../.third_party/"
+fi
+if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/" ]; then
+  g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/"
+fi
+if [ "${g_with_go_grpc_gateway}"x != "ON"x ] || [ "${g_with_openapiv2}"x != "ON"x ]; then
+  if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway" ]; then
+    g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
+  fi
+  if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../.third_party/github.com/grpc-ecosystem/grpc-gateway" ]; then
+    g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../.third_party/github.com/grpc-ecosystem/grpc-gateway"
+  fi
+  if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/" ]; then
+    g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/github.com/grpc-ecosystem/grpc-gateway"
+  fi
+fi
 
 function die() {
   echo 1>&2 "$*"

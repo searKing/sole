@@ -248,11 +248,11 @@ sanitize_subtree_env() {
 # $2 = option
 # $3 = default value
 #
-# print "<merged>\n<configed>"
+# print "<merged>\n<configured>"
 get_subtree_status() {
   prefix="$1"
   merged_prefixes="$2"
-  configed_prefixes="$3"
+  configured_prefixes="$3"
 
   merged="N"
   # check to see if the prefix is already in merged commits
@@ -263,15 +263,15 @@ get_subtree_status() {
     fi
   done
 
-  configed="N"
+  configured="N"
   # check to see if the prefix is already in merged commits
-  for p in ${configed_prefixes}; do
+  for p in ${configured_prefixes}; do
     if [ "${p}"x = "${prefix}"x ]; then
-      configed="Y"
+      configured="Y"
       break
     fi
   done
-  printf "%s\n%s\n%s" "${merged}" "${configed}"
+  printf "%s\n%s\n%s" "${merged}" "${configured}"
 }
 
 function cleanup() {
@@ -408,13 +408,13 @@ cmd_tidy() {
   # for each prefix that was subtree merged
   subtree_merged_prefixes=$(get_subtree_prefixes_merged) ||
     die "$(eval_gettext "failed to pasred git log")"
-  subtree_configed_prefixes=$(get_subtree_prefixes_config "") ||
+  subtree_configured_prefixes=$(get_subtree_prefixes_config "") ||
     die "$(eval_gettext "failed to pasred \$GITTREES_FILE")"
   subtree_prefixes=
   subtree_prefixes+="${subtree_merged_prefixes}"
   subtree_prefixes+=$'\n'
-  subtree_prefixes+="${subtree_configed_prefixes}"
-  subtree_prefixes=$(echo "${subtree_configed_prefixes}" | sort -u -k 1,1)
+  subtree_prefixes+="${subtree_configured_prefixes}"
+  subtree_prefixes=$(echo "${subtree_configured_prefixes}" | sort -u -k 1,1)
 
   for prefix in $subtree_prefixes; do
     if [ -z "${prefix}" ]; then
@@ -423,9 +423,9 @@ cmd_tidy() {
 
     say "__________"
 
-    status=$(get_subtree_status "${prefix}" "${subtree_merged_prefixes}" "${subtree_configed_prefixes}") || exit $?
+    status=$(get_subtree_status "${prefix}" "${subtree_merged_prefixes}" "${subtree_configured_prefixes}") || exit $?
     commited="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $1 }')" || exit $?
-    configed="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $2 }')" || exit $?
+    configured="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $2 }')" || exit $?
 
     if [ "${commited}"x = "Y"x ]; then
       # look for the most recent commit
@@ -442,7 +442,7 @@ cmd_tidy() {
     url=
     branch=
     disabled=
-    if [ "$configed"x = "Y"x ]; then
+    if [ "$configured"x = "Y"x ]; then
       set +o pipefail
       url="$(git config -f .gittrees --get subtree."$prefix".url)" || exit $?
       branch="$(git config -f .gittrees --get subtree."$prefix".branch)" || exit $?
@@ -453,7 +453,7 @@ cmd_tidy() {
       fi
     fi
 
-    if [ "$configed"x = "N"x ]; then
+    if [ "$configured"x = "N"x ]; then
       # ask for the git url
       printf "adding %s\n" "${prefix}"
 
@@ -572,13 +572,13 @@ cmd_update() {
     shift
   done
 
-  subtree_configed_prefixes="${prefix}"
+  subtree_configured_prefixes="${prefix}"
   # for each prefix that was subtree merged
-  if [ -z "$subtree_configed_prefixes" ]; then
-    subtree_configed_prefixes=$(get_subtree_prefixes_config "")
+  if [ -z "$subtree_configured_prefixes" ]; then
+    subtree_configured_prefixes=$(get_subtree_prefixes_config "")
   fi
 
-  for prefix in $subtree_configed_prefixes; do
+  for prefix in $subtree_configured_prefixes; do
     if [ -z "${prefix}" ]; then
       continue
     fi
@@ -631,12 +631,17 @@ cmd_update() {
 # Purge each subtree path, using filter-branch as needed
 #
 cmd_purge() {
+  remove_files=""
   while test $# -ne 0; do
     case "$1" in
     -P | --prefix)
       case "$2" in '') usage ;; esac
       prefix+=$'\n'
       prefix+=$2
+      shift
+      ;;
+    --remove_files)
+      remove_files="true"
       shift
       ;;
     -q | --quiet)
@@ -656,13 +661,13 @@ cmd_purge() {
     shift
   done
 
-  subtree_configed_prefixes="${prefix}"
+  subtree_configured_prefixes="${prefix}"
   # for each prefix that was subtree merged
-  if [ -z "$subtree_configed_prefixes" ]; then
-    subtree_configed_prefixes=$(get_subtree_prefixes_config "")
+  if [ -z "$subtree_configured_prefixes" ]; then
+    subtree_configured_prefixes=$(get_subtree_prefixes_config "")
   fi
 
-  for prefix in $subtree_configed_prefixes; do
+  for prefix in $subtree_configured_prefixes; do
     if [ -z "${prefix}" ]; then
       continue
     fi
@@ -690,14 +695,20 @@ cmd_purge() {
     git for-each-ref --format="%(refname)" refs/original | xargs -n 1 git update-ref -d || exit
     git reflog expire --expire=now --all || exit
     git gc --aggressive --prune=now || exit
-    say "$(printf "purge %s %s %s\n" "${prefix}" "${url}" "${branch}")"
+
+    if [ "${remove_files}"x == "true"x ]; then
+      rm -rf "${prefix}"
+      git add -u
+      git commit -m "$(printf "removed %s %s %s as purged" "${prefix}" "${url}" "${branch}")"
+    fi
+    say "$(printf "purged %s %s %s\n" "${prefix}" "${url}" "${branch}")"
   done
 
   say "__________"
 }
 
 #
-# Show configed summary for subtrees in index or working tree
+# Show configured summary for subtrees in index or working tree
 #
 cmd_summary() {
   while test $# -ne 0; do
@@ -726,7 +737,7 @@ cmd_summary() {
   done
 
   subtree_merged_prefixes=$(get_subtree_prefixes_merged)
-  subtree_configed_prefixes=$(get_subtree_prefixes_config "")
+  subtree_configured_prefixes=$(get_subtree_prefixes_config "")
 
   subtree_prefixes="${prefix}"
   if [ -z "$subtree_prefixes" ]; then
@@ -734,7 +745,7 @@ cmd_summary() {
     subtree_prefixes=
     subtree_prefixes+="${subtree_merged_prefixes}"
     subtree_prefixes+=$'\n'
-    subtree_prefixes+="${subtree_configed_prefixes}"
+    subtree_prefixes+="${subtree_configured_prefixes}"
   fi
   subtree_prefixes=$(echo "${subtree_prefixes}" | sort -u -k 1,1)
   printf "subtree_prefixes list below...\n__________\n"
@@ -749,22 +760,22 @@ cmd_summary() {
     if [ -z "${prefix}" ]; then
       continue
     fi
-    status=$(get_subtree_status "${prefix}" "${subtree_merged_prefixes}" "${subtree_configed_prefixes}")
+    status=$(get_subtree_status "${prefix}" "${subtree_merged_prefixes}" "${subtree_configured_prefixes}")
     commited="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $1 }')"
-    configed="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $2 }')"
+    configured="$(echo "$status" | awk 'BEGIN{RS="";FS="\n"} { print $2 }')"
 
     url=
     branch=
     disabled=
-    if [ "$configed"x = "Y"x ]; then
+    if [ "$configured"x = "Y"x ]; then
       url="$(git config -f .gittrees --get subtree."$prefix".url)"
       branch="$(git config -f .gittrees --get subtree."$prefix".branch)"
       disabled="$(git config -f .gittrees --get subtree."$prefix".disabled)"
     fi
     if [ -z "$GIT_QUIET" ]; then
-      msg+=$(printf "%s %s %s %s %s %s" "${prefix}" "${commited}" "${configed}" "${url:-<empty>}" "${branch:-<empty>}" "${disabled:-false}")
+      msg+=$(printf "%s %s %s %s %s %s" "${prefix}" "${commited}" "${configured}" "${url:-<empty>}" "${branch:-<empty>}" "${disabled:-false}")
     else
-      msg+=$(printf "%s %s %s %s %s" "${prefix}" "${commited}" "${configed}" "${branch:-<empty>}" "${disabled:-false}")
+      msg+=$(printf "%s %s %s %s %s" "${prefix}" "${commited}" "${configured}" "${branch:-<empty>}" "${disabled:-false}")
     fi
     msg+=$'\n'
   done
