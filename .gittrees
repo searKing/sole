@@ -1,15 +1,15 @@
-[subtree "third_party/github.com/googleapis/googleapis"]
-	prefix = third_party/github.com/googleapis/googleapis
+[subtree ".third_party/github.com/googleapis/googleapis"]
+	prefix = .third_party/github.com/googleapis/googleapis
 	url = https://github.com/googleapis/googleapis.git
 	branch = master
-	disabled = true
-[subtree "third_party/github.com/searKing/golang"]
-	prefix = third_party/github.com/searKing/golang
+	disabled = false
+[subtree ".third_party/github.com/searKing/golang"]
+	prefix = .third_party/github.com/searKing/golang
 	url = https://github.com/searKing/golang.git
 	branch = master
-	disabled = true
-[subtree "third_party/github.com/grpc-ecosystem/grpc-gateway"]
-	prefix = third_party/github.com/grpc-ecosystem/grpc-gateway
+	disabled = false
+[subtree ".third_party/github.com/grpc-ecosystem/grpc-gateway"]
+	prefix = .third_party/github.com/grpc-ecosystem/grpc-gateway
 	url = https://github.com/grpc-ecosystem/grpc-gateway.git
 	branch = v2.0.1
-	disabled = true
+	disabled = false
