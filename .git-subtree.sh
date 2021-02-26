@@ -53,7 +53,7 @@ USAGE="[--quiet] [--debug]
    or: $dashless [--quiet] [--debug] add --update --prefix <prefix> [--] <url> [<branch>] [<disabled>]
    or: $dashless [--quiet] [--debug] tidy --update --prefix <prefix> [--]
    or: $dashless [--quiet] [--debug] update --install --prefix <prefix> [--]
-   or: $dashless [--quiet] [--debug] purge --prefix <prefix> [--]
+   or: $dashless [--quiet] [--debug] purge --prefix <prefix> [--remove_files] [--]
    or: $dashless [--quiet] [--debug] summary --prefix <prefix> [--]"
 
 OPTIONS_SPEC="
@@ -61,7 +61,7 @@ ${dashless} add       --prefix=<prefix> <url> <branch>
 ${dashless} add       --prefix=<prefix> <url> <branch> <disabled>
 ${dashless} tidy      --prefix=<prefix>
 ${dashless} update    --prefix=<prefix>
-${dashless} purge  --prefix=<prefix>
+${dashless} purge     --prefix=<prefix>
 ${dashless} summary   --prefix=<prefix>
 --
 h,help        show the help
@@ -72,8 +72,10 @@ m,message=    use the given message as the commit message for the merge commit
  options for 'add', 'tidy'
 u,update     update tracked subtrees
  options for 'update'
-i,intall     install missing subtrees
+i,install     install missing subtrees
 squash        merge subtree changes as a single commit
+ options for 'purge'
+remove_files  remove files after purge and git commit
 "
 #eval "$(echo "$OPTIONS_SPEC" | git rev-parse --parseopt -- "$@" || echo exit $?)"
 
@@ -110,6 +112,7 @@ message=
 prefix=
 update=
 install=
+remove_files=
 
 debug() {
   if test -n "$debug"; then
@@ -160,6 +163,9 @@ while test $# -gt 0; do
     ;;
   -i | --install)
     install=1
+    ;;
+  --remove_files)
+    remove_files=1
     ;;
   --)
     break
@@ -631,17 +637,12 @@ cmd_update() {
 # Purge each subtree path, using filter-branch as needed
 #
 cmd_purge() {
-  remove_files=""
   while test $# -ne 0; do
     case "$1" in
     -P | --prefix)
       case "$2" in '') usage ;; esac
       prefix+=$'\n'
       prefix+=$2
-      shift
-      ;;
-    --remove_files)
-      remove_files="true"
       shift
       ;;
     -q | --quiet)
@@ -696,7 +697,7 @@ cmd_purge() {
     git reflog expire --expire=now --all || exit
     git gc --aggressive --prune=now || exit
 
-    if [ "${remove_files}"x == "true"x ]; then
+    if [ -n "${remove_files}" ]; then
       rm -rf "${prefix}"
       git add -u
       git commit -m "$(printf "removed %s %s %s as purged" "${prefix}" "${url}" "${branch}")"
