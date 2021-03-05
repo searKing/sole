@@ -50,4 +50,4 @@ require (
 
 //replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0
 
-//replace github.com/searKing/golang v0.0.127 => ../../../github.com/searKing/golang
+//replace github.com/searKing/golang v0.0.131 => ../../../github.com/searKing/golang

@@ -14,6 +14,7 @@ import (
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/jwalterweatherman"
 	jaegerConfig "github.com/uber/jaeger-client-go/config"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
@@ -129,6 +130,8 @@ func (c completedConfig) Apply(ctx context.Context) error {
 // installViperProtoOrDie allows you to load config from default, config path、env and so on, but dies on failure.
 func (c *Config) installViperProtoOrDie() {
 	var v viper_.ViperProto
+	jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
+	jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
 
 	if err := viper.LoadGlobalConfig(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto()); err != nil {
 		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load config")
