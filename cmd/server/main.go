@@ -12,6 +12,7 @@ import (
 	"time"
 
 	context_ "github.com/searKing/golang/go/context"
+	runtime_ "github.com/searKing/golang/go/runtime"
 	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server"
@@ -20,6 +21,7 @@ import (
 )
 
 func main() {
+	defer runtime_.LogPanic.Recover()
 	rand.Seed(time.Now().UnixNano())
 
 	logs.InitLog()

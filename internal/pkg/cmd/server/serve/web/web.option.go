@@ -50,16 +50,13 @@ func (s *ServerRunOptions) Validate() []error {
 
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
-	var options CompletedServerRunOptions
 	if err := s.completeDiscovery(); err != nil {
-		return options, err
+		return CompletedServerRunOptions{}, err
 	}
 	if err := s.completeWebServer(); err != nil {
-		return options, err
+		return CompletedServerRunOptions{}, err
 	}
-
-	options.ServerRunOptions = s
-	return options, nil
+	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
 }
 
 // Run runs the specified APIServer.  This should never exit.
