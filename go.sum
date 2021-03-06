@@ -762,8 +762,8 @@ github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdh
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 h1:nn5Wsu0esKSJiIVhscUtVbo7ada43DJhG55ua/hjS5I=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/searKing/golang v0.0.102/go.mod h1:ALbjoT75YuThYrV4SKUNfVzAZY+++901LLWgZWMadOA=
-github.com/searKing/golang v0.0.131 h1:r9c/dCmzGxzrCdIqSe9N2MBQsOREornEDgL33bECgLE=
-github.com/searKing/golang v0.0.131/go.mod h1:GtobzbygxoAVTVAonD7i3ZR8aV88+8pC0b6NoncQZwk=
+github.com/searKing/golang v0.0.132 h1:6r/2EzKdZgGVuviU14/HEKTaGWLX68lMVNbiyCDrBIc=
+github.com/searKing/golang v0.0.132/go.mod h1:GtobzbygxoAVTVAonD7i3ZR8aV88+8pC0b6NoncQZwk=
 github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210305033433-3133a74ad7bd h1:XTT0dSLajlaOCBK8alX22zQyGUy7EbAB/WkPydNYCU4=
 github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210305033433-3133a74ad7bd/go.mod h1:9byWpMGeLV1RT6Burm3HSLjqPcE2qkR5NajhwK8DQgQ=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
