@@ -37,7 +37,7 @@ type Config struct {
 	WebHandlers []WebHandler
 
 	// done values in this values for this map are ignored.
-	PostStartHooks   map[string]PostStartHookConfigEntry
+	PostStartHooks   map[string]postStartHookEntry
 	PreShutdownHooks map[string]preShutdownHookEntry
 
 	// BindAddress is the host name to use for bind (local internet) facing URLs (e.g. Loopback)
@@ -102,7 +102,7 @@ func (c *Config) AddPostStartHook(name string, hook PostStartHookFunc) error {
 		// this is programmer error, but it can be hard to debug
 		return fmt.Errorf("unable to add %q because it was already registered by: %s", name, postStartHook.originatingStack)
 	}
-	c.PostStartHooks[name] = PostStartHookConfigEntry{hook: hook, originatingStack: string(debug.Stack())}
+	c.PostStartHooks[name] = postStartHookEntry{hook: hook, originatingStack: string(debug.Stack())}
 
 	return nil
 }
@@ -121,6 +121,9 @@ func (s *Config) AddPreShutdownHook(name string, hook PreShutdownHookFunc) error
 	}
 	if hook == nil {
 		return nil
+	}
+	if s.PreShutdownHooks == nil {
+		s.PreShutdownHooks = make(map[string]preShutdownHookEntry)
 	}
 
 	if _, exists := s.PreShutdownHooks[name]; exists {
@@ -185,6 +188,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	ginBackend.Use(gin_.UseHTTPPreflight())
 
 	s := &WebServer{
+		Name:                   name,
 		ServiceRegistryBackend: c.ServiceRegistryBackend,
 		ShutdownDelayDuration:  c.ShutdownDelayDuration,
 		grpcBackend:            grpcBackend,
@@ -231,7 +235,8 @@ func NewConfig() *Config {
 	defaultHealthChecks := []healthz.HealthCheck{healthz.PingHealthCheck, healthz.LogHealthCheck}
 
 	return &Config{
-		PostStartHooks:        map[string]PostStartHookConfigEntry{},
+		PreShutdownHooks:      map[string]preShutdownHookEntry{},
+		PostStartHooks:        map[string]postStartHookEntry{},
 		HealthzChecks:         append([]healthz.HealthCheck{}, defaultHealthChecks...),
 		ReadyzChecks:          append([]healthz.HealthCheck{}, defaultHealthChecks...),
 		LivezChecks:           append([]healthz.HealthCheck{}, defaultHealthChecks...),

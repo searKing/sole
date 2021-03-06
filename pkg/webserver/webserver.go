@@ -21,6 +21,7 @@ import (
 )
 
 type WebServer struct {
+	Name string
 	// Server Register. The backend is started after the server starts listening.
 	ServiceRegistryBackend *consul.ServiceRegistryServer
 
@@ -152,7 +153,7 @@ func (s preparedWebServer) NonBlockingRun(ctx context.Context) (context.Context,
 	go func() {
 		defer cancel()
 		err := graceful.Graceful(ctx, graceful.Handler{
-			Name: "grpc",
+			Name: s.Name,
 			StartFunc: func(ctx context.Context) error {
 				var err error
 				logrus.Infof("Setting up http server on %s", s.grpcBackend.Addr)

@@ -43,13 +43,6 @@ type postStartHookEntry struct {
 	done chan struct{}
 }
 
-type PostStartHookConfigEntry struct {
-	hook PostStartHookFunc
-	// originatingStack holds the stack that registered postStartHooks. This allows us to show a more helpful message
-	// for duplicate registration.
-	originatingStack string
-}
-
 type preShutdownHookEntry struct {
 	hook PreShutdownHookFunc
 }
