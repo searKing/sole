@@ -15,6 +15,8 @@ import (
 	runtime_ "github.com/searKing/golang/go/runtime"
 	"github.com/sirupsen/logrus"
 
+	_ "go.uber.org/automaxprocs"
+
 	"github.com/searKing/sole/internal/pkg/cmd/server"
 	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/runtime/profile"
