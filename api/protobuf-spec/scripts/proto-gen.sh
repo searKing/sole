@@ -60,7 +60,7 @@ fi
 if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/" ]; then
   g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/"
 fi
-if [ "${g_with_go_grpc_gateway}"x != "ON"x ] || [ "${g_with_openapiv2}"x != "ON"x ]; then
+if [ "${g_with_go_grpc_gateway}"x == "ON"x ] || [ "${g_with_openapiv2}"x == "ON"x ]; then
   if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway" ]; then
     g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
   fi
