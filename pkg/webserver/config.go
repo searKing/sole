@@ -12,10 +12,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 
 	"github.com/searKing/sole/pkg/consul"
 
@@ -28,6 +31,9 @@ type WebHandler interface {
 }
 
 type Config struct {
+	GatewayOptions []grpc.GatewayOption
+	GinMiddlewares []gin.HandlerFunc
+
 	CORS *cors.Config
 
 	TlsConfig *tls.Config
@@ -170,6 +176,14 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
 	opts := grpc.WithDefault()
 	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
+	opts = append(opts, grpc.WithGrpcUnaryServerChain(grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+		logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+		return status.Errorf(codes.Internal, "%s", p)
+	}))))
+	opts = append(opts, grpc.WithGrpcStreamServerChain(grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+		logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+		return status.Errorf(codes.Internal, "%s", p)
+	}))))
 
 	{
 		if c.CORS != nil {
@@ -181,11 +195,14 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		}
 	}
 
+	opts = append(opts, c.GatewayOptions...)
 	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
+	grpcBackend.ApplyOptions()
 	ginBackend := gin.New()
 	ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
 	ginBackend.Use(gin_.RecoveryWithWriter(logrus.StandardLogger().Writer()))
 	ginBackend.Use(gin_.UseHTTPPreflight())
+	ginBackend.Use(c.GinMiddlewares...)
 
 	s := &WebServer{
 		Name:                   name,
