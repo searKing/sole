@@ -75,7 +75,7 @@ func installLogrus(c *Config) error {
 	logrus.SetLevel(c.Level)
 
 	if err := logrus_.WithRotation(logrus.StandardLogger(),
-		c.Path, c.RotateDuration, uint(c.RotateMaxCount), c.RotateMaxAge); err != nil {
+		c.Path, c.RotateDuration, c.RotateMaxCount, c.RotateMaxAge); err != nil {
 		logrus.WithField("module", "log").WithField("path", c.Path).
 			WithField("duration", c.RotateDuration).
 			WithField("max_count", c.RotateMaxCount).
