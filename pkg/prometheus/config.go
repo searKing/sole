@@ -7,6 +7,7 @@ package prometheus
 import (
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -47,5 +48,7 @@ func (s *Config) Complete() CompletedConfig {
 }
 
 func (c completedConfig) New() (http.Handler, error) {
+	// Add Go module build info.
+	prometheus.MustRegister(prometheus.NewBuildInfoCollector())
 	return promhttp.Handler(), nil
 }

@@ -106,14 +106,17 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	if c.Sql != nil {
 		sqlDB = c.Sql.Complete().New(ctx)
 	}
-	return &Provider{
+	p := &Provider{
 		proto:       c.proto,
 		sqlDB:       sqlDB,
 		redis:       c.Redis.Complete().New(),
 		keyCipher:   c.KeyCipher.Complete().New(),
 		corsHandler: corsHandler,
 		ctx:         ctx,
-	}, nil
+	}
+	providerReloads.WithLabelValues(p.proto.String())
+	go p.ReloadForever()
+	return p, nil
 }
 
 // Apply set options and something else as global init, act likes New but without Config's instance

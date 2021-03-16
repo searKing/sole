@@ -7,6 +7,7 @@ package provider
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
@@ -25,7 +26,8 @@ type Provider struct {
 
 	corsHandler func(handler http.Handler) http.Handler
 
-	ctx context.Context
+	ctx        context.Context
+	reloadOnce sync.Once
 }
 
 func (p *Provider) Context() context.Context {
