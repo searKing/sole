@@ -6,17 +6,13 @@ package provider
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	providerReloads = prometheus.NewCounterVec(
+	providerReloads = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "provider_reload_total",
 			Help: "How many provider reloaded.",
 		}, []string{"proto"})
 )
-
-func init() {
-	// Register the summary and the histogram with Prometheus's default registry.
-	prometheus.MustRegister(providerReloads)
-}
