@@ -199,10 +199,10 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	opts = append(opts, c.GatewayOptions...)
 	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
 	grpcBackend.ApplyOptions()
-	grpcBackend.ErrorLog = logrus_.New(logrus.StandardLogger()).GetStdLogger()
+	grpcBackend.ErrorLog = logrus_.New(logrus.StandardLogger()).GetStdLoggerWithLevel(logrus.ErrorLevel)
 	ginBackend := gin.New()
 	ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
-	ginBackend.Use(gin_.RecoveryWithWriter(logrus.StandardLogger().Writer()))
+	ginBackend.Use(gin_.RecoveryWithWriter(grpcBackend.ErrorLog.Writer()))
 	ginBackend.Use(gin_.UseHTTPPreflight())
 	ginBackend.Use(c.GinMiddlewares...)
 
