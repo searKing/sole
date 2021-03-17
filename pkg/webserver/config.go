@@ -15,6 +15,7 @@ import (
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -198,6 +199,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	opts = append(opts, c.GatewayOptions...)
 	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
 	grpcBackend.ApplyOptions()
+	grpcBackend.ErrorLog = logrus_.New(logrus.StandardLogger()).GetStdLogger()
 	ginBackend := gin.New()
 	ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
 	ginBackend.Use(gin_.RecoveryWithWriter(logrus.StandardLogger().Writer()))
