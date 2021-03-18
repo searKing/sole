@@ -45,7 +45,8 @@ g_with_go_tag="${4:-ON}"
 g_with_go_grpc="${5:-ON}"
 g_with_go_grpc_gateway="${6:-ON}"
 g_with_openapiv2="${7:-ON}"
-g_proto_headers="-I ."
+g_proto_header="${8}" # "-I xxx -I xxx"
+g_proto_headers="${g_proto_headers} -I ."
 
 # Directory and file names that begin with "." or "_" are ignored
 # by the go tool, as are directories named "testdata".
