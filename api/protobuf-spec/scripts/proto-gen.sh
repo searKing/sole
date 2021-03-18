@@ -38,6 +38,7 @@ STACK_ABS_DIR=$(pwd)
 # 打印脚本入参
 echo "$0" "$*"
 
+# //go:generate bash scripts/proto-gen.sh ./v1 OFF ON OFF OFF OFF OFF "-I ."
 g_protos_dir="$1"
 g_with_cpp="${2:-OFF}"
 g_with_go="${3:-OFF}"
@@ -45,7 +46,7 @@ g_with_go_tag="${4:-ON}"
 g_with_go_grpc="${5:-ON}"
 g_with_go_grpc_gateway="${6:-ON}"
 g_with_openapiv2="${7:-ON}"
-g_proto_header="${8}" # "-I xxx -I xxx"
+g_proto_headers=${8:-""} # "-I xxx -I xxx"
 g_proto_headers="${g_proto_headers} -I ."
 
 # Directory and file names that begin with "." or "_" are ignored
