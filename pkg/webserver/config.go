@@ -39,7 +39,7 @@ type Config struct {
 
 	TlsConfig *tls.Config
 
-	ServiceRegistryBackend *consul.ServiceRegistryServer
+	ServiceRegistryBackend *consul.ServiceRegistry
 
 	WebHandlers []WebHandler
 

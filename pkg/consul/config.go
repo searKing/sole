@@ -8,6 +8,7 @@ type Config struct {
 	ConsulAddress  string // consul server addr
 	ServiceAddress string
 	ServiceName    string // service name
+	HealthCheckUrl string
 }
 
 type completedConfig struct {
@@ -41,10 +42,10 @@ func (c *Config) Complete() CompletedConfig {
 	return CompletedConfig{&completedConfig{c}}
 }
 
-func (c completedConfig) New() (*ServiceRegistryServer, error) {
+func (c completedConfig) New() (*ServiceRegistry, error) {
 	return installConsul(c.Config)
 }
 
-func installConsul(c *Config) (*ServiceRegistryServer, error) {
-	return NewServiceRegistry(c.ConsulAddress, c.ServiceName, c.ServiceAddress)
+func installConsul(c *Config) (*ServiceRegistry, error) {
+	return NewServiceRegistry(c.ConsulAddress, c.ServiceName, c.ServiceAddress, c.HealthCheckUrl)
 }

@@ -8,5 +8,6 @@ func (s *ServerRunOptions) completeDiscovery() error {
 	s.ServiceRegistry.ServiceName = s.Provider.Proto().GetService().GetName()
 	s.ServiceRegistry.ServiceAddress = s.Provider.GetBackendServeHostPort()
 	s.ServiceRegistry.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()
+	s.ServiceRegistry.HealthCheckUrl = "/healthz"
 	return nil
 }

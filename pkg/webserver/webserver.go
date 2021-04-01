@@ -23,7 +23,7 @@ import (
 type WebServer struct {
 	Name string
 	// Server Register. The backend is started after the server starts listening.
-	ServiceRegistryBackend *consul.ServiceRegistryServer
+	ServiceRegistryBackend *consul.ServiceRegistry
 
 	ginBackend  *gin.Engine
 	grpcBackend *grpc.Gateway

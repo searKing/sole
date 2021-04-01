@@ -114,7 +114,7 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 		corsHandler: corsHandler,
 		ctx:         ctx,
 	}
-	providerReloads.WithLabelValues(p.proto.String())
+	providerReloads.WithLabelValues(p.proto.String()).Inc()
 	go p.ReloadForever()
 	return p, nil
 }
