@@ -7,10 +7,12 @@ package consul
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/consul/api"
+	"github.com/searKing/golang/go/container/hashring"
 	"github.com/searKing/golang/go/errors"
 	"github.com/searKing/golang/go/sync/atomic"
 	"github.com/sirupsen/logrus"
@@ -19,17 +21,27 @@ import (
 //go:generate go-syncmap -type "Services<string, Service>"
 type Services sync.Map
 
+type ResolverType int
+
+const (
+	ResolverTypeRandom  ResolverType = iota
+	ResolverTypeConsist ResolverType = iota
+)
+
 type Service struct {
 	Name string `validate:"required"`
 
 	// optional
-	Tags         []string
-	PassingOnly  bool
-	QueryOptions *api.QueryOptions
+	ResolverType       ResolverType
+	Tags               []string
+	PassingOnly        bool
+	QueryOptions       *api.QueryOptions
+	NodeLocatorOptions []hashring.NodeLocatorOption
 
 	// update from consul server
-	services []*api.ServiceEntry
-	updateAt time.Time
+	updateAt  time.Time
+	services  []*api.ServiceEntry
+	nodeAddrs *hashring.StringNodeLocator // for Consistent by hash ring
 }
 
 type ServiceResolver struct {
@@ -138,6 +150,14 @@ func (srv *ServiceResolver) QueryServices() error {
 		}
 		service.services = nodes
 		service.updateAt = time.Now()
+		if service.ResolverType == ResolverTypeConsist {
+			var nodeAddrs []string
+			for _, node := range nodes {
+				nodeAddrs = append(nodeAddrs, node.Node.Address)
+			}
+			service.nodeAddrs = hashring.NewStringNodeLocator(service.NodeLocatorOptions...)
+			service.nodeAddrs.AddNodes(nodeAddrs...)
+		}
 		srv.serviceByName.Store(name, service)
 		return true
 	})
@@ -151,6 +171,22 @@ func (srv *ServiceResolver) LookupService(name string) []*api.ServiceEntry {
 		return nil
 	}
 	return service.services
+}
+
+func (srv *ServiceResolver) PickNode(name string, consistKey string) (addr string, has bool) {
+	service, has := srv.serviceByName.Load(name)
+	if !has {
+		return "", false
+	}
+	if len(service.services) == 0 {
+		return "", false
+	}
+
+	if service.ResolverType == ResolverTypeConsist {
+		return service.nodeAddrs.Get(consistKey)
+	}
+
+	return service.services[rand.Intn(len(service.services))].Node.Address, true
 }
 
 func (srv *ServiceResolver) AddService(service Service) error {
