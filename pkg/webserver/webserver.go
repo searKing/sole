@@ -24,6 +24,7 @@ type WebServer struct {
 	Name string
 	// Server Register. The backend is started after the server starts listening.
 	ServiceRegistryBackend *consul.ServiceRegistry
+	ServiceResolverBackend *consul.ServiceResolver
 
 	ginBackend  *gin.Engine
 	grpcBackend *grpc.Gateway
@@ -94,6 +95,16 @@ func (s *WebServer) PrepareRun() (preparedWebServer, error) {
 			return preparedWebServer{}, err
 		}
 	}
+	if s.ServiceResolverBackend != nil {
+		err := s.AddPreShutdownHook("service-resolver-backend", func() error {
+			s.ServiceResolverBackend.Shutdown()
+			return nil
+		})
+		if err != nil {
+			logrus.WithError(err).Errorf("Failed to add pre-shutdown hook for service-resolver-backend")
+			return preparedWebServer{}, err
+		}
+	}
 	return preparedWebServer{s}, nil
 }
 
@@ -147,6 +158,17 @@ func (s preparedWebServer) NonBlockingRun(ctx context.Context) (context.Context,
 		if err := s.ServiceRegistryBackend.Run(ctx); err != nil {
 			cancel()
 			return ctx, fmt.Errorf("failed to run the service registry backend: %v", err)
+		}
+	}
+	if s.ServiceResolverBackend != nil {
+		// recommend to add by postStartHooks
+		//s.ServiceResolverBackend.AddService(consul.Service{
+		//	Name:         s.ServiceRegistryBackend.ServiceName,
+		//	ResolverType: consul.ResolverTypeConsist,
+		//})
+		if err := s.ServiceResolverBackend.Run(ctx); err != nil {
+			cancel()
+			return ctx, fmt.Errorf("failed to run the service resolver backend: %v", err)
 		}
 	}
 

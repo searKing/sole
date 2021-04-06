@@ -4,6 +4,8 @@
 
 package consul
 
+import "github.com/go-playground/validator/v10"
+
 type ServiceRegistryConfig struct {
 	ConsulAddress  string // consul server addr
 	ServiceAddress string
@@ -28,8 +30,13 @@ func NewServiceRegistryConfig() *ServiceRegistryConfig {
 }
 
 // Validate checks Config and return a slice of found errs.
-func (c *ServiceRegistryConfig) Validate() []error {
-	return nil
+func (c *ServiceRegistryConfig) Validate(validate *validator.Validate) []error {
+	var errs []error
+	if validate == nil {
+		validate = validator.New()
+	}
+	errs = append(errs, validate.Struct(c))
+	return errs
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived

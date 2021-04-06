@@ -48,12 +48,19 @@ func (s *ServerRunOptions) completeWebServer() error {
 	{
 		consulInfo := s.Provider.Proto().GetConsul()
 		if consulInfo.GetEnabled() {
-			backend, err := s.ServiceRegistry.Complete().New()
-			if err != nil {
-				logrus.WithError(err).Errorf("build service registry backend")
-				return err
+			{
+				backend, err := s.ServiceRegistry.Complete().New()
+				if err != nil {
+					logrus.WithError(err).Errorf("build service registry backend")
+					return err
+				}
+				s.WebServerOptions.ServiceRegistryBackend = backend
 			}
-			s.WebServerOptions.ServiceRegistryBackend = backend
+
+			{
+				backend := s.ServiceResolver.Complete().New()
+				s.WebServerOptions.ServiceResolverBackend = backend
+			}
 		}
 	}
 	return nil

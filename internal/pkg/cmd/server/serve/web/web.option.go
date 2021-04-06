@@ -7,6 +7,7 @@ package web
 import (
 	"context"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/version"
@@ -21,6 +22,7 @@ type ServerRunOptions struct {
 	Provider         *provider.Provider
 	WebServerOptions *webserver.Config
 	ServiceRegistry  *consul.ServiceRegistryConfig
+	ServiceResolver  *consul.ServiceResolverConfig
 }
 
 type completedServerRunOptions struct {
@@ -38,13 +40,15 @@ func NewServerRunOptions() *ServerRunOptions {
 		Provider:         provider.GlobalProvider(),
 		WebServerOptions: webserver.NewConfig(),
 		ServiceRegistry:  consul.NewServiceRegistryConfig(),
+		ServiceResolver:  consul.NewServiceResolverConfig(),
 	}
 }
 
 // Validate checks ServerRunOptions and return a slice of found errs.
-func (s *ServerRunOptions) Validate() []error {
+func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 	var errs []error
-	errs = append(errs, s.ServiceRegistry.Validate()...)
+	errs = append(errs, s.ServiceRegistry.Validate(validate)...)
+	errs = append(errs, s.ServiceResolver.Validate(validate)...)
 	return errs
 }
 

@@ -40,6 +40,7 @@ type Config struct {
 	TlsConfig *tls.Config
 
 	ServiceRegistryBackend *consul.ServiceRegistry
+	ServiceResolverBackend *consul.ServiceResolver
 
 	WebHandlers []WebHandler
 
@@ -206,6 +207,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	s := &WebServer{
 		Name:                   name,
 		ServiceRegistryBackend: c.ServiceRegistryBackend,
+		ServiceResolverBackend: c.ServiceResolverBackend,
 		ShutdownDelayDuration:  c.ShutdownDelayDuration,
 		grpcBackend:            grpcBackend,
 		ginBackend:             ginBackend,

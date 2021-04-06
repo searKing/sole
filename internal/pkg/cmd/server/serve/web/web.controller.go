@@ -29,7 +29,7 @@ func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error
 		}
 
 		// validate options
-		if err := errors.Multi(completedOptions.Validate()...); err != nil {
+		if err := errors.Multi(completedOptions.Validate(nil)...); err != nil {
 			return err
 		}
 		return completedOptions.Run(ctx)
