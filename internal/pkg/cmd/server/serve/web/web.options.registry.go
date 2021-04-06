@@ -4,7 +4,7 @@
 
 package web
 
-func (s *ServerRunOptions) completeDiscovery() error {
+func (s *ServerRunOptions) completeServiceResgistry() error {
 	s.ServiceRegistry.ServiceName = s.Provider.Proto().GetService().GetName()
 	s.ServiceRegistry.ServiceAddress = s.Provider.GetBackendServeHostPort()
 	s.ServiceRegistry.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()

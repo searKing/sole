@@ -188,11 +188,8 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 
 	{
 		if c.CORS != nil {
-			corsHandler, err := c.CORS.Complete().New()
-			if err != nil {
-				return nil, err
-			}
-			opts = append(opts, grpc.WithHttpWrapper(corsHandler))
+			opts = append(opts, grpc.WithHttpWrapper(c.CORS.Complete().New().Handler))
+			c.GinMiddlewares = append(c.GinMiddlewares, c.CORS.Complete().NewGinHandler())
 		}
 	}
 

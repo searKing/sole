@@ -37,16 +37,66 @@ STACK_ABS_DIR=$(pwd)
 
 # 打印脚本入参
 echo "$0" "$*"
+GIT_QUIET=
+debug=
+g_proto_headers=
+g_with_cpp=
+g_with_go=
+g_with_go_tag=
+g_with_govalidators=
+g_with_go_grpc=
+g_with_go_grpc_gateway=
+g_with_openapiv2=
 
-# //go:generate bash scripts/proto-gen.sh ./v1 OFF ON OFF OFF OFF OFF "-I ."
+# //go:generate bash scripts/proto-gen.sh ./v1 --with_go -I "."
+
 g_protos_dir="$1"
-g_with_cpp="${2:-OFF}"
-g_with_go="${3:-OFF}"
-g_with_go_tag="${4:-ON}"
-g_with_go_grpc="${5:-ON}"
-g_with_go_grpc_gateway="${6:-ON}"
-g_with_openapiv2="${7:-ON}"
-g_proto_headers=${8:-""} # "-I xxx -I xxx"
+shift
+while test $# -gt 0; do
+  opt="$1"
+  shift
+
+  case "$opt" in
+  -q)
+    GIT_QUIET=1
+    ;;
+  -d)
+    debug=1
+    ;;
+  -I)
+    g_proto_headers+=" -I ${1}"
+    shift
+    ;;
+  --with_cpp)
+    g_with_cpp=1
+    ;;
+  --with_go)
+    g_with_go=1
+    ;;
+  --with_go_tag)
+    g_with_go_tag=1
+    ;;
+  --with_govalidators)
+    g_with_govalidators=1
+    ;;
+  --with_go_grpc)
+    g_with_go_grpc=1
+    ;;
+  --with_go_grpc_gateway)
+    g_with_go_grpc_gateway=1
+    ;;
+  --with_go_grpc_openapiv2)
+    g_with_openapiv2=1
+    ;;
+  --)
+    break
+    ;;
+  *)
+    die "Unexpected option: $opt"
+    ;;
+  esac
+done
+
 g_proto_headers="${g_proto_headers} -I ."
 
 # Directory and file names that begin with "." or "_" are ignored
@@ -62,7 +112,7 @@ fi
 if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/" ]; then
   g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/"
 fi
-if [ "${g_with_go_grpc_gateway}"x == "ON"x ] || [ "${g_with_openapiv2}"x == "ON"x ]; then
+if [ -n "${g_with_go_grpc_gateway}" ] || [ -n "${g_with_openapiv2}" ]; then
   if [ -d "${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway" ]; then
     g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../third_party/github.com/grpc-ecosystem/grpc-gateway"
   fi
@@ -79,35 +129,40 @@ function die() {
   exit 1
 }
 
-if [ "$g_with_go_tag"x == "ON"x ]; then
-  g_with_go="OFF"
+if [ -n "$g_with_go_tag" ]; then
+  g_with_go=
 fi
 
 # Sanity check that the right tools are accessible.
-for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2; do
+for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-govalidators protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2; do
   case $tool in
   "protoc-gen-go")
-    if [ "${g_with_go}"x != "ON"x ]; then
+    if [ -n "${g_with_go}" ]; then
       continue
     fi
     ;;
   "protoc-gen-go-tag")
-    if [ "${g_with_go_tag}"x != "ON"x ]; then
+    if [ -n "${g_with_go_tag}" ]; then
+      continue
+    fi
+    ;;
+  "protoc-gen-govalidators")
+    if [ -n "${g_with_govalidators}" ]; then
       continue
     fi
     ;;
   "protoc-gen-go-grpc")
-    if [ "${g_with_go_grpc}"x != "ON"x ]; then
+    if [ -n "${g_with_go_grpc}" ]; then
       continue
     fi
     ;;
   "protoc-gen-grpc-gateway")
-    if [ "${g_with_go_grpc_gateway}"x != "ON"x ]; then
+    if [ -n "${g_with_go_grpc_gateway}" ]; then
       continue
     fi
     ;;
   "protoc-gen-openapiv2")
-    if [ "${g_with_openapiv2}"x != "ON"x ]; then
+    if [ -n "${g_with_openapiv2}" ]; then
       continue
     fi
     ;;
@@ -126,6 +181,7 @@ for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-go-grpc protoc-gen
   protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
   protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
   protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/cmd/protoc-gen-go-tag
+  protoc-gen-govalidators: go get -u github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
   "
   echo 1>&2 "$tool: $q"
 done
@@ -143,40 +199,45 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   grpc_gateway_option=""
   openapiv2_option=""
   go_tag_option=""
+  go_validators_option=""
 
-  if [ "${g_with_cpp}"x == "ON"x ]; then
+  if [ -n "${g_with_cpp}" ]; then
     cpp_option="--cpp_out=."
   fi
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
-  if [ "${g_with_go}"x == "ON"x ]; then
+  if [ -n "${g_with_go}" ]; then
     go_option="--go_out=paths=source_relative:."
   fi
-  if [ "${g_with_go_tag}"x == "ON"x ]; then
+  if [ -n "${g_with_go_tag}" ]; then
     go_tag_option="--go-tag_out=paths=source_relative:."
   fi
-  if [ "${g_with_go_grpc}"x == "ON"x ]; then
+  if [ -n "${g_with_govalidators}" ]; then
+    go_validators_option="--govalidators_out=paths=source_relative:."
+  fi
+
+  if [ -n "${g_with_go_grpc}" ]; then
     go_grpc_option="--go-grpc_out=paths=source_relative:."
   fi
-  if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+  if [ -n "${g_with_go_grpc_gateway}" ]; then
     grpc_gateway_option="--grpc-gateway_out=logtostderr=true"
   fi
-  if [ "${g_with_openapiv2}"x == "ON"x ]; then
+  if [ -n "${g_with_openapiv2}" ]; then
     openapiv2_option="--openapiv2_out=logtostderr=true"
   fi
 
   api_conf_yaml="${proto_base_name}.yaml"
   if [[ -f "${api_conf_yaml}" ]]; then
-    if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+    if [ -n "${g_with_go_grpc_gateway}" ]; then
       grpc_gateway_option="${grpc_gateway_option},grpc_api_configuration=${api_conf_yaml}"
     fi
-    if [ "${g_with_openapiv2}"x == "ON"x ]; then
+    if [ -n "${g_with_openapiv2}" ]; then
       openapiv2_option="${openapiv2_option},grpc_api_configuration=${api_conf_yaml}"
     fi
   fi
-  if [ "${g_with_go_grpc_gateway}"x == "ON"x ]; then
+  if [ -n "${g_with_go_grpc_gateway}" ]; then
     grpc_gateway_option="${grpc_gateway_option},paths=source_relative:."
   fi
-  if [ "${g_with_openapiv2}"x == "ON"x ]; then
+  if [ -n "${g_with_openapiv2}" ]; then
     openapiv2_option="${openapiv2_option}:."
   fi
 
@@ -185,7 +246,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_name}" || exit
+  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_validators_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_name}" || exit
   printf "\r\033[K%s compilied " "${proto_file}"
 
   popd 1>/dev/null 2>&1 || exit

@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/handlers"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/cors"
+	gincors "github.com/rs/cors/wrapper/gin"
 )
 
 type Config struct {
@@ -83,42 +85,26 @@ func (s *Config) Complete() CompletedConfig {
 	return CompletedConfig{&completedConfig{s}}
 }
 
-func (c completedConfig) New() (func(http.Handler) http.Handler, error) {
-	return installCors(c.Config)
+func (c completedConfig) options() cors.Options {
+	return cors.Options{
+		AllowedOrigins:     c.AllowedOrigins,
+		AllowedMethods:     c.AllowedMethods,
+		AllowedHeaders:     c.AllowedHeaders,
+		ExposedHeaders:     c.ExposedHeaders,
+		AllowCredentials:   c.AllowCredentials,
+		MaxAge:             int(c.MaxAge.Truncate(time.Second).Seconds()),
+		OptionsPassthrough: c.OptionsPassthrough,
+	}
 }
 
-func installCors(c *Config) (func(http.Handler) http.Handler, error) {
-	if !c.UseConditional {
-		return func(h http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Access-Control-Allow-Origin", "*")
-				h.ServeHTTP(w, r)
-			})
-		}, nil
-	}
+func (c completedConfig) New() *cors.Cors {
+	return cors.New(c.options())
+}
 
-	var opts []handlers.CORSOption
-	if c.AllowCredentials {
-		opts = append(opts, handlers.AllowCredentials())
-	}
-	if c.OptionsPassthrough {
-		opts = append(opts, handlers.IgnoreOptions())
-	}
-	if c.AllowedMethods != nil {
-		opts = append(opts, handlers.AllowedMethods(c.AllowedMethods))
-	}
-	if c.AllowedHeaders != nil {
-		opts = append(opts, handlers.AllowedHeaders(c.AllowedHeaders))
-	}
-	if c.AllowedOrigins != nil {
-		opts = append(opts, handlers.AllowedOrigins(c.AllowedOrigins))
-	}
-	if c.ExposedHeaders != nil {
-		opts = append(opts, handlers.ExposedHeaders(c.ExposedHeaders))
-	}
-	if c.MaxAge >= 0 {
-		opts = append(opts, handlers.MaxAge(int(c.MaxAge.Seconds())))
-	}
+func (c completedConfig) NewWrapper() func(http.Handler) http.Handler {
+	return c.New().Handler
+}
 
-	return handlers.CORS(opts...), nil
+func (c completedConfig) NewGinHandler() gin.HandlerFunc {
+	return gincors.New(c.options())
 }

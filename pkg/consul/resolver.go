@@ -55,7 +55,7 @@ type ServiceResolver struct {
 	cancel func()
 }
 
-func NewServiceResolver(address string, services []Service) *ServiceResolver {
+func NewServiceResolver(address string, services ...Service) *ServiceResolver {
 	c := &ServiceResolver{
 		ConsulAddress: address,
 		CheckInterval: 10 * time.Second,

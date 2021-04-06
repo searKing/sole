@@ -4,7 +4,7 @@
 
 package consul
 
-type Config struct {
+type ServiceRegistryConfig struct {
 	ConsulAddress  string // consul server addr
 	ServiceAddress string
 	ServiceName    string // service name
@@ -12,7 +12,7 @@ type Config struct {
 }
 
 type completedConfig struct {
-	*Config
+	*ServiceRegistryConfig
 }
 
 type CompletedConfig struct {
@@ -20,32 +20,32 @@ type CompletedConfig struct {
 	*completedConfig
 }
 
-// NewConfig returns a Config struct with the default values
-func NewConfig() *Config {
-	return &Config{
+// NewServiceRegistryConfig returns a Config struct with the default values
+func NewServiceRegistryConfig() *ServiceRegistryConfig {
+	return &ServiceRegistryConfig{
 		ConsulAddress: "127.0.0.1:8500",
 	}
 }
 
 // Validate checks Config and return a slice of found errs.
-func (c *Config) Validate() []error {
+func (c *ServiceRegistryConfig) Validate() []error {
 	return nil
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
-func (c *Config) Complete() CompletedConfig {
+func (c *ServiceRegistryConfig) Complete() CompletedConfig {
 	var options completedConfig
 
 	// set defaults
-	options.Config = c
+	options.ServiceRegistryConfig = c
 	return CompletedConfig{&completedConfig{c}}
 }
 
 func (c completedConfig) New() (*ServiceRegistry, error) {
-	return installConsul(c.Config)
+	return installConsul(c.ServiceRegistryConfig)
 }
 
-func installConsul(c *Config) (*ServiceRegistry, error) {
+func installConsul(c *ServiceRegistryConfig) (*ServiceRegistry, error) {
 	return NewServiceRegistry(c.ConsulAddress, c.ServiceName, c.ServiceAddress, c.HealthCheckUrl)
 }

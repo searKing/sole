@@ -20,7 +20,7 @@ import (
 type ServerRunOptions struct {
 	Provider         *provider.Provider
 	WebServerOptions *webserver.Config
-	ServiceRegistry  *consul.Config
+	ServiceRegistry  *consul.ServiceRegistryConfig
 }
 
 type completedServerRunOptions struct {
@@ -37,7 +37,7 @@ func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		Provider:         provider.GlobalProvider(),
 		WebServerOptions: webserver.NewConfig(),
-		ServiceRegistry:  consul.NewConfig(),
+		ServiceRegistry:  consul.NewServiceRegistryConfig(),
 	}
 }
 
@@ -50,7 +50,7 @@ func (s *ServerRunOptions) Validate() []error {
 
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
-	if err := s.completeDiscovery(); err != nil {
+	if err := s.completeServiceResgistry(); err != nil {
 		return CompletedServerRunOptions{}, err
 	}
 	if err := s.completeWebServer(); err != nil {
