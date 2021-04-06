@@ -4,6 +4,10 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 #
+function die() {
+  echo 1>&2 "$*"
+  exit 1
+}
 
 set -o pipefail
 set -o errexit
@@ -123,11 +127,6 @@ if [ -n "${g_with_go_grpc_gateway}" ] || [ -n "${g_with_openapiv2}" ]; then
     g_proto_headers="${g_proto_headers} -I ${THIS_BASH_FILE_ABS_DIR}/../../../_third_party/github.com/grpc-ecosystem/grpc-gateway"
   fi
 fi
-
-function die() {
-  echo 1>&2 "$*"
-  exit 1
-}
 
 if [ -n "$g_with_go_tag" ]; then
   g_with_go=

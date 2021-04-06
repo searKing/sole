@@ -5,6 +5,16 @@
 # license that can be found in the LICENSE file.
 #
 
+function die() {
+  die_with_status 1 "$@"
+}
+
+function die_with_status() {
+  status=$1
+  shift
+  printf >&2 '%s\n' "$*"
+  exit "$status"
+}
 set -o pipefail
 set -o errexit
 set -o nounset
@@ -31,17 +41,6 @@ STACK_ABS_DIR=$(pwd)
 #cd "${THIS_BASH_FILE_ABS_DIR}" 1>/dev/null 2>&1 || exit
 
 g_protos_dir="$1"
-
-die() {
-  die_with_status 1 "$@"
-}
-
-die_with_status() {
-  status=$1
-  shift
-  printf >&2 '%s\n' "$*"
-  exit "$status"
-}
 
 # 临时文件
 # Install the working tree in a tempdir.
@@ -80,7 +79,7 @@ find "." -name "*.swagger.yaml" -o -name "*.swagger.json" -o -name "*.swagger.in
   printf "\r\033[K%s mixing" "${swagger_file}"
   if [[ "${swagger_file}" == *.init.yaml ]]; then
     tmp="${swagger_file}.json"
-    swagger -q generate spec -i "${swagger_file}" -o "${tmpdir}/${tmp}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
+    swagger -q generate spec -i "${swagger_file}" -o "${tmpdir}/${tmp}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options" || exit
 
     swagger -q mixin "${tmpdir}/${tmp}" "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_json}" || true
     [[ -f "${tmpdir}/${tmp}" ]] && rm -f "${tmpdir}/${tmp}"
@@ -92,7 +91,7 @@ find "." -name "*.swagger.yaml" -o -name "*.swagger.json" -o -name "*.swagger.in
   printf "\r\033[K%s mixed" "${swagger_file}"
 done
 printf "\r\033[K%s generating" "${mixed_swagger_yaml}"
-swagger -q generate spec -i "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_yaml}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"|| exit
+swagger -q generate spec -i "${tmpdir}/${mixed_swagger_json}" -o "${tmpdir}/${mixed_swagger_yaml}" --exclude="github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options" || exit
 printf "\r\033[K%s generated" "${mixed_swagger_yaml}"
 
 mv "${tmpdir}/${mixed_swagger_yaml}" "${mixed_swagger_yaml}"
