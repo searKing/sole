@@ -136,32 +136,32 @@ fi
 for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-govalidators protoc-gen-go-grpc protoc-gen-grpc-gateway protoc-gen-openapiv2; do
   case $tool in
   "protoc-gen-go")
-    if [ -n "${g_with_go}" ]; then
+    if [ -z "${g_with_go}" ]; then
       continue
     fi
     ;;
   "protoc-gen-go-tag")
-    if [ -n "${g_with_go_tag}" ]; then
+    if [ -z "${g_with_go_tag}" ]; then
       continue
     fi
     ;;
   "protoc-gen-govalidators")
-    if [ -n "${g_with_govalidators}" ]; then
+    if [ -z "${g_with_govalidators}" ]; then
       continue
     fi
     ;;
   "protoc-gen-go-grpc")
-    if [ -n "${g_with_go_grpc}" ]; then
+    if [ -z "${g_with_go_grpc}" ]; then
       continue
     fi
     ;;
   "protoc-gen-grpc-gateway")
-    if [ -n "${g_with_go_grpc_gateway}" ]; then
+    if [ -z "${g_with_go_grpc_gateway}" ]; then
       continue
     fi
     ;;
   "protoc-gen-openapiv2")
-    if [ -n "${g_with_openapiv2}" ]; then
+    if [ -z "${g_with_openapiv2}" ]; then
       continue
     fi
     ;;
