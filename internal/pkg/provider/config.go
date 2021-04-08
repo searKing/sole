@@ -6,7 +6,6 @@ package provider
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
@@ -23,7 +22,6 @@ import (
 	redis_ "github.com/searKing/sole/pkg/database/redis"
 	"github.com/searKing/sole/pkg/database/sql"
 	"github.com/searKing/sole/pkg/logs"
-	"github.com/searKing/sole/pkg/net/cors"
 	"github.com/searKing/sole/pkg/opentrace"
 	"github.com/searKing/sole/pkg/protobuf"
 )
@@ -37,7 +35,6 @@ type Config struct {
 	Logs       *logs.Config
 	OpenTracer *opentrace.Config
 
-	CORS      *cors.Config
 	KeyCipher *pasta.Config
 	Sql       *sql.Config
 	Redis     *redis_.Config
@@ -48,7 +45,6 @@ func NewConfig() *Config {
 	return &Config{
 		Logs:       logs.NewConfig(),
 		OpenTracer: opentrace.NewConfig(),
-		CORS:       cors.NewConfig(),
 		KeyCipher:  pasta.NewConfig(),
 		Sql:        sql.NewConfig(),
 		Redis:      redis_.NewConfig(),
@@ -63,7 +59,6 @@ func (o *Config) Complete(options ...ConfigOption) CompletedConfig {
 	o.installViperProtoOrDie()
 	o.completeLogs()
 	o.completeOpenTraceOrDie()
-	o.completeCors()
 	o.completeKeyCipherOrDie()
 	o.completeSqlDBOrDie()
 	o.completeRedis()
@@ -75,8 +70,6 @@ func (o *Config) Complete(options ...ConfigOption) CompletedConfig {
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
 func (c completedConfig) New(ctx context.Context) (*Provider, error) {
-	var err error
-	var corsHandler func(http.Handler) http.Handler
 	var sqlDB *sqlx.DB
 
 	if err := c.Logs.Complete().Apply(); err != nil {
@@ -96,23 +89,16 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 		}()
 		return nil, err
 	}
-	if c.CORS != nil {
-		corsHandler, err = c.CORS.Complete().New()
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	if c.Sql != nil {
 		sqlDB = c.Sql.Complete().New(ctx)
 	}
 	p := &Provider{
-		proto:       c.proto,
-		sqlDB:       sqlDB,
-		redis:       c.Redis.Complete().New(),
-		keyCipher:   c.KeyCipher.Complete().New(),
-		corsHandler: corsHandler,
-		ctx:         ctx,
+		proto:     c.proto,
+		sqlDB:     sqlDB,
+		redis:     c.Redis.Complete().New(),
+		keyCipher: c.KeyCipher.Complete().New(),
+		ctx:       ctx,
 	}
 	providerReloads.WithLabelValues(p.proto.String()).Inc()
 	go p.ReloadForever()
@@ -225,33 +211,6 @@ func (c *Config) completeOpenTraceOrDie() {
 		c.OpenTracer.Configuration.Sampler.Param = float64(sampler.GetParam())
 	}
 	return
-}
-
-func (c *Config) completeCors() {
-	corsConfig := c.CORS
-	corsInfo := c.proto.GetWeb().GetCors()
-	if corsInfo != nil {
-		if corsInfo.Enable {
-			maxAge, err := ptypes.Duration(corsInfo.GetMaxAge())
-			if err != nil {
-				maxAge = corsConfig.MaxAge
-				logrus.WithField("max_age", corsInfo.GetMaxAge()).
-					WithError(err).
-					Warnf("malformed max_age, use %s instead", maxAge)
-			}
-			corsConfig.UseConditional = corsInfo.GetUseConditional()
-			corsConfig.AllowedOrigins = corsInfo.GetAllowedOrigins()
-			corsConfig.AllowedMethods = corsInfo.GetAllowedOrigins()
-			corsConfig.AllowedHeaders = corsInfo.GetAllowedHeaders()
-			corsConfig.ExposedHeaders = corsInfo.GetExposedHeaders()
-
-			corsConfig.MaxAge = maxAge
-			corsConfig.AllowCredentials = corsInfo.GetAllowCredentials()
-		} else {
-			corsConfig = nil
-		}
-	}
-	c.CORS = corsConfig
 }
 
 // completeKeyCipherOrDie allows you to generate a key cipher.

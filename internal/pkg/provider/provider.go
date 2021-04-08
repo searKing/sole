@@ -6,11 +6,11 @@ package provider
 
 import (
 	"context"
-	"net/http"
 	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/pkg/crypto/pasta"
 )
@@ -24,7 +24,6 @@ type Provider struct {
 
 	keyCipher *pasta.Pasta
 
-	corsHandler func(handler http.Handler) http.Handler
 
 	ctx        context.Context
 	reloadOnce sync.Once
