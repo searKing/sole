@@ -5,11 +5,7 @@
 package provider
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
-
-	filepath_ "github.com/searKing/golang/go/path/filepath"
 
 	"github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/internal/pkg/version"
@@ -32,10 +28,4 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetService().Id = proto.GetService().GetName() + "-" + uuid.New().String()
 
 	return proto
-}
-
-// DefaultConfigPath returns config file's default path
-func DefaultConfigPath() string {
-	// 	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yaml", version.ServiceName))
-	return filepath_.Pathify(fmt.Sprintf("./conf/%s.yaml", version.ServiceName))
 }

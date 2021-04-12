@@ -8,7 +8,12 @@ import (
 	"context"
 	"fmt"
 
+	filepath_ "github.com/searKing/golang/go/path/filepath"
+	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/jwalterweatherman"
+	"github.com/spf13/viper"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/all"
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/web"
@@ -44,11 +49,17 @@ To learn more about each individual command, run:
 	// Here you will define your flags and configuration settings.
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
-	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", provider.DefaultConfigPath(),
-		fmt.Sprintf("Config file (default is %q)", provider.DefaultConfigPath()))
+	serveCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", DefaultConfigPath(),
+		fmt.Sprintf("Config file (default is %q)", DefaultConfigPath()))
 	serveCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// viper allows you to load config from default, config path、env and so on, but dies on failure.
+		jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
+		jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
+		if err := viperhelper.MergeAll(viper.GetViper(), cfgFile, version.ServiceName); err != nil {
+			logrus.WithError(err).WithField("config_path", cfgFile).Fatalf("load config")
+		}
+
 		cfg := provider.NewConfig()
-		cfg.ConfigFile = cfgFile
 		return cfg.Complete().Apply(cmd.Context())
 	}
 
@@ -58,4 +69,10 @@ To learn more about each individual command, run:
 	serveCmd.PersistentFlags().BoolVar(&provider.ForceDisableTls, "dangerous-force-disable-tls", false, "Disable HTTP/2 over TLS (HTTPS) and serve HTTP instead. Never use this in production.")
 
 	return serveCmd
+}
+
+// DefaultConfigPath returns config file's default path
+func DefaultConfigPath() string {
+	// 	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yaml", version.ServiceName))
+	return filepath_.Pathify(fmt.Sprintf("./conf/%s.yaml", version.ServiceName))
 }

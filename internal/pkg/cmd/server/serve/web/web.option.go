@@ -55,6 +55,7 @@ func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
+	s.WebServerOptions.Proto.ForceDisableTls = provider.ForceDisableTls
 	s.WebServerOptions.AddWebHandler(golang.NewHandler())
 	{
 		consulInfo := s.Provider.Proto().GetConsul()

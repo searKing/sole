@@ -24,6 +24,7 @@ import (
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+
 	"github.com/searKing/sole/pkg/protobuf"
 
 	"github.com/searKing/sole/pkg/consul"

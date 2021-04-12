@@ -9,12 +9,11 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/jwalterweatherman"
+	"github.com/spf13/viper"
 
 	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/crypto/pasta"
 	redis_ "github.com/searKing/sole/pkg/database/redis"
 	"github.com/searKing/sole/pkg/database/sql"
@@ -24,7 +23,8 @@ import (
 
 //go:generate go-option -type=Config
 type Config struct {
-	ConfigFile string
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
 
 	proto *viper_.ViperProto
 
@@ -36,9 +36,22 @@ type Config struct {
 	Redis     *redis_.Config
 }
 
+type completedConfig struct {
+	*Config
+
+	// for Complete Only
+	completeError error
+}
+
+type CompletedConfig struct {
+	// Embed a private pointer that cannot be instantiated outside of this package.
+	*completedConfig
+}
+
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
+		proto:      NewDefaultViperProto(),
 		Logs:       logs.NewViperConfig("log"),
 		OpenTracer: opentrace.NewViperConfig("tracing"),
 		KeyCipher:  pasta.NewViperConfig("secret"),
@@ -47,13 +60,27 @@ func NewConfig() *Config {
 	}
 }
 
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
-func (o *Config) Complete(options ...ConfigOption) CompletedConfig {
-	o.ApplyOptions(options...)
-	o.installViperProtoOrDie()
-	return CompletedConfig{&completedConfig{o}}
+func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
@@ -113,14 +140,17 @@ func (c completedConfig) Apply(ctx context.Context) error {
 	return nil
 }
 
-// installViperProtoOrDie allows you to load config from default, config path、env and so on, but dies on failure.
-func (c *Config) installViperProtoOrDie() {
-	var v viper_.ViperProto
-	jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
-	jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
-
-	if err := viperhelper.LoadGlobalConfig(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto()); err != nil {
-		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load config")
+func (c *Config) loadViper() error {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
 	}
-	c.proto = &v
+	if c.proto == nil {
+		c.proto = &viper_.ViperProto{}
+	}
+	if err := viperhelper.UnmarshalProtoMessageByJsonpb(v, c.proto); err != nil {
+		logrus.WithError(err).Errorf("load logs config from viper")
+		return err
+	}
+	return nil
 }

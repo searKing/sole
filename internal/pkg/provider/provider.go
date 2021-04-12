@@ -16,6 +16,8 @@ import (
 )
 
 type Provider struct {
+	ConfigFile string
+
 	proto *viper_.ViperProto
 
 	sqlDB *sqlx.DB
