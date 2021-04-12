@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package sole.api.v1.viper.logs;
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/pkg/logs;logs";
+
+// ViperProto is immutable, so mutex free
+message ViperProto {
+  Log log = 1;
+}
+
+message Log {
+  // 日志等级
+  enum Level {
+    option allow_alias = true;
+    panic = 0;
+    fatal = 1;
+    error = 2;
+    warn = 3;
+    warning = 3;
+    info = 4;
+    debug = 5;
+    trace = 6;
+  }
+  // 日志格式
+  enum Format {
+    json = 0;
+    text = 1;
+  }
+  Level level = 1 ; // 日志最低打印等级
+  Format format = 2 ; // 日志格式
+  string path = 3; //日志存储路径
+  google.protobuf.Duration rotation_duration = 4; // 日志循环覆盖分片时间
+  int32 rotation_max_count = 5; //日志循环覆盖保留分片个数
+  google.protobuf.Duration rotation_max_age = 6; // 文件最大保存时间
+  bool report_caller = 7;// 调用者堆栈
+}

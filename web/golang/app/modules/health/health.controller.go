@@ -13,27 +13,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type Controller struct {
-	//h *healthx.Handler
-}
+type Controller struct{}
 
 func NewController() *Controller {
-	h := &Controller{}
-	h.init()
-	return h
-}
-
-func (d *Controller) init() {
-	//c := provider.GlobalProvider()
-	//dependency.ExpectDependency(c.Logger(), map[string]interface{}{"service_discovery": c.ServiceDiscoveryConnection})
-
-	//logger := logrusx.New("", "")
-	//logger.Logger = logrus.StandardLogger()
-	//w := herodot.NewJSONWriter(logger)
-	//d.h = healthx.NewHandler(w, c.Proto().GetAppInfo().GetBuildVersion(), healthx.ReadyCheckers{
-	//	"database": provider.GlobalProvider().SqlDBPing,
-	//	//"zookeeper": ctx.ServiceDiscoveryConnection.Ping,
-	//})
+	return &Controller{}
 }
 
 func (d *Controller) Health() gin.HandlerFunc {

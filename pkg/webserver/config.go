@@ -13,13 +13,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
-	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
-	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	grpc_ "google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
+
+	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
+	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/searKing/sole/pkg/protobuf"
 
 	"github.com/searKing/sole/pkg/consul"
 
@@ -27,11 +32,11 @@ import (
 	"github.com/searKing/sole/pkg/webserver/healthz"
 )
 
-type WebHandler interface {
-	SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway)
-}
-
 type Config struct {
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
+	Proto      Web
+
 	GatewayOptions []grpc.GatewayOption
 	GinMiddlewares []gin.HandlerFunc
 
@@ -72,6 +77,9 @@ type Config struct {
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -153,6 +161,13 @@ func (s *Config) AddPreShutdownHookOrDie(name string, hook PreShutdownHookFunc) 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
+	c.parseViper()
 	// if there is no port, and we listen on one securely, use that one
 	if _, _, err := net.SplitHostPort(c.ExternalAddress); err != nil {
 		if c.BindAddress == "" {
@@ -166,17 +181,23 @@ func (c *Config) Complete() CompletedConfig {
 		c.ExternalAddress = net.JoinHostPort(c.ExternalAddress, port)
 	}
 
-	return CompletedConfig{&completedConfig{c}}
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 func (c completedConfig) New(name string) (*WebServer, error) {
+	if c.completeError != nil {
+		return nil, c.completeError
+	}
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(
 		logrus.StandardLogger().WriterLevel(logrus.InfoLevel),
 		logrus.StandardLogger().WriterLevel(logrus.WarnLevel),
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
 	opts := grpc.WithDefault()
+	if c.Proto.GetNoGrpcGatewayProxy() {
+		opts = append(opts, grpc.WithGrpcDialOption(grpc_.WithNoProxy()))
+	}
 	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
 	opts = append(opts, grpc.WithGrpcUnaryServerChain(grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
 		logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
@@ -233,19 +254,10 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		}
 	}
 
-	// install grpc & http handlers
-	installWebHandlers(s, c.Config)
+	// parseViper grpc & http handlers
+	s.InstallWebHandlers(c.Config.WebHandlers...)
 
 	return s, nil
-}
-
-func installWebHandlers(s *WebServer, c *Config) {
-	for _, h := range c.WebHandlers {
-		if h == nil {
-			continue
-		}
-		h.SetRoutes(s.ginBackend, s.grpcBackend)
-	}
 }
 
 // NewConfig returns a Config struct with the default values
@@ -259,5 +271,59 @@ func NewConfig() *Config {
 		ReadyzChecks:          append([]healthz.HealthCheck{}, defaultHealthChecks...),
 		LivezChecks:           append([]healthz.HealthCheck{}, defaultHealthChecks...),
 		ShutdownDelayDuration: time.Duration(0),
+		Proto: Web{
+			BindAddr: &Web_Net{
+				Port: 80,
+			},
+		},
+	}
+}
+
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
+func (c *Config) loadViper() error {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
+	}
+
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
+		logrus.WithError(err).Errorf("load web_server config from viper")
+		return err
+	}
+	return nil
+}
+
+func (s *Config) parseViper() {
+	s.BindAddress = s.Proto.GetBackendBindHostPort()
+	s.ExternalAddress = s.Proto.GetBackendServeHostPort()
+
+	{
+		corsConfig := cors.NewConfig()
+		corsInfo := s.Proto.GetCors()
+		if corsInfo != nil {
+			if corsInfo.Enable {
+				maxAge := protobuf.DurationOrDefault(corsInfo.GetMaxAge(), 0, "max_age")
+				corsConfig.UseConditional = corsInfo.GetUseConditional()
+				corsConfig.AllowedOrigins = corsInfo.GetAllowedOrigins()
+				corsConfig.AllowedMethods = corsInfo.GetAllowedOrigins()
+				corsConfig.AllowedHeaders = corsInfo.GetAllowedHeaders()
+				corsConfig.ExposedHeaders = corsInfo.GetExposedHeaders()
+
+				corsConfig.MaxAge = maxAge
+				corsConfig.AllowCredentials = corsInfo.GetAllowCredentials()
+			} else {
+				corsConfig = nil
+			}
+		}
+		s.CORS = corsConfig
 	}
 }

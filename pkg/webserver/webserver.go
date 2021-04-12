@@ -20,6 +20,10 @@ import (
 	"github.com/searKing/sole/pkg/webserver/healthz"
 )
 
+type WebHandler interface {
+	SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway)
+}
+
 type WebServer struct {
 	Name string
 	// Server Register. The backend is started after the server starts listening.
@@ -79,7 +83,7 @@ func (s *WebServer) PrepareRun() (preparedWebServer, error) {
 	s.installLivez()
 	err := s.addReadyzShutdownCheck(s.readinessStopCh)
 	if err != nil {
-		logrus.Errorf("Failed to install readyz shutdown check %s", err)
+		logrus.Errorf("Failed to parseViper readyz shutdown check %s", err)
 		return preparedWebServer{}, err
 	}
 	s.installReadyz()
@@ -205,4 +209,13 @@ func (s preparedWebServer) NonBlockingRun(ctx context.Context) (context.Context,
 	s.RunPostStartHooks(ctx)
 
 	return ctx, nil
+}
+
+func (s *WebServer) InstallWebHandlers(handlers ...WebHandler) {
+	for _, h := range handlers {
+		if h == nil {
+			continue
+		}
+		h.SetRoutes(s.ginBackend, s.grpcBackend)
+	}
 }

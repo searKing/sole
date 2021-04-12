@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package sole.api.v1.viper.opentrace;
+
+option go_package = "github.com/searKing/sole/pkg/database/opentrace;opentrace";
+
+// ViperProto is immutable, so mutex free
+message ViperProto {
+  Tracing tracing = 1;
+}
+
+message Tracing {
+  bool enable = 1;
+  Type type = 2;
+  Jaeger jaeger = 3;
+  string service_name = 4;
+
+  message Jaeger {
+    Reporter reporter = 1;
+    Sampler sampler = 2;
+
+    // Reporter configures the reporter. All fields are optional.
+    message Reporter {
+      // LocalAgentHostPort instructs reporter to send spans to jaeger-agent at this address
+      string local_agent_host_port = 1;
+    }
+    // Sampler allows initializing a non-default sampler.  All fields are optional.
+    message Sampler {
+      // server_url is the address of jaeger-agent's HTTP sampling server
+      string server_url = 1;
+      Type type = 2;
+
+      // Param is a value passed to the sampler.
+      // Valid values for Param field are:
+      // - for "const" sampler, 0 or 1 for always false/true respectively
+      // - for "probabilistic" sampler, a probability between 0 and 1
+      // - for "rateLimiting" sampler, the number of spans per second
+      // - for "remote" sampler, param is the same as for "probabilistic"
+      //   and indicates the initial sampling rate before the actual one
+      //   is received from the mothership.
+      float param = 3;
+      // Type specifies the type of the sampler: const, probabilistic, rateLimiting, or remote
+      enum Type {
+        const = 0;
+        probabilistic = 1;
+        rateLimiting = 2;
+        remote = 3;
+      }
+    }
+  }
+  enum Type {
+    urber_jaeger = 0; //uber-jaeger
+    zipkin = 1; //zipkin
+  }
+}

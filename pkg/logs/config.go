@@ -9,23 +9,27 @@ import (
 	"path/filepath"
 	"time"
 
-	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/durationpb"
+
+	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/searKing/sole/pkg/protobuf"
 )
 
 type Config struct {
-	ReportCaller bool             // 是否打印调用者堆栈
-	Level        logrus.Level     // 日志最低打印等级
-	Formatter    logrus.Formatter // 日志格式
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
 
-	Path           string        // //日志存储路径
-	RotateDuration time.Duration // 日志循环覆盖分片时间
-	RotateMaxAge   time.Duration // 文件最大保存时间
-	RotateMaxCount int           //日志循环覆盖保留分片个数
+	Log
 }
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -36,53 +40,105 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		ReportCaller:   true,
-		Level:          logrus.InfoLevel,
-		Formatter:      &logrus.TextFormatter{CallerPrettyfier: logrus_.ShortCallerPrettyfier},
-		Path:           "./log/" + filepath.Base(os.Args[0]),
-		RotateDuration: 24 * time.Hour,
-		RotateMaxAge:   7 * 24 * time.Hour,
-		RotateMaxCount: 0,
+		Log: Log{
+			Level:            Log_info,
+			Format:           Log_text,
+			Path:             "./log/" + filepath.Base(os.Args[0]),
+			RotationDuration: durationpb.New(24 * time.Hour),
+			RotationMaxCount: 0,
+			RotationMaxAge:   durationpb.New(7 * 24 * time.Hour),
+			ReportCaller:     false,
+		},
 	}
 }
 
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
 // Validate checks Config and return a slice of found errs.
-func (s *Config) Validate() []error {
+func (c *Config) Validate() []error {
 	return nil
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
-func (s *Config) Complete() CompletedConfig {
-	var options completedConfig
-
-	// set defaults
-	options.Config = s
-	return CompletedConfig{&completedConfig{s}}
+func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 func (c completedConfig) Apply() error {
-	return installLogrus(c.Config)
+	if c.completeError != nil {
+		return c.completeError
+	}
+	return c.install()
 }
 
-func installLogrus(c *Config) error {
-	logrus.SetReportCaller(c.ReportCaller)
-	if c.Formatter != nil {
-		logrus.SetFormatter(c.Formatter)
+func (c *Config) loadViper() error {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
 	}
-	logrus.SetLevel(c.Level)
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Log); err != nil {
+		logrus.WithError(err).Errorf("load logs config from viper")
+		return err
+	}
+	return nil
+}
+
+func (c *completedConfig) install() error {
+	log := c.Log
+	c.Path = log.GetPath()
+	c.ReportCaller = log.GetReportCaller()
+
+	if log.GetFormat() == Log_json {
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
+		})
+	} else if log.GetFormat() == Log_text {
+		logrus.SetFormatter(&logrus.TextFormatter{
+			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
+		})
+	}
+
+	level, err := logrus.ParseLevel(log.GetLevel().String())
+	if err != nil {
+		level = logrus.InfoLevel
+		logrus.WithField("module", "log").WithField("log_level", log.GetLevel()).
+			WithError(err).
+			Warnf("malformed log level, use %s instead", level)
+	}
+	logrus.SetLevel(level)
+
+	var RotateDuration time.Duration = protobuf.DurationOrDefault(log.GetRotationDuration(), 24*time.Hour, "rotation_duration")
+	var RotateMaxAge time.Duration = protobuf.DurationOrDefault(log.GetRotationMaxAge(), 7*24*time.Hour, "rotation_max_age")
+	var RotateMaxCount = int(log.GetRotationMaxCount())
+
+	logrus.SetReportCaller(c.GetReportCaller())
 
 	if err := logrus_.WithRotate(logrus.StandardLogger(),
 		c.Path,
-		logrus_.WithRotateInterval(c.RotateDuration),
-		logrus_.WithMaxCount(c.RotateMaxCount),
-		logrus_.WithMaxAge(c.RotateMaxAge)); err != nil {
+		logrus_.WithRotateInterval(RotateDuration),
+		logrus_.WithMaxCount(RotateMaxCount),
+		logrus_.WithMaxAge(RotateMaxAge)); err != nil {
 		logrus.WithField("module", "log").WithField("path", c.Path).
-			WithField("duration", c.RotateDuration).
-			WithField("max_count", c.RotateMaxCount).
-			WithField("max_age", c.RotateMaxAge).
+			WithField("duration", RotateDuration).
+			WithField("max_count", RotateMaxCount).
+			WithField("max_age", RotateMaxAge).
 			WithError(err).Error("add rotation wrapper for log")
 		return err
 	}

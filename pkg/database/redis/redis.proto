@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package sole.api.v1.viper.redis;
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/pkg/database/redis;redis";
+
+// ViperProto is immutable, so mutex free
+message ViperProto {
+  Redis redis = 1;
+}
+
+message Redis {
+  // Either a single address or a seed list of host:port addresses
+  // of cluster/sentinel nodes.
+  repeated string addrs = 1;
+
+  // Database to be selected after connecting to the server.
+  // Only single-node and failover clients.
+  int64 db = 2;
+
+
+  // Use the specified Username to authenticate the current connection
+  // with one of the connections defined in the ACL list when connecting
+  // to a Redis 6.0 instance, or greater, that is using the Redis ACL system.
+  string username = 3;
+
+  // Optional password. Must match the password specified in the
+  // requirepass server configuration option (if connecting to a Redis 5.0 instance, or lower),
+  // or the User Password when connecting to a Redis 6.0 instance, or greater,
+  // that is using the Redis ACL system.
+  string password = 4;
+
+  string sentinel_password = 5;
+
+
+  // Maximum number of retries before giving up.
+  // Default is 3 retries.
+  int64 max_retries = 6;
+
+  google.protobuf.Duration min_retry_backoff = 7;
+  google.protobuf.Duration max_retry_backoff = 8;
+  google.protobuf.Duration dial_timeout = 9;
+  google.protobuf.Duration read_timeout = 10;
+  google.protobuf.Duration write_timeout = 11;
+
+  int64 pool_size = 12;
+  int64 min_idle_conns = 13;
+  google.protobuf.Duration max_conn_age = 14;
+  google.protobuf.Duration pool_timeout = 15;
+  google.protobuf.Duration idle_timeout = 16;
+  google.protobuf.Duration idle_check_frequency = 17;
+
+  // Only cluster clients.
+  int64 max_redirects = 18;
+  bool read_only = 19;
+  // Allows routing read-only commands to the closest master or slave node.
+  // This option only works with NewFailoverClusterClient.
+  bool route_by_latency = 20;
+  // Allows routing read-only commands to the random master or slave node.
+  // This option only works with NewFailoverClusterClient.
+  bool route_randomly = 21;
+  // Route all commands to slave read-only nodes.
+
+  // The sentinel master name.
+  // Only failover clients.
+  // The master name.
+  string master_name = 22;
+}

@@ -6,10 +6,9 @@ package provider
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/google/uuid"
+
 	filepath_ "github.com/searKing/golang/go/path/filepath"
 
 	"github.com/searKing/sole/api/protobuf-spec/v1/viper"
@@ -31,27 +30,6 @@ func NewDefaultViperProto() *viper.ViperProto {
 	proto.GetService().DisplayName = version.ServiceName
 	proto.GetService().Description = version.ServiceDescription
 	proto.GetService().Id = proto.GetService().GetName() + "-" + uuid.New().String()
-
-	proto.Log = &viper.Log{}
-	proto.GetLog().Level = viper.Log_info
-	proto.GetLog().Format = viper.Log_text
-	proto.GetLog().Path = "./log/" + version.ServiceName
-	proto.GetLog().RotationDuration = ptypes.DurationProto(24 * time.Hour)
-	proto.GetLog().RotationMaxCount = 0
-	proto.GetLog().RotationMaxAge = ptypes.DurationProto(7 * 24 * time.Hour)
-	proto.GetLog().ReportCaller = true
-
-	proto.Web = &viper.Web{}
-	proto.GetWeb().ForceDisableTls = ForceDisableTls
-	proto.GetWeb().BindAddr = &viper.Web_Net{}
-	if proto.GetWeb().GetForceDisableTls() || proto.GetWeb().GetTls() == nil {
-		proto.GetWeb().GetBindAddr().Port = 80
-	} else {
-		proto.GetWeb().GetBindAddr().Port = 443
-	}
-
-	proto.Database = &viper.Database{}
-	proto.GetDatabase().Dsn = "memory"
 
 	return proto
 }

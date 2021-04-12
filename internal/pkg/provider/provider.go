@@ -24,7 +24,6 @@ type Provider struct {
 
 	keyCipher *pasta.Pasta
 
-
 	ctx        context.Context
 	reloadOnce sync.Once
 }
@@ -49,12 +48,8 @@ func (p *Provider) SqlDB() *sqlx.DB {
 }
 
 func (p *Provider) SqlDBPing() error {
-	dsn := p.Proto().GetDatabase().GetDsn()
-	switch dsn {
-	case "memory":
-		// ignore
+	if p.sqlDB == nil {
 		return nil
-	default:
-		return p.SqlDB().PingContext(p.Context())
 	}
+	return p.SqlDB().PingContext(p.Context())
 }

@@ -6,15 +6,12 @@ package provider
 
 import (
 	"context"
-	"strings"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/jmoiron/sqlx"
-	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
-	"github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/jwalterweatherman"
-	jaegerConfig "github.com/uber/jaeger-client-go/config"
+
+	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/searKing/sole/internal/pkg/version"
@@ -23,7 +20,6 @@ import (
 	"github.com/searKing/sole/pkg/database/sql"
 	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/opentrace"
-	"github.com/searKing/sole/pkg/protobuf"
 )
 
 //go:generate go-option -type=Config
@@ -43,11 +39,11 @@ type Config struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Logs:       logs.NewConfig(),
-		OpenTracer: opentrace.NewConfig(),
-		KeyCipher:  pasta.NewConfig(),
-		Sql:        sql.NewConfig(),
-		Redis:      redis_.NewConfig(),
+		Logs:       logs.NewViperConfig("log"),
+		OpenTracer: opentrace.NewViperConfig("tracing"),
+		KeyCipher:  pasta.NewViperConfig("secret"),
+		Sql:        sql.NewViperConfig("database"),
+		Redis:      redis_.NewViperConfig("redis"),
 	}
 }
 
@@ -57,12 +53,6 @@ func NewConfig() *Config {
 func (o *Config) Complete(options ...ConfigOption) CompletedConfig {
 	o.ApplyOptions(options...)
 	o.installViperProtoOrDie()
-	o.completeLogs()
-	o.completeOpenTraceOrDie()
-	o.completeKeyCipherOrDie()
-	o.completeSqlDBOrDie()
-	o.completeRedis()
-
 	return CompletedConfig{&completedConfig{o}}
 }
 
@@ -93,12 +83,19 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	if c.Sql != nil {
 		sqlDB = c.Sql.Complete().New(ctx)
 	}
+
 	p := &Provider{
 		proto:     c.proto,
 		sqlDB:     sqlDB,
-		redis:     c.Redis.Complete().New(),
 		keyCipher: c.KeyCipher.Complete().New(),
 		ctx:       ctx,
+	}
+	if c.Redis != nil {
+		redis, err := c.Redis.Complete().New()
+		if err != nil {
+			return nil, err
+		}
+		p.redis = redis
 	}
 	providerReloads.WithLabelValues(p.proto.String()).Inc()
 	go p.ReloadForever()
@@ -122,153 +119,8 @@ func (c *Config) installViperProtoOrDie() {
 	jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
 	jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
 
-	if err := viper.LoadGlobalConfig(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto()); err != nil {
+	if err := viperhelper.LoadGlobalConfig(&v, c.ConfigFile, version.ServiceName, NewDefaultViperProto()); err != nil {
 		logrus.WithError(err).WithField("config_path", c.ConfigFile).Fatalf("load config")
 	}
-
-	if err := viper.PersistGlobalConfig(); err != nil {
-		logrus.WithError(err).WithField("config_path", c.ConfigFile).Warnf("persist config ignored")
-	}
-
 	c.proto = &v
-}
-
-func (c *Config) completeLogs() {
-	log := c.proto.GetLog()
-	c.Logs.Path = log.GetPath()
-	c.Logs.ReportCaller = log.GetReportCaller()
-
-	if log.GetFormat() == viper_.Log_json {
-		c.Logs.Formatter = &logrus.JSONFormatter{
-			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
-		}
-	} else if log.GetFormat() == viper_.Log_text {
-		c.Logs.Formatter = &logrus.TextFormatter{
-			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
-		}
-	}
-
-	level, err := logrus.ParseLevel(log.GetLevel().String())
-	if err != nil {
-		level = c.Logs.Level
-		logrus.WithField("module", "log").WithField("log_level", log.GetLevel()).
-			WithError(err).
-			Warnf("malformed log level, use %s instead", level)
-	}
-	c.Logs.Level = level
-
-	duration, err := ptypes.Duration(log.GetRotationDuration())
-	if err != nil {
-		duration = c.Logs.RotateDuration
-		logrus.WithField("module", "log").WithField("rotation_duration", log.GetRotationDuration()).
-			WithError(err).
-			Warnf("malformed rotation duration, use %s instead", duration)
-	}
-	c.Logs.RotateDuration = duration
-
-	maxAge, err := ptypes.Duration(log.GetRotationMaxAge())
-	if err != nil {
-		maxAge = c.Logs.RotateMaxAge
-		logrus.WithField("module", "log").WithField("max_age", log.GetRotationMaxAge()).
-			WithError(err).
-			Warnf("malformed max age, use %s instead", maxAge)
-	}
-	c.Logs.RotateMaxAge = maxAge
-	c.Logs.RotateMaxCount = int(log.GetRotationMaxCount())
-}
-
-func (c *Config) completeOpenTraceOrDie() {
-	trace := c.proto.GetTracing()
-	if !trace.GetEnable() {
-		c.OpenTracer.Enabled = false
-		return
-	}
-
-	c.OpenTracer.Enabled = true
-	switch trace.GetType() {
-	case viper_.Tracing_urber_jaeger:
-		c.OpenTracer.Type = opentrace.TypeJeager
-	case viper_.Tracing_zipkin:
-		c.OpenTracer.Type = opentrace.TypeZipkin
-	default:
-		c.OpenTracer.Type = opentrace.TypeButt
-		logrus.Fatalf("malformed trace type: %s", trace.GetType())
-		return
-	}
-	c.OpenTracer.ServiceName = c.proto.GetService().GetName()
-
-	reporter := trace.GetJaeger().GetReporter()
-	if reporter != nil {
-		c.OpenTracer.Configuration.Reporter = &jaegerConfig.ReporterConfig{}
-		c.OpenTracer.Configuration.Reporter.LocalAgentHostPort = reporter.GetLocalAgentHostPort()
-	}
-
-	sampler := trace.GetJaeger().GetSampler()
-	if sampler != nil {
-		c.OpenTracer.Configuration.Sampler = &jaegerConfig.SamplerConfig{}
-		c.OpenTracer.Configuration.Sampler.SamplingServerURL = sampler.GetServerUrl()
-		c.OpenTracer.Configuration.Sampler.Type = sampler.GetType().String()
-		c.OpenTracer.Configuration.Sampler.Param = float64(sampler.GetParam())
-	}
-	return
-}
-
-// completeKeyCipherOrDie allows you to generate a key cipher.
-func (c *Config) completeKeyCipherOrDie() {
-	pastaConfig := c.KeyCipher
-
-	secrets := c.proto.GetSecret().GetSystem()
-	if len(secrets) > 0 {
-		pastaConfig.SystemSecret = []byte(secrets[0])
-	}
-	if len(secrets) > 1 {
-		for _, secret := range secrets[1:] {
-			pastaConfig.RotatedSystemSecrets = append(pastaConfig.RotatedSystemSecrets, []byte(secret))
-		}
-	}
-}
-
-func (c *Config) completeSqlDBOrDie() {
-	sqlConfig := c.Sql
-	sqlConfig.Dsn = c.proto.GetDatabase().GetDsn()
-
-	dsnUrl := c.proto.GetDatabase().GetDsn()
-	switch dsnUrl {
-	case "memory":
-		// ignore
-		return
-	case "":
-		logrus.Fatalf(`config.database.dsn is not set, use "export %s_DATABASE_DSN=memory" for an in memory storage or the documented database adapters.`,
-			strings.ToUpper(version.ServiceName))
-	}
-
-	sqlConfig.MaxWait = protobuf.DurationOrDefault(c.proto.GetDatabase().GetMaxWaitDuration(), sqlConfig.MaxWait, "max_wait")
-	sqlConfig.FailAfter = protobuf.DurationOrDefault(c.proto.GetDatabase().GetFailAfterDuration(), sqlConfig.FailAfter, "fail_after")
-}
-
-func (c *Config) completeRedis() {
-	redisConfig := c.Redis
-	redis := c.proto.GetRedis()
-	redisConfig.Addrs = redis.GetAddrs()
-	redisConfig.DB = int(redis.GetDb())
-	redisConfig.Username = redis.GetUsername()
-	redisConfig.Password = redis.GetPassword()
-	redisConfig.SentinelPassword = redis.GetSentinelPassword()
-	redisConfig.MaxRetries = int(redis.GetMaxRetries())
-	redisConfig.MinRetryBackoff = protobuf.DurationOrDefault(redis.GetMinRetryBackoff(), redisConfig.MinRetryBackoff, "min_retry_backoff")
-	redisConfig.MaxRetryBackoff = protobuf.DurationOrDefault(redis.GetMaxRetryBackoff(), redisConfig.MaxRetryBackoff, "max_retry_backoff")
-	redisConfig.DialTimeout = protobuf.DurationOrDefault(redis.GetDialTimeout(), redisConfig.DialTimeout, "dial_timeout")
-	redisConfig.ReadTimeout = protobuf.DurationOrDefault(redis.GetReadTimeout(), redisConfig.ReadTimeout, "read_timeout")
-	redisConfig.WriteTimeout = protobuf.DurationOrDefault(redis.GetWriteTimeout(), redisConfig.WriteTimeout, "write_timeout")
-	redisConfig.PoolSize = int(redis.GetPoolSize())
-	redisConfig.MinIdleConns = int(redis.GetMinIdleConns())
-	redisConfig.MaxConnAge = protobuf.DurationOrDefault(redis.GetMaxConnAge(), redisConfig.MaxConnAge, "max_conn_age")
-	redisConfig.PoolTimeout = protobuf.DurationOrDefault(redis.GetPoolTimeout(), redisConfig.PoolTimeout, "pool_timeout")
-	redisConfig.IdleTimeout = protobuf.DurationOrDefault(redis.GetIdleTimeout(), redisConfig.IdleTimeout, "idle_timeout")
-	redisConfig.IdleCheckFrequency = protobuf.DurationOrDefault(redis.GetIdleCheckFrequency(), redisConfig.IdleCheckFrequency, "idle_check_frequency")
-	redisConfig.MaxRedirects = int(redis.GetMaxRedirects())
-	redisConfig.ReadOnly = redis.GetReadOnly()
-	redisConfig.RouteByLatency = redis.GetRouteByLatency()
-	redisConfig.RouteRandomly = redis.GetRouteRandomly()
-	redisConfig.MasterName = redis.GetMasterName()
 }

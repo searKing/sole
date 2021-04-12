@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package provider
+package webserver
 
 import (
 	"fmt"
@@ -12,48 +12,50 @@ import (
 	"strings"
 
 	"github.com/searKing/golang/go/net/addr"
-
 	"github.com/searKing/sole/pkg/protobuf"
 )
 
-func (p *Provider) HTTPScheme() string {
-	return "http"
+func (p *Web) HTTPScheme() string {
+	if p.GetForceDisableTls() {
+		return "http"
+	}
+	return "https"
 }
 
-func (p *Provider) GetBackendBindHostPort() string {
-	local := p.Proto().GetWeb().GetBindAddr()
+func (p *Web) GetBackendBindHostPort() string {
+	local := p.GetBindAddr()
 	return getHostPort(local.GetHost(), local.GetPort())
 }
 
-func (p *Provider) GetBackendAdvertiseHostPort() string {
-	addr := p.Proto().GetWeb().GetAdvertiseAddr()
+func (p *Web) GetBackendAdvertiseHostPort() string {
+	addr := p.GetAdvertiseAddr()
 	if addr.GetHost() == "" {
 		return p.GetBackendBindHostPort()
 	}
 	return getHostPort(addr.GetHost(), addr.GetPort())
 }
 
-func (p *Provider) GetBackendServeHostPort() string {
-	if p.Proto().GetWeb().GetAdvertiseAddr().GetHost() != "" {
-		return getHostPort(p.Proto().GetWeb().GetAdvertiseAddr().GetHost(),
-			p.Proto().GetWeb().GetAdvertiseAddr().GetPort())
+func (p *Web) GetBackendServeHostPort() string {
+	if p.GetAdvertiseAddr().GetHost() != "" {
+		return getHostPort(p.GetAdvertiseAddr().GetHost(),
+			p.GetAdvertiseAddr().GetPort())
 	}
-	if p.Proto().GetWeb().GetBindAddr().GetHost() != "" &&
-		p.Proto().GetWeb().GetBindAddr().GetHost() != "0.0.0.0" {
-		return getHostPort(p.Proto().GetWeb().GetBindAddr().GetHost(),
-			p.Proto().GetWeb().GetBindAddr().GetPort())
+	if p.GetBindAddr().GetHost() != "" &&
+		p.GetBindAddr().GetHost() != "0.0.0.0" {
+		return getHostPort(p.GetBindAddr().GetHost(),
+			p.GetBindAddr().GetPort())
 	}
-	resolvers := p.Proto().GetWeb().GetLocalIpResolver()
+	resolvers := p.GetLocalIpResolver()
 	ip, err := addr.ServeIP(resolvers.GetNetworks(), resolvers.GetAddresses(),
 		protobuf.DurationOrDefault(resolvers.GetTimeout(), 0, "timeout"))
 	if err != nil {
 		return getHostPort("localhost",
-			p.Proto().GetWeb().GetBindAddr().GetPort())
+			p.GetBindAddr().GetPort())
 	}
-	return getHostPort(ip.String(), p.Proto().GetWeb().GetBindAddr().GetPort())
+	return getHostPort(ip.String(), p.GetBindAddr().GetPort())
 }
 
-func (p *Provider) ResolveBackendLocalUrl(relativePaths ...string) string {
+func (p *Web) ResolveBackendLocalUrl(relativePaths ...string) string {
 	return resolveLocalUrl(
 		p.HTTPScheme(),
 		p.GetBackendServeHostPort(),

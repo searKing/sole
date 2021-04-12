@@ -12,6 +12,7 @@ import (
 
 	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/consul"
+	"github.com/searKing/sole/web/golang"
 
 	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/pkg/webserver"
@@ -38,7 +39,7 @@ type CompletedServerRunOptions struct {
 func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		Provider:         provider.GlobalProvider(),
-		WebServerOptions: webserver.NewConfig(),
+		WebServerOptions: webserver.NewViperConfig("web"),
 		ServiceRegistry:  consul.NewServiceRegistryConfig(),
 		ServiceResolver:  consul.NewServiceResolverConfig(),
 	}
@@ -54,11 +55,29 @@ func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
-	if err := s.completeServiceResgistry(); err != nil {
-		return CompletedServerRunOptions{}, err
-	}
-	if err := s.completeWebServer(); err != nil {
-		return CompletedServerRunOptions{}, err
+	s.WebServerOptions.AddWebHandler(golang.NewHandler())
+	{
+		consulInfo := s.Provider.Proto().GetConsul()
+		if consulInfo.GetEnabled() {
+			{
+				s.ServiceRegistry.ServiceName = s.Provider.Proto().GetService().GetName()
+				s.ServiceRegistry.ServiceAddress = s.WebServerOptions.Proto.GetBackendServeHostPort()
+				s.ServiceRegistry.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()
+				s.ServiceRegistry.HealthCheckUrl = "/healthz"
+				backend, err := s.ServiceRegistry.Complete().New()
+				if err != nil {
+					logrus.WithError(err).Errorf("build service registry backend")
+					return CompletedServerRunOptions{}, err
+				}
+				s.WebServerOptions.ServiceRegistryBackend = backend
+			}
+
+			{
+				s.ServiceResolver.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()
+				backend := s.ServiceResolver.Complete().New()
+				s.WebServerOptions.ServiceResolverBackend = backend
+			}
+		}
 	}
 	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
 }

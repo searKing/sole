@@ -9,21 +9,26 @@ import (
 	"io"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	jeagerConf "github.com/uber/jaeger-client-go/config"
+
 	"github.com/uber/jaeger-client-go/zipkin"
+
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 )
 
 type Config struct {
-	Enabled       bool
-	ServiceName   string
-	Type          Type
-	Configuration jeagerConf.Configuration
-
-	closer io.Closer
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
+	Tracing
 }
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -34,47 +39,100 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Type:          TypeJeager,
-		Configuration: jeagerConf.Configuration{},
+		Tracing: Tracing{
+			Enable: false,
+			Type:   Tracing_urber_jaeger,
+		},
 	}
 }
 
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
 // Validate checks Config and return a slice of found errs.
-func (s *Config) Validate() []error {
+func (c *Config) Validate() []error {
 	return nil
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
-func (s *Config) Complete() CompletedConfig {
+func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
 	var options completedConfig
 
 	// set defaults
-	options.Config = s
-	return CompletedConfig{&completedConfig{s}}
+	options.Config = c
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 func (c completedConfig) Apply() (io.Closer, error) {
-	return installOpenTrace(c.Config)
+	if c.completeError != nil {
+		return nil, c.completeError
+	}
+	return c.install()
 }
 
-func installOpenTrace(c *Config) (io.Closer, error) {
-	if !c.Enabled {
-		c.Configuration.Disabled = true
-		return c.Configuration.InitGlobalTracer(c.ServiceName)
+func (c *Config) loadViper() error {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
 	}
-	if c.Type >= TypeButt {
-		return nil, fmt.Errorf("unknown tracer: %s", c.Type)
+
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Tracing); err != nil {
+		logrus.WithError(err).Errorf("load opentrace config from viper")
+		return err
+	}
+	return nil
+}
+
+func (c *completedConfig) install() (io.Closer, error) {
+	var Configuration jeagerConf.Configuration
+	trace := c.Tracing
+	if !trace.GetEnable() {
+		Configuration.Disabled = true
+		return Configuration.InitGlobalTracer(trace.GetServiceName())
+	}
+
+	reporter := trace.GetJaeger().GetReporter()
+	if reporter != nil {
+		Configuration.Reporter = &jeagerConf.ReporterConfig{}
+		Configuration.Reporter.LocalAgentHostPort = reporter.GetLocalAgentHostPort()
+	}
+
+	sampler := trace.GetJaeger().GetSampler()
+	if sampler != nil {
+		Configuration.Sampler = &jeagerConf.SamplerConfig{}
+		Configuration.Sampler.SamplingServerURL = sampler.GetServerUrl()
+		Configuration.Sampler.Type = sampler.GetType().String()
+		Configuration.Sampler.Param = float64(sampler.GetParam())
 	}
 	var configs []jeagerConf.Option
-	if c.Type == TypeZipkin {
+	switch trace.GetType() {
+	case Tracing_urber_jaeger:
+		break
+	case Tracing_zipkin:
 		zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
 		configs = append(
 			configs,
 			jeagerConf.Injector(opentracing.HTTPHeaders, zipkinPropagator),
 			jeagerConf.Extractor(opentracing.HTTPHeaders, zipkinPropagator),
 		)
+	default:
+		logrus.Errorf("malformed trace type: %s", trace.GetType())
+		return nil, fmt.Errorf("malformed trace type: %s", trace.GetType())
 	}
 
-	return c.Configuration.InitGlobalTracer(c.ServiceName, configs...)
+	return Configuration.InitGlobalTracer(c.ServiceName, configs...)
 }

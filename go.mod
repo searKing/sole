@@ -8,7 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.2.0
 	github.com/go-redis/redis/v8 v8.5.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/protobuf v1.5.1
+	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.1.0
@@ -25,14 +25,14 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.0.147
+	github.com/searKing/golang v1.0.154
 	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210305033433-3133a74ad7bd
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
-	github.com/spf13/viper v1.7.1 // indirect
+	github.com/spf13/viper v1.7.1
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	go.uber.org/automaxprocs v1.4.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect
@@ -52,7 +52,7 @@ require (
 
 //replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0
 
-//replace github.com/searKing/golang v1.0.147 => ../../../github.com/searKing/golang
+//replace github.com/searKing/golang v1.0.154 => ../../../github.com/searKing/golang
 
 //
 //replace github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210305033433-3133a74ad7bd => ../../../github.com/searKing/golang/tools/cmd/protoc-gen-go-tag

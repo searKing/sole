@@ -7,7 +7,6 @@ package protobuf
 import (
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -16,12 +15,12 @@ func DurationOrDefault(timeout *durationpb.Duration, def time.Duration, msg stri
 	if timeout == nil {
 		return def
 	}
-	d, err := ptypes.Duration(timeout)
-	if err != nil {
+
+	if err := timeout.CheckValid(); err != nil {
 		logrus.WithField("timeout", timeout).
 			WithError(err).
 			Warnf("malformed %s, use %s instead", msg, def)
 		return def
 	}
-	return d
+	return timeout.AsDuration()
 }

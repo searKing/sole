@@ -13,19 +13,26 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/searKing/golang/third_party/github.com/go-sql-driver/mysql"
 	"github.com/searKing/golang/third_party/github.com/golang/go/database/sql"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/searKing/sole/pkg/protobuf"
 )
 
 type Config struct {
-	Dsn       string
-	MaxWait   time.Duration
-	FailAfter time.Duration
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
+	Database
 }
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -36,24 +43,73 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Dsn:       "memory",
-		MaxWait:   5 * time.Second,
-		FailAfter: 5 * time.Minute,
+		Database: Database{
+			Dsn:               "memory",
+			MaxWaitDuration:   durationpb.New(5 * time.Second),
+			FailAfterDuration: durationpb.New(5 * time.Minute),
+		},
 	}
+}
+
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
+// Validate checks Config and return a slice of found errs.
+func (c *Config) Validate() []error {
+	var errs []error
+	dsnUrl := c.GetDsn()
+	switch dsnUrl {
+	case "memory":
+		// ignore
+		break
+	case "":
+		errs = append(errs, fmt.Errorf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`))
+	}
+	return errs
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
-func (o *Config) Complete() CompletedConfig {
-	return CompletedConfig{&completedConfig{o}}
+func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
 func (c completedConfig) New(ctx context.Context) *sqlx.DB {
+	if c.completeError != nil {
+		logrus.WithError(c.completeError).Fatalf("complete config")
+		return nil
+	}
 	return c.installSqlDBOrDie(ctx)
+}
+
+func (c *Config) loadViper() error {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
+	}
+
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Database); err != nil {
+		logrus.WithError(err).Errorf("load database config from viper")
+		return err
+	}
+	return nil
 }
 
 func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
@@ -71,8 +127,8 @@ func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
 		logrus.Fatalf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`)
 	}
 
-	maxWait := c.MaxWait
-	failAfter := c.FailAfter
+	maxWait := protobuf.DurationOrDefault(c.GetMaxWaitDuration(), 5*time.Second, "max_wait")
+	failAfter := protobuf.DurationOrDefault(c.GetFailAfterDuration(), 5*time.Minute, "fail_after")
 
 	schema, sdnConfig, err := mysql.ParseDSN(dsnUrl)
 	if err != nil {

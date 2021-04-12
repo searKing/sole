@@ -1,0 +1,9 @@
+log:
+  format: text
+  level: info
+  path: ./log/sole
+  report_caller: true
+  rotation_duration: 86400s
+  rotation_max_age: 604800s
+web:
+  no_grpc_gateway_proxy: true

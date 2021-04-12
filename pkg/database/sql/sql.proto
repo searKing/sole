@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sole.api.v1.viper.database.sql;
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/pkg/database/sql;sql";
+
+// ViperProto is immutable, so mutex free
+message ViperProto {
+  Database database = 1;
+}
+
+message Database {
+  string dsn = 1; // memory|schema://[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+  google.protobuf.Duration max_wait_duration = 2;
+  google.protobuf.Duration fail_after_duration = 3;
+}

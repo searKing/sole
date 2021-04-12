@@ -6,11 +6,15 @@ package pasta
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 )
 
 type Config struct {
-	SystemSecret         []byte
-	RotatedSystemSecrets [][]byte
+	KeyInViper string
+	Viper      *viper.Viper // If set, overrides params below
+	Secret
 }
 
 type completedConfig struct {
@@ -27,13 +31,25 @@ func NewConfig() *Config {
 	return &Config{}
 }
 
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(key string) *Config {
+	c := NewConfig()
+	c.Viper = viper.GetViper()
+	c.KeyInViper = key
+	return c
+}
+
+// Validate checks Config and return a slice of found errs.
+func (s *Config) Validate() []error {
+	return nil
+}
+
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
 func (o *Config) Complete() CompletedConfig {
-	o.installSystemSecretOrDie()
-	o.installRotatedSystemSecret()
-
 	return CompletedConfig{&completedConfig{o}}
 }
 
@@ -41,47 +57,71 @@ func (o *Config) Complete() CompletedConfig {
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
 func (c completedConfig) New() *Pasta {
+	c.loadViperOrDie()
 	return c.installKeyCipherOrDie()
+}
+
+func (c *completedConfig) loadViperOrDie() {
+	v := c.Viper
+	if v != nil && c.KeyInViper != "" {
+		v = v.Sub(c.KeyInViper)
+	}
+
+	if err := viper_.UnmarshalProtoMessageByJsonpb(c.Viper, &c.Secret); err != nil {
+		logrus.WithError(err).Fatalf("load secret config from viper")
+		return
+	}
 }
 
 // installSystemSecretOrDie allows you to check or generate system secret, but dies on failure.
 func (c *Config) installSystemSecretOrDie() {
+	var SystemSecret []byte
+	var RotatedSystemSecrets [][]byte
+
+	secrets := c.Secret.GetSystemSecrets()
+	if len(secrets) > 0 {
+		SystemSecret = secrets[0]
+	}
+	if len(secrets) > 1 {
+		for _, secret := range secrets[1:] {
+			RotatedSystemSecrets = append(RotatedSystemSecrets, secret)
+		}
+	}
+
+	RotatedSystemSecrets = append(RotatedSystemSecrets, c.Secret.GetRotatedSystemSecrets()...)
 	logger := logrus.WithField("module", "provider.system_secret")
-	secret := c.SystemSecret
-	if len(secret) == 0 {
+	if len(SystemSecret) == 0 {
 		logger.Warnf("Configuration secrets.system is not set, generating a temporary, random secret...")
 		secretBytes := GenerateSecret(32)
 		logger.Warnf("Generated secret: %s", string(secretBytes))
-		secretBytes = HashByteSecret(secretBytes)
-
 		logger.Warnln("Do not use generate secrets in production. The secret will be leaked to the logs.")
-		c.SystemSecret = secretBytes
-		return
+		SystemSecret = secretBytes
 	}
 
-	if len(secret) >= 16 {
+	if len(SystemSecret) >= 16 {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.SystemSecret = HashByteSecret(secret)
+		SystemSecret = HashByteSecret(SystemSecret)
+		c.SystemSecrets = [][]byte{SystemSecret}
 		return
 	}
 
-	logger.Fatalf("system secret must be undefined or have at least 16 characters but only has %d characters.", len(secret))
+	logger.Fatalf("system secret must be undefined or have at least 16 characters but only has %d characters.", len(SystemSecret))
 	return
 }
 
 // installRotatedSystemSecret allows you to check rotated system secret.
 func (c *Config) installRotatedSystemSecret() {
-	secrets := c.RotatedSystemSecrets
-	if len(secrets) < 2 {
-		return
-	}
-	for _, secret := range secrets[1:] {
+	secrets := c.GetRotatedSystemSecrets()
+	for i, secret := range secrets {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.RotatedSystemSecrets = append(c.RotatedSystemSecrets, HashByteSecret(secret))
+		c.RotatedSystemSecrets[i] = HashByteSecret(secret)
 	}
 }
 
 // installKeyCipherOrDie allows you to generate a key cipher.
 func (c *Config) installKeyCipherOrDie() *Pasta {
-	return NewFromKey(c.SystemSecret, c.RotatedSystemSecrets)
+	c.installSystemSecretOrDie()
+	c.installRotatedSystemSecret()
+
+	return NewFromKey(c.GetSystemSecrets()[0], c.GetRotatedSystemSecrets())
 }
