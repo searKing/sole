@@ -2,13 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package opentrace
+package prometheus
 
-//go:generate go-enum -type Type -trimprefix=Type
-type Type int
-
-const (
-	TypeJeager Type = iota
-	TypeZipkin
-	TypeButt
-)
+// Add Go module build info.
+//_ = prometheus.Register(prometheus.NewBuildInfoCollector())
+// promhttp.Handler()

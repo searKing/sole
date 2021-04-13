@@ -25,7 +25,7 @@ import (
 type Config struct {
 	KeyInViper string
 	Viper      *viper.Viper // If set, overrides params below
-	Database
+	Proto      Database
 }
 
 type completedConfig struct {
@@ -43,7 +43,7 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Database: Database{
+		Proto: Database{
 			Dsn:               "memory",
 			MaxWaitDuration:   durationpb.New(5 * time.Second),
 			FailAfterDuration: durationpb.New(5 * time.Minute),
@@ -64,13 +64,13 @@ func NewViperConfig(key string) *Config {
 // Validate checks Config and return a slice of found errs.
 func (c *Config) Validate() []error {
 	var errs []error
-	dsnUrl := c.GetDsn()
+	dsnUrl := c.Proto.GetDsn()
 	switch dsnUrl {
 	case "memory":
 		// ignore
 		break
 	case "":
-		errs = append(errs, fmt.Errorf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`))
+		errs = append(errs, fmt.Errorf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters`))
 	}
 	return errs
 }
@@ -105,7 +105,7 @@ func (c *Config) loadViper() error {
 		v = v.Sub(c.KeyInViper)
 	}
 
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Database); err != nil {
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
 		logrus.WithError(err).Errorf("load database config from viper")
 		return err
 	}
@@ -118,7 +118,7 @@ func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
 		options = append(options, sql.WithDistributedTracing(), sql.WithOmitArgsFromTraceSpans())
 	}
 
-	dsnUrl := c.Dsn
+	dsnUrl := c.Proto.GetDsn()
 	switch dsnUrl {
 	case "memory":
 		// ignore
@@ -127,8 +127,8 @@ func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
 		logrus.Fatalf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`)
 	}
 
-	maxWait := protobuf.DurationOrDefault(c.GetMaxWaitDuration(), 5*time.Second, "max_wait")
-	failAfter := protobuf.DurationOrDefault(c.GetFailAfterDuration(), 5*time.Minute, "fail_after")
+	maxWait := protobuf.DurationOrDefault(c.Proto.GetMaxWaitDuration(), 5*time.Second, "max_wait")
+	failAfter := protobuf.DurationOrDefault(c.Proto.GetFailAfterDuration(), 5*time.Minute, "fail_after")
 
 	schema, sdnConfig, err := mysql.ParseDSN(dsnUrl)
 	if err != nil {

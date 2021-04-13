@@ -14,7 +14,7 @@ import (
 type Config struct {
 	KeyInViper string
 	Viper      *viper.Viper // If set, overrides params below
-	Secret
+	Proto      Secret
 }
 
 type completedConfig struct {
@@ -67,7 +67,7 @@ func (c *completedConfig) loadViperOrDie() {
 		v = v.Sub(c.KeyInViper)
 	}
 
-	if err := viper_.UnmarshalProtoMessageByJsonpb(c.Viper, &c.Secret); err != nil {
+	if err := viper_.UnmarshalProtoMessageByJsonpb(c.Viper, &c.Proto); err != nil {
 		logrus.WithError(err).Fatalf("load secret config from viper")
 		return
 	}
@@ -78,7 +78,7 @@ func (c *Config) installSystemSecretOrDie() {
 	var SystemSecret []byte
 	var RotatedSystemSecrets [][]byte
 
-	secrets := c.Secret.GetSystemSecrets()
+	secrets := c.Proto.GetSystemSecrets()
 	if len(secrets) > 0 {
 		SystemSecret = secrets[0]
 	}
@@ -88,7 +88,7 @@ func (c *Config) installSystemSecretOrDie() {
 		}
 	}
 
-	RotatedSystemSecrets = append(RotatedSystemSecrets, c.Secret.GetRotatedSystemSecrets()...)
+	RotatedSystemSecrets = append(RotatedSystemSecrets, c.Proto.GetRotatedSystemSecrets()...)
 	logger := logrus.WithField("module", "provider.system_secret")
 	if len(SystemSecret) == 0 {
 		logger.Warnf("Configuration secrets.system is not set, generating a temporary, random secret...")
@@ -101,7 +101,7 @@ func (c *Config) installSystemSecretOrDie() {
 	if len(SystemSecret) >= 16 {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
 		SystemSecret = HashByteSecret(SystemSecret)
-		c.SystemSecrets = [][]byte{SystemSecret}
+		c.Proto.SystemSecrets = [][]byte{SystemSecret}
 		return
 	}
 
@@ -111,10 +111,10 @@ func (c *Config) installSystemSecretOrDie() {
 
 // installRotatedSystemSecret allows you to check rotated system secret.
 func (c *Config) installRotatedSystemSecret() {
-	secrets := c.GetRotatedSystemSecrets()
+	secrets := c.Proto.GetRotatedSystemSecrets()
 	for i, secret := range secrets {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.RotatedSystemSecrets[i] = HashByteSecret(secret)
+		c.Proto.RotatedSystemSecrets[i] = HashByteSecret(secret)
 	}
 }
 
@@ -123,5 +123,5 @@ func (c *Config) installKeyCipherOrDie() *Pasta {
 	c.installSystemSecretOrDie()
 	c.installRotatedSystemSecret()
 
-	return NewFromKey(c.GetSystemSecrets()[0], c.GetRotatedSystemSecrets())
+	return NewFromKey(c.Proto.GetSystemSecrets()[0], c.Proto.GetRotatedSystemSecrets())
 }

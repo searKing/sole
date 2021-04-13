@@ -17,7 +17,7 @@ import (
 type Config struct {
 	KeyInViper string
 	Viper      *viper.Viper // If set, overrides params below
-	Redis
+	Proto      Redis
 }
 
 type completedConfig struct {
@@ -72,30 +72,29 @@ func (c completedConfig) New() (redis.UniversalClient, error) {
 	if c.completeError != nil {
 		return nil, c.completeError
 	}
-	redis_ := c.Redis
 	var UniversalOptions redis.UniversalOptions
-	UniversalOptions.Addrs = redis_.GetAddrs()
-	UniversalOptions.DB = int(redis_.GetDb())
-	UniversalOptions.Username = redis_.GetUsername()
-	UniversalOptions.Password = redis_.GetPassword()
-	UniversalOptions.SentinelPassword = redis_.GetSentinelPassword()
-	UniversalOptions.MaxRetries = int(redis_.GetMaxRetries())
-	UniversalOptions.MinRetryBackoff = protobuf.DurationOrDefault(redis_.GetMinRetryBackoff(), UniversalOptions.MinRetryBackoff, "min_retry_backoff")
-	UniversalOptions.MaxRetryBackoff = protobuf.DurationOrDefault(redis_.GetMaxRetryBackoff(), UniversalOptions.MaxRetryBackoff, "max_retry_backoff")
-	UniversalOptions.DialTimeout = protobuf.DurationOrDefault(redis_.GetDialTimeout(), UniversalOptions.DialTimeout, "dial_timeout")
-	UniversalOptions.ReadTimeout = protobuf.DurationOrDefault(redis_.GetReadTimeout(), UniversalOptions.ReadTimeout, "read_timeout")
-	UniversalOptions.WriteTimeout = protobuf.DurationOrDefault(redis_.GetWriteTimeout(), UniversalOptions.WriteTimeout, "write_timeout")
-	UniversalOptions.PoolSize = int(redis_.GetPoolSize())
-	UniversalOptions.MinIdleConns = int(redis_.GetMinIdleConns())
-	UniversalOptions.MaxConnAge = protobuf.DurationOrDefault(redis_.GetMaxConnAge(), UniversalOptions.MaxConnAge, "max_conn_age")
-	UniversalOptions.PoolTimeout = protobuf.DurationOrDefault(redis_.GetPoolTimeout(), UniversalOptions.PoolTimeout, "pool_timeout")
-	UniversalOptions.IdleTimeout = protobuf.DurationOrDefault(redis_.GetIdleTimeout(), UniversalOptions.IdleTimeout, "idle_timeout")
-	UniversalOptions.IdleCheckFrequency = protobuf.DurationOrDefault(redis_.GetIdleCheckFrequency(), UniversalOptions.IdleCheckFrequency, "idle_check_frequency")
-	UniversalOptions.MaxRedirects = int(redis_.GetMaxRedirects())
-	UniversalOptions.ReadOnly = redis_.GetReadOnly()
-	UniversalOptions.RouteByLatency = redis_.GetRouteByLatency()
-	UniversalOptions.RouteRandomly = redis_.GetRouteRandomly()
-	UniversalOptions.MasterName = redis_.GetMasterName()
+	UniversalOptions.Addrs = c.Proto.GetAddrs()
+	UniversalOptions.DB = int(c.Proto.GetDb())
+	UniversalOptions.Username = c.Proto.GetUsername()
+	UniversalOptions.Password = c.Proto.GetPassword()
+	UniversalOptions.SentinelPassword = c.Proto.GetSentinelPassword()
+	UniversalOptions.MaxRetries = int(c.Proto.GetMaxRetries())
+	UniversalOptions.MinRetryBackoff = protobuf.DurationOrDefault(c.Proto.GetMinRetryBackoff(), UniversalOptions.MinRetryBackoff, "min_retry_backoff")
+	UniversalOptions.MaxRetryBackoff = protobuf.DurationOrDefault(c.Proto.GetMaxRetryBackoff(), UniversalOptions.MaxRetryBackoff, "max_retry_backoff")
+	UniversalOptions.DialTimeout = protobuf.DurationOrDefault(c.Proto.GetDialTimeout(), UniversalOptions.DialTimeout, "dial_timeout")
+	UniversalOptions.ReadTimeout = protobuf.DurationOrDefault(c.Proto.GetReadTimeout(), UniversalOptions.ReadTimeout, "read_timeout")
+	UniversalOptions.WriteTimeout = protobuf.DurationOrDefault(c.Proto.GetWriteTimeout(), UniversalOptions.WriteTimeout, "write_timeout")
+	UniversalOptions.PoolSize = int(c.Proto.GetPoolSize())
+	UniversalOptions.MinIdleConns = int(c.Proto.GetMinIdleConns())
+	UniversalOptions.MaxConnAge = protobuf.DurationOrDefault(c.Proto.GetMaxConnAge(), UniversalOptions.MaxConnAge, "max_conn_age")
+	UniversalOptions.PoolTimeout = protobuf.DurationOrDefault(c.Proto.GetPoolTimeout(), UniversalOptions.PoolTimeout, "pool_timeout")
+	UniversalOptions.IdleTimeout = protobuf.DurationOrDefault(c.Proto.GetIdleTimeout(), UniversalOptions.IdleTimeout, "idle_timeout")
+	UniversalOptions.IdleCheckFrequency = protobuf.DurationOrDefault(c.Proto.GetIdleCheckFrequency(), UniversalOptions.IdleCheckFrequency, "idle_check_frequency")
+	UniversalOptions.MaxRedirects = int(c.Proto.GetMaxRedirects())
+	UniversalOptions.ReadOnly = c.Proto.GetReadOnly()
+	UniversalOptions.RouteByLatency = c.Proto.GetRouteByLatency()
+	UniversalOptions.RouteRandomly = c.Proto.GetRouteRandomly()
+	UniversalOptions.MasterName = c.Proto.GetMasterName()
 	return redis.NewUniversalClient(&UniversalOptions), nil
 }
 
@@ -105,7 +104,7 @@ func (c *Config) loadViper() error {
 		v = v.Sub(c.KeyInViper)
 	}
 
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Redis); err != nil {
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
 		logrus.WithError(err).Errorf("load redis config from viper")
 		return err
 	}

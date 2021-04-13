@@ -59,7 +59,7 @@ To learn more about each individual command, run:
 			logrus.WithError(err).WithField("config_path", cfgFile).Fatalf("load config")
 		}
 
-		cfg := provider.NewConfig()
+		cfg := provider.NewViperConfig("")
 		return cfg.Complete().Apply(cmd.Context())
 	}
 
