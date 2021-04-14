@@ -11,10 +11,6 @@ message ViperProto {
   Consul consul = 3;
 }
 
-message Secret {
-  repeated string system = 1; // 系统秘钥, new, old, older,..., oldest
-}
-
 message AppInfo {
   string build_version = 1; // 编译版本
   string build_hash = 2; // 源码hash

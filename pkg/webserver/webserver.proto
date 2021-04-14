@@ -5,10 +5,6 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/searKing/sole/pkg/webserver;webserver";
 
-// ViperProto is immutable, so mutex free
-message ViperProto {
-  Web web = 1;
-}
 message Web {
   Net bind_addr = 1; // for listen
   Net advertise_addr = 2; // for expose

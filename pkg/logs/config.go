@@ -22,7 +22,7 @@ type Config struct {
 	KeyInViper string
 	Viper      *viper.Viper // If set, overrides params below
 
-	Log Log
+	Proto Log
 }
 
 type completedConfig struct {
@@ -40,7 +40,7 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Log: Log{
+		Proto: Log{
 			Level:            Log_info,
 			Format:           Log_text,
 			Path:             "./log/" + filepath.Base(os.Args[0]),
@@ -93,7 +93,7 @@ func (c *Config) loadViper() error {
 	if v != nil && c.KeyInViper != "" {
 		v = v.Sub(c.KeyInViper)
 	}
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Log); err != nil {
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
 		logrus.WithError(err).Errorf("load logs config from viper")
 		return err
 	}
@@ -101,37 +101,37 @@ func (c *Config) loadViper() error {
 }
 
 func (c *completedConfig) install() error {
-	if c.Log.GetFormat() == Log_json {
+	if c.Proto.GetFormat() == Log_json {
 		logrus.SetFormatter(&logrus.JSONFormatter{
 			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
 		})
-	} else if c.Log.GetFormat() == Log_text {
+	} else if c.Proto.GetFormat() == Log_text {
 		logrus.SetFormatter(&logrus.TextFormatter{
 			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
 		})
 	}
 
-	level, err := logrus.ParseLevel(c.Log.GetLevel().String())
+	level, err := logrus.ParseLevel(c.Proto.GetLevel().String())
 	if err != nil {
 		level = logrus.InfoLevel
-		logrus.WithField("module", "log").WithField("log_level", c.Log.GetLevel()).
+		logrus.WithField("module", "log").WithField("log_level", c.Proto.GetLevel()).
 			WithError(err).
 			Warnf("malformed log level, use %s instead", level)
 	}
 	logrus.SetLevel(level)
 
-	var RotateDuration = protobuf.DurationOrDefault(c.Log.GetRotationDuration(), 24*time.Hour, "rotation_duration")
-	var RotateMaxAge = protobuf.DurationOrDefault(c.Log.GetRotationMaxAge(), 7*24*time.Hour, "rotation_max_age")
-	var RotateMaxCount = int(c.Log.GetRotationMaxCount())
+	var RotateDuration = protobuf.DurationOrDefault(c.Proto.GetRotationDuration(), 24*time.Hour, "rotation_duration")
+	var RotateMaxAge = protobuf.DurationOrDefault(c.Proto.GetRotationMaxAge(), 7*24*time.Hour, "rotation_max_age")
+	var RotateMaxCount = int(c.Proto.GetRotationMaxCount())
 
-	logrus.SetReportCaller(c.Log.GetReportCaller())
+	logrus.SetReportCaller(c.Proto.GetReportCaller())
 
 	if err := logrus_.WithRotate(logrus.StandardLogger(),
-		c.Log.GetPath(),
+		c.Proto.GetPath(),
 		logrus_.WithRotateInterval(RotateDuration),
 		logrus_.WithMaxCount(RotateMaxCount),
 		logrus_.WithMaxAge(RotateMaxAge)); err != nil {
-		logrus.WithField("module", "log").WithField("path", c.Log.GetPath()).
+		logrus.WithField("module", "log").WithField("path", c.Proto.GetPath()).
 			WithField("duration", RotateDuration).
 			WithField("max_count", RotateMaxCount).
 			WithField("max_age", RotateMaxAge).

@@ -4,11 +4,6 @@ package sole.api.v1.viper.opentrace;
 
 option go_package = "github.com/searKing/sole/pkg/database/opentrace;opentrace";
 
-// ViperProto is immutable, so mutex free
-message ViperProto {
-  Tracing tracing = 1;
-}
-
 message Tracing {
   bool enable = 1;
   Type type = 2;

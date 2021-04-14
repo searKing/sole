@@ -5,11 +5,6 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/searKing/sole/pkg/database/redis;redis";
 
-// ViperProto is immutable, so mutex free
-message ViperProto {
-  Redis redis = 1;
-}
-
 message Redis {
   // Either a single address or a seed list of host:port addresses
   // of cluster/sentinel nodes.

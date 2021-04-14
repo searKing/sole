@@ -4,11 +4,6 @@ package sole.api.v1.viper.crypto.pasta;
 
 option go_package = "github.com/searKing/sole/pkg/crypto/pasta;pasta";
 
-// ViperProto is immutable, so mutex free
-message ViperProto {
-  Secret secret = 1;
-}
-
 message Secret {
   repeated bytes system_secrets = 1; // new, old, older,..., oldest
   repeated bytes rotated_system_secrets = 2; // old, older,..., oldest
