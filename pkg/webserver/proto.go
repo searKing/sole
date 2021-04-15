@@ -12,53 +12,64 @@ import (
 	"strings"
 
 	"github.com/searKing/golang/go/net/addr"
+	strings_ "github.com/searKing/golang/go/strings"
 	"github.com/searKing/sole/pkg/protobuf"
 )
 
-func (p *Web) HTTPScheme() string {
-	if p.GetForceDisableTls() {
+func (web *Web) HTTPScheme() string {
+	if web.GetForceDisableTls() {
 		return "http"
 	}
 	return "https"
 }
 
-func (p *Web) GetBackendBindHostPort() string {
-	local := p.GetBindAddr()
-	return getHostPort(local.GetHost(), local.GetPort())
-}
-
-func (p *Web) GetBackendAdvertiseHostPort() string {
-	addr := p.GetAdvertiseAddr()
-	if addr.GetHost() == "" {
-		return p.GetBackendBindHostPort()
-	}
-	return getHostPort(addr.GetHost(), addr.GetPort())
-}
-
-func (p *Web) GetBackendServeHostPort() string {
-	if p.GetAdvertiseAddr().GetHost() != "" {
-		return getHostPort(p.GetAdvertiseAddr().GetHost(),
-			p.GetAdvertiseAddr().GetPort())
-	}
-	if p.GetBindAddr().GetHost() != "" &&
-		p.GetBindAddr().GetHost() != "0.0.0.0" {
-		return getHostPort(p.GetBindAddr().GetHost(),
-			p.GetBindAddr().GetPort())
-	}
-	resolvers := p.GetLocalIpResolver()
+func (web *Web) ResolveLocalIp() string {
+	resolvers := web.GetLocalIpResolver()
 	ip, err := addr.ServeIP(resolvers.GetNetworks(), resolvers.GetAddresses(),
 		protobuf.DurationOrDefault(resolvers.GetTimeout(), 0, "timeout"))
 	if err != nil {
-		return getHostPort("localhost",
-			p.GetBindAddr().GetPort())
+		return "localhost"
 	}
-	return getHostPort(ip.String(), p.GetBindAddr().GetPort())
+	return ip.String()
 }
 
-func (p *Web) ResolveBackendLocalUrl(relativePaths ...string) string {
+// GetBackendBindHostPort returns a address to listen.
+func (web *Web) GetBackendBindHostPort() string {
+	local := web.GetBindAddr()
+	return getHostPort(local.GetHost(), local.GetPort())
+}
+
+// GetBackendAdvertiseHostPort returns a address to expose with domain, if not set, use host instead.
+func (web *Web) GetBackendAdvertiseHostPort() string {
+	extern := web.GetAdvertiseAddr()
+	host := strings_.ValueOrDefault(extern.GetDomains()...)
+	if host == "" {
+		host = web.GetAdvertiseAddr().GetHost()
+	}
+	if host == "" {
+		return web.GetBackendBindHostPort()
+	}
+	return getHostPort(host, extern.GetPort())
+}
+
+// GetBackendServeHostPort returns a address to expose without domain, if not set, use resolver to resolve a ip
+func (web *Web) GetBackendServeHostPort() string {
+	host := web.GetAdvertiseAddr().GetHost()
+	if host != "" {
+		return getHostPort(host, web.GetAdvertiseAddr().GetPort())
+	}
+
+	host = web.GetBindAddr().GetHost()
+	if host != "" && host != "0.0.0.0" {
+		return getHostPort(host, web.GetBindAddr().GetPort())
+	}
+	return getHostPort(web.ResolveLocalIp(), web.GetBindAddr().GetPort())
+}
+
+func (web *Web) ResolveBackendLocalUrl(relativePaths ...string) string {
 	return resolveLocalUrl(
-		p.HTTPScheme(),
-		p.GetBackendServeHostPort(),
+		web.HTTPScheme(),
+		web.GetBackendServeHostPort(),
 		filepath.Join(relativePaths...)).String()
 }
 

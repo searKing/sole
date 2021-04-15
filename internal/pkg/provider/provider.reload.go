@@ -31,7 +31,7 @@ func (p *Provider) ReloadForever() {
 				if err := viperhelper.MergeAll(viper.GetViper(), p.ConfigFile, version.ServiceName); err != nil {
 					logrus.WithError(err).WithField("config_path", p.ConfigFile).Fatalf("load config")
 				}
-				providerReloads.WithLabelValues(p.proto.String()).Inc()
+				providerReloads.WithLabelValues(p.Proto.String()).Inc()
 			}, DefaultTimeout)
 		}()
 	})

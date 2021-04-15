@@ -6,7 +6,6 @@ package webserver
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 	"github.com/searKing/golang/go/x/graceful"
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/sirupsen/logrus"
-
-	"github.com/searKing/sole/pkg/consul"
 
 	"github.com/searKing/sole/pkg/webserver/healthz"
 )
@@ -26,9 +23,6 @@ type WebHandler interface {
 
 type WebServer struct {
 	Name string
-	// Server Register. The backend is started after the server starts listening.
-	ServiceRegistryBackend *consul.ServiceRegistry
-	ServiceResolverBackend *consul.ServiceResolver
 
 	ginBackend  *gin.Engine
 	grpcBackend *grpc.Gateway
@@ -89,26 +83,6 @@ func (s *WebServer) PrepareRun() (preparedWebServer, error) {
 	s.installReadyz()
 
 	// Register audit backend preShutdownHook.
-	if s.ServiceRegistryBackend != nil {
-		err := s.AddPreShutdownHook("service-registry-backend", func() error {
-			s.ServiceRegistryBackend.Shutdown()
-			return nil
-		})
-		if err != nil {
-			logrus.WithError(err).Errorf("Failed to add pre-shutdown hook for service-registry-backend")
-			return preparedWebServer{}, err
-		}
-	}
-	if s.ServiceResolverBackend != nil {
-		err := s.AddPreShutdownHook("service-resolver-backend", func() error {
-			s.ServiceResolverBackend.Shutdown()
-			return nil
-		})
-		if err != nil {
-			logrus.WithError(err).Errorf("Failed to add pre-shutdown hook for service-resolver-backend")
-			return preparedWebServer{}, err
-		}
-	}
 	return preparedWebServer{s}, nil
 }
 
@@ -158,23 +132,6 @@ func (s preparedWebServer) NonBlockingRun(ctx context.Context) (context.Context,
 
 	// Start the audit backend before any request comes in. This means we must call Backend.Run
 	// before http server start serving. Otherwise the Backend.ProcessEvents call might block.
-	if s.ServiceRegistryBackend != nil {
-		if err := s.ServiceRegistryBackend.Run(ctx); err != nil {
-			cancel()
-			return ctx, fmt.Errorf("failed to run the service registry backend: %v", err)
-		}
-	}
-	if s.ServiceResolverBackend != nil {
-		// recommend to add by postStartHooks
-		//s.ServiceResolverBackend.AddService(consul.Service{
-		//	Name:         s.ServiceRegistryBackend.ServiceName,
-		//	ResolverType: consul.ResolverTypeConsist,
-		//})
-		if err := s.ServiceResolverBackend.Run(ctx); err != nil {
-			cancel()
-			return ctx, fmt.Errorf("failed to run the service resolver backend: %v", err)
-		}
-	}
 
 	go func() {
 		defer cancel()

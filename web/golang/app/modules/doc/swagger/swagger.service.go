@@ -17,7 +17,7 @@ type IndexTemplateInfo struct {
 
 func GetIndexTemplateInfo(webPath string) IndexTemplateInfo {
 	return IndexTemplateInfo{
-		Name:           provider.GlobalProvider().Proto().GetService().GetDisplayName(),
+		Name:           provider.GlobalProvider().Proto.GetService().GetDisplayName(),
 		BaseUrl:        webPath,
 		SwaggerJsonUrl: values.SwaggerJson,
 	}

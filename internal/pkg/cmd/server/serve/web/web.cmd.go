@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-// represent the web command
+// New represent the web command
 func New(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "web",

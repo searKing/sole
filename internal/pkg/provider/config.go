@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/searKing/sole/pkg/consul"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -34,6 +35,7 @@ type Config struct {
 	KeyCipher *pasta.Config
 	Sql       *sql.Config
 	Redis     *redis_.Config
+	Consul    *consul.Config
 }
 
 type completedConfig struct {
@@ -57,6 +59,7 @@ func NewConfig() *Config {
 		KeyCipher:  pasta.NewViperConfig("secret"),
 		Sql:        sql.NewViperConfig("database"),
 		Redis:      redis_.NewViperConfig("redis"),
+		Consul:     consul.NewViperConfig("consul"),
 	}
 }
 
@@ -112,9 +115,9 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	}
 
 	p := &Provider{
-		proto:     c.proto,
-		sqlDB:     sqlDB,
-		keyCipher: c.KeyCipher.Complete().New(),
+		Proto:     c.proto,
+		SqlDB:     sqlDB,
+		KeyCipher: c.KeyCipher.Complete().New(),
 		ctx:       ctx,
 	}
 	if c.Redis != nil {
@@ -122,9 +125,24 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 		if err != nil {
 			return nil, err
 		}
-		p.redis = redis
+		p.Redis = redis
 	}
-	providerReloads.WithLabelValues(p.proto.String()).Inc()
+
+	if c.Consul != nil {
+		builder := c.Consul.Complete()
+		register, err := builder.NewServiceRegister()
+		if err != nil {
+			return nil, err
+		}
+		p.ServiceRegister = register
+		resolver, err := builder.NewServiceResolver()
+		if err != nil {
+			return nil, err
+		}
+		p.ServiceResolver = resolver
+	}
+
+	providerReloads.WithLabelValues(p.Proto.String()).Inc()
 	go p.ReloadForever()
 	return p, nil
 }

@@ -21,7 +21,7 @@ import (
 	"github.com/searKing/sole/internal/pkg/version"
 )
 
-// represent the serve command
+// New represent the serve command
 func New(ctx context.Context) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",

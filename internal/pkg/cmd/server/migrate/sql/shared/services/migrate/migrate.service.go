@@ -19,16 +19,16 @@ package sql
 //
 //func Migrate(dsn string, yes bool, direct migrate.MigrationDirection) error {
 //	if len(dsn) == 0 {
-//		dsn = provider.GlobalProvider().Proto().GetDatabase().GetDsn()
+//		dsn = provider.GlobalProvider().Proto.GetDatabase().GetDsn()
 //	}
 //	if len(dsn) == 0 {
 //		return fmt.Errorf("DSN must be set with --dsn or config file")
 //	}
-//	provider.GlobalProvider().Proto().Database.Dsn = dsn
+//	provider.GlobalProvider().Proto.Database.Dsn = dsn
 //
 //	logger := logrus.WithField("module", "cmd.migrate.sql")
 //
-//	scheme := sqlcon.GetDriverName(provider.GlobalProvider().Proto().GetDatabase().GetDsn())
+//	scheme := sqlcon.GetDriverName(provider.GlobalProvider().Proto.GetDatabase().GetDsn())
 //
 //	plan, err := provider.GlobalProvider().SchemaMigrationPlan(scheme, direct)
 //	if err != nil {

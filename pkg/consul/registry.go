@@ -16,20 +16,76 @@ import (
 	"github.com/hashicorp/consul/api"
 	"github.com/searKing/golang/go/errors"
 	net_ "github.com/searKing/golang/go/net"
+	runtime_ "github.com/searKing/golang/go/runtime"
 	"github.com/searKing/golang/go/sync/atomic"
+	time_ "github.com/searKing/golang/go/time"
 	"github.com/sirupsen/logrus"
 )
 
-type ServiceRegistry struct {
-	ConsulAddress  string
-	ServiceId      string
-	ServiceName    string
-	Tag            []string
-	Ip             string
-	Port           int
-	HealthCheckUrl string
-	TTL            time.Duration
-	CheckInterval  time.Duration
+//go:generate go-syncmap -type "serviceRegistrationMap<string, ServiceRegistration>"
+type serviceRegistrationMap sync.Map
+
+type ServiceRegistration struct {
+	Name                string
+	Id                  string
+	Tags                []string
+	Ip                  string
+	Port                int
+	HealthCheckUrl      string
+	HealthCheckInterval time.Duration
+	TTL                 time.Duration
+}
+
+func (r *ServiceRegistration) SetDefault() *ServiceRegistration {
+	r.TTL = 300 * time.Second
+	r.HealthCheckInterval = 10 * time.Second
+	return r
+}
+
+func (r *ServiceRegistration) SetAddr(addr string) error {
+
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return err
+	}
+
+	nport, err := strconv.Atoi(port)
+	if err != nil {
+		return fmt.Errorf("malformed service port: %w", err)
+	}
+
+	r.Ip = host
+	r.Port = nport
+	return nil
+}
+
+func (r *ServiceRegistration) Complete() {
+	r.Id = fmt.Sprintf("%v-%v-%v", r.Name, r.Ip, r.Id)
+}
+
+func (r *ServiceRegistration) GetCheck() (*api.AgentServiceCheck, error) {
+	if r.HealthCheckUrl == "" {
+		return nil, nil
+	}
+	u, err := url.Parse(r.HealthCheckUrl)
+	if err != nil {
+		return nil, err
+	}
+	u.Host = net_.HostportOrDefault(u.Host, net.JoinHostPort(r.Ip, fmt.Sprintf("%d", r.Port)))
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+	return &api.AgentServiceCheck{
+		Interval:                       r.HealthCheckInterval.String(),
+		HTTP:                           u.String(),
+		DeregisterCriticalServiceAfter: r.TTL.String(),
+	}, nil
+}
+
+type ServiceRegister struct {
+	ConsulAddress    string
+	RegisterInterval time.Duration
+	serviceById      serviceRegistrationMap
 
 	inShutdown atomic.Bool // true when when server is in shutdown
 
@@ -37,48 +93,26 @@ type ServiceRegistry struct {
 	cancel func()
 }
 
-func NewServiceRegistry(consulAddr string, serviceName string, serviceAddress string, healthCheckUrl string) (*ServiceRegistry, error) {
-	logger := logrus.WithField("module", "ServiceRegistry").
-		WithField("service_name", serviceName).
-		WithField("addr", serviceAddress)
-
-	host, port, err := net.SplitHostPort(serviceAddress)
-	if err != nil {
-		logger.WithError(err).Errorln("malformed service serviceAddress")
-		return nil, fmt.Errorf("malformed service serviceAddress: %w", err)
+func NewServiceRegister(consulAddr string, services ...ServiceRegistration) (*ServiceRegister, error) {
+	register := &ServiceRegister{
+		ConsulAddress:    consulAddr,
+		RegisterInterval: 30 * time.Second,
 	}
-
-	nport, err := strconv.Atoi(port)
-	if err != nil {
-		logger.WithField("port", port).
-			WithError(err).
-			Errorln("malformed service port, must be a number")
-		return nil, fmt.Errorf("malformed service port: %w", err)
+	for _, s := range services {
+		_ = register.AddService(s)
 	}
-	serviceId := fmt.Sprintf("%v-%v-%v", serviceName, host, port)
-	s := &ServiceRegistry{
-		ConsulAddress:  consulAddr,
-		ServiceId:      serviceId,
-		ServiceName:    serviceName,
-		Tag:            []string{},
-		Port:           nport,
-		Ip:             host,
-		HealthCheckUrl: healthCheckUrl,
-		TTL:            300 * time.Second,
-		CheckInterval:  10 * time.Second,
-	}
-	return s, nil
+	return register, nil
 }
 
 // Run will initialize the backend. It must not block, but may run go routines in the background.
-func (srv *ServiceRegistry) Run(ctx context.Context) error {
-	logger := srv.logger().
-		WithField("service_name", srv.ServiceName).
-		WithField("service_id", srv.ServiceId)
-	logger.Infoln("ConsulRegistry Run")
+func (srv *ServiceRegister) Run(ctx context.Context) error {
+	logger := srv.logger()
+	logger.Infof("ServiceRegister Run")
+
 	if srv.inShutdown.Load() {
-		logger.Infoln("ConsulRegistry Shutdown")
-		return fmt.Errorf("server closed")
+		err := fmt.Errorf("server closed")
+		logger.WithError(err).Errorf("ServiceRegister Run canceled")
+		return err
 	}
 	go func() {
 		errors.HandleError(srv.Serve(ctx))
@@ -86,50 +120,44 @@ func (srv *ServiceRegistry) Run(ctx context.Context) error {
 	return nil
 }
 
-func (srv *ServiceRegistry) Serve(ctx context.Context) error {
-	logger := srv.logger().
-		WithField("service_name", srv.ServiceName).
-		WithField("service_id", srv.ServiceId)
-	logger.Infoln("ConsulRegistry Serve")
+func (srv *ServiceRegister) Serve(ctx context.Context) error {
+	logger := srv.logger()
+	logger.Infof("ServiceRegister Serve")
 
 	if srv.inShutdown.Load() {
-		logger.Infoln("ConsulRegistry Shutdown")
-		return fmt.Errorf("server closed")
+		err := fmt.Errorf("server closed")
+		logger.WithError(err).Errorf("ServiceRegister Serve canceled")
+		return err
 	}
 
 	defer srv.inShutdown.Store(true)
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	srv.mu.Lock()
 	srv.cancel = cancel
 	srv.mu.Unlock()
 
-	t := time.NewTicker(time.Second * 30)
-	defer t.Stop()
-	for {
-		select {
-		case <-t.C:
-			logger.Infoln("registering service to consul")
-			err := srv.Register()
-			if err != nil {
-				logger.WithError(err).Errorln("register service failed")
-				continue
-			}
-			logger.Info("register service by consul")
-
-		case <-ctx.Done():
-			logger.Infoln("unregistering service to consul")
-			err := srv.UnRegister()
-			if err != nil {
-				logger.WithError(err).Errorln("unregister service failed")
-				return err
-			}
-			logger.Info("unregister service by consul")
-			return nil
+	time_.Until(ctx, func(ctx context.Context) {
+		logger.Infof("registering services to consul")
+		err := srv.Register()
+		if err != nil {
+			logger.WithError(err).Errorf("register services failed")
+			return
 		}
+		logger.Infof("register services by consul")
+	}, srv.RegisterInterval)
+
+	logger.Infoln("unregistering services to consul")
+	err := srv.UnRegister()
+	if err != nil {
+		logger.WithError(err).Errorf("unregisters service failed")
+		return err
 	}
+	logger.Info("unregister services by consul")
+	return nil
 }
 
-func (srv *ServiceRegistry) Shutdown() {
+func (srv *ServiceRegister) Shutdown() {
 	srv.inShutdown.Store(true)
 	srv.mu.Lock()
 	defer srv.mu.Unlock()
@@ -138,60 +166,114 @@ func (srv *ServiceRegistry) Shutdown() {
 	}
 }
 
-func (srv *ServiceRegistry) Register() error {
+func (srv *ServiceRegister) Register() error {
+	defer runtime_.NeverPanicButLog.Recover()
+	var errs []error
+	srv.serviceById.Range(func(id string, service ServiceRegistration) bool {
+		errs = append(errs, srv.RegisterService(service))
+		return true
+	})
+	return errors.Multi(errs...)
+}
+
+func (srv *ServiceRegister) UnRegister() error {
+	defer runtime_.NeverPanicButLog.Recover()
+	var errs []error
+	srv.serviceById.Range(func(id string, service ServiceRegistration) bool {
+		errs = append(errs, srv.UnregisterService(service))
+		return true
+	})
+	return errors.Multi(errs...)
+}
+
+func (srv *ServiceRegister) logger() logrus.FieldLogger {
+	return logrus.
+		WithField("module", "service_registry").
+		WithField("consul", srv.ConsulAddress)
+}
+
+func (srv *ServiceRegister) AddService(service ServiceRegistration) error {
+	_, loaded := srv.serviceById.LoadOrStore(service.Id, service)
+	if loaded {
+		return fmt.Errorf("service entry already installed")
+	}
+	return nil
+}
+
+func (srv *ServiceRegister) DeleteService(serviceId string) error {
+	service, loaded := srv.serviceById.LoadAndDelete(serviceId)
+	if !loaded {
+		return nil
+	}
+	return srv.UnregisterService(service)
+}
+
+func (srv *ServiceRegister) GetConsulAgent() (*api.Agent, error) {
 	config := api.DefaultConfig()
 	config.Address = srv.ConsulAddress
 	client, err := api.NewClient(config)
 	if err != nil {
+		return nil, err
+	}
+	return client.Agent(), nil
+}
+
+func (srv *ServiceRegister) RegisterService(service ServiceRegistration) error {
+	logger := srv.logger().
+		WithField("service_name", service.Name).
+		WithField("service_id", service.Id).
+		WithField("service_ip", service.Ip).
+		WithField("service_port", service.Port).
+		WithField("health_check_url", service.HealthCheckUrl)
+	agent, err := srv.GetConsulAgent()
+	if err != nil {
+		logger.WithError(err).Errorf("get consul agent to register service to consul")
 		return err
 	}
-	agent := client.Agent()
-	var check *api.AgentServiceCheck
-	if srv.HealthCheckUrl != "" {
-		u, err := url.Parse(srv.HealthCheckUrl)
-		if err != nil {
-			return err
-		}
-		u.Host = net_.HostportOrDefault(u.Host, net.JoinHostPort(srv.Ip, fmt.Sprintf("%d", srv.Port)))
-		if u.Scheme == "" {
-			u.Scheme = "http"
-		}
-		checkUrl := u.String()
-		check = &api.AgentServiceCheck{
-			Interval:                       srv.CheckInterval.String(),
-			HTTP:                           checkUrl,
-			DeregisterCriticalServiceAfter: srv.TTL.String(),
-		}
+
+	check, err := service.GetCheck()
+	if err != nil {
+		logger.WithError(err).Errorf("get check to register service to consul")
+		return err
 	}
 
 	reg := &api.AgentServiceRegistration{
-		ID:      srv.ServiceId,
-		Name:    srv.ServiceName,
-		Tags:    srv.Tag,
-		Port:    srv.Port,
-		Address: srv.Ip,
+		ID:      service.Id,
+		Name:    service.Name,
+		Tags:    service.Tags,
+		Port:    service.Port,
+		Address: service.Ip,
 		Check:   check,
 	}
 
-	return agent.ServiceRegister(reg)
+	err = agent.ServiceRegister(reg)
+	if err != nil {
+		logger.WithError(err).Errorf("register service to consul")
+		return err
+	}
+	logger.Infof("register service to consul")
+	return nil
 }
 
-func (srv *ServiceRegistry) UnRegister() error {
-	config := api.DefaultConfig()
-	config.Address = srv.ConsulAddress
-	client, err := api.NewClient(config)
+func (srv *ServiceRegister) UnregisterService(service ServiceRegistration) error {
+	logger := srv.logger().
+		WithField("service_name", service.Name).
+		WithField("service_id", service.Id).
+		WithField("service_ip", service.Ip).
+		WithField("service_port", service.Port).
+		WithField("health_check_url", service.HealthCheckUrl)
+	agent, err := srv.GetConsulAgent()
 	if err != nil {
+		logger.WithError(err).Errorf("get consul agent to register service to consul")
 		return err
 	}
 
-	return client.Agent().ServiceDeregister(srv.ServiceId)
-}
+	err = agent.ServiceDeregister(service.Id)
+	if err != nil {
+		logger.WithError(err).Errorf("unregister service to consul")
+		return err
+	}
+	logger.Infof("unregister service to consul")
+	return nil
 
-func (srv *ServiceRegistry) logger() logrus.FieldLogger {
-	return logrus.
-		WithField("module", "service_registry").
-		WithField("consul", srv.ConsulAddress).
-		WithField("service_name", srv.ServiceName).
-		WithField("service_id", srv.ServiceId).
-		WithField("ip", srv.Ip).WithField("port", srv.Port)
 }

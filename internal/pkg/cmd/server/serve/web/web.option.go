@@ -22,8 +22,6 @@ import (
 type ServerRunOptions struct {
 	Provider         *provider.Provider
 	WebServerOptions *webserver.Config
-	ServiceRegistry  *consul.ServiceRegistryConfig
-	ServiceResolver  *consul.ServiceResolverConfig
 }
 
 type completedServerRunOptions struct {
@@ -40,16 +38,12 @@ func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		Provider:         provider.GlobalProvider(),
 		WebServerOptions: webserver.NewViperConfig("web"),
-		ServiceRegistry:  consul.NewServiceRegistryConfig(),
-		ServiceResolver:  consul.NewServiceResolverConfig(),
 	}
 }
 
 // Validate checks ServerRunOptions and return a slice of found errs.
 func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 	var errs []error
-	errs = append(errs, s.ServiceRegistry.Validate(validate)...)
-	errs = append(errs, s.ServiceResolver.Validate(validate)...)
 	return errs
 }
 
@@ -58,26 +52,60 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 	s.WebServerOptions.Proto.ForceDisableTls = provider.ForceDisableTls
 	s.WebServerOptions.AddWebHandler(golang.NewHandler())
 	{
-		consulInfo := s.Provider.Proto().GetConsul()
-		if consulInfo.GetEnabled() {
-			{
-				s.ServiceRegistry.ServiceName = s.Provider.Proto().GetService().GetName()
-				s.ServiceRegistry.ServiceAddress = s.WebServerOptions.Proto.GetBackendServeHostPort()
-				s.ServiceRegistry.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()
-				s.ServiceRegistry.HealthCheckUrl = "/healthz"
-				backend, err := s.ServiceRegistry.Complete().New()
-				if err != nil {
-					logrus.WithError(err).Errorf("build service registry backend")
+		// register webserver as a service
+		if register := s.Provider.ServiceRegister; register != nil {
+			for _, domain := range s.WebServerOptions.Proto.GetAdvertiseAddr().GetDomains() {
+				if domain == "" {
+					continue
+				}
+				r := consul.ServiceRegistration{}
+				if err := r.SetDefault().SetAddr(s.WebServerOptions.Proto.GetBackendServeHostPort()); err != nil {
 					return CompletedServerRunOptions{}, err
 				}
-				s.WebServerOptions.ServiceRegistryBackend = backend
+				r.Name = domain
+				r.HealthCheckUrl = "/healthz"
+				r.Complete()
+				if err := register.AddService(r); err != nil {
+					logrus.WithError(err).WithField("domain", domain).
+						Errorf("register web server as service in consul")
+					return CompletedServerRunOptions{}, err
+				}
 			}
 
-			{
-				s.ServiceResolver.ConsulAddress = s.Provider.Proto().GetConsul().GetAddress()
-				backend := s.ServiceResolver.Complete().New()
-				s.WebServerOptions.ServiceResolverBackend = backend
+			s.WebServerOptions.AddPostStartHookOrDie("service-register-backend", func(ctx context.Context) error {
+				return register.Run(ctx)
+			})
+			s.WebServerOptions.AddPreShutdownHookOrDie("service-register-backend", func() error {
+				register.Shutdown()
+				return nil
+			})
+		}
+	}
+	{
+		// resolve webserver as a service
+		if resolver := s.Provider.ServiceResolver; resolver != nil {
+
+			for _, domain := range s.WebServerOptions.Proto.GetAdvertiseAddr().GetDomains() {
+				if domain == "" {
+					continue
+				}
+				r := consul.ServiceQuery{}
+				r.SetDefault()
+				r.Name = domain
+				r.Complete()
+				if err := resolver.AddService(r); err != nil {
+					logrus.WithError(err).Errorf("resolver web server as service in consul")
+					return CompletedServerRunOptions{}, err
+				}
 			}
+
+			s.WebServerOptions.AddPostStartHookOrDie("service-resolver-backend", func(ctx context.Context) error {
+				return resolver.Run(ctx)
+			})
+			s.WebServerOptions.AddPreShutdownHookOrDie("service-resolver-backend", func() error {
+				resolver.Shutdown()
+				return nil
+			})
 		}
 	}
 	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
@@ -87,7 +115,7 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
 	// To help debugging, immediately log version
 	logrus.Infof("Version: %+v", version.GetVersion())
-	//isDSNAllowedOrDie(completeOptions.Provider.Proto().GetDatabase().GetDsn())
+	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
 
 	server, err := s.WebServerOptions.Complete().New("sole")
 	if err != nil {

@@ -10,21 +10,22 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+	"github.com/searKing/sole/pkg/consul"
+	"github.com/searKing/sole/pkg/crypto/pasta"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/pkg/crypto/pasta"
 )
 
 type Provider struct {
 	ConfigFile string
 
-	proto *viper_.ViperProto
+	Proto *viper_.ViperProto
 
-	sqlDB *sqlx.DB
-
-	redis redis.UniversalClient
-
-	keyCipher *pasta.Pasta
+	KeyCipher       *pasta.Pasta
+	SqlDB           *sqlx.DB
+	Redis           redis.UniversalClient
+	ServiceRegister *consul.ServiceRegister
+	ServiceResolver *consul.ServiceResolver
 
 	ctx        context.Context
 	reloadOnce sync.Once
@@ -37,21 +38,9 @@ func (p *Provider) Context() context.Context {
 	return p.ctx
 }
 
-func (p *Provider) Proto() *viper_.ViperProto {
-	return p.proto
-}
-
-func (p *Provider) KeyCipher() *pasta.Pasta {
-	return p.keyCipher
-}
-
-func (p *Provider) SqlDB() *sqlx.DB {
-	return p.sqlDB
-}
-
 func (p *Provider) SqlDBPing() error {
-	if p.sqlDB == nil {
+	if p.SqlDB == nil {
 		return nil
 	}
-	return p.SqlDB().PingContext(p.Context())
+	return p.SqlDB.PingContext(p.Context())
 }

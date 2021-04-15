@@ -20,7 +20,8 @@ message Web {
 
   message Net {
     string host = 1;
-    int32 port = 2;
+    repeated string domains = 2;// service name to register to consul for dns
+    int32 port = 3;
   }
 
   message LocalIpResolver {
@@ -89,4 +90,5 @@ message Web {
     // debug flag adds additional output to debug server side CORS issues
     bool debug = 10;
   }
+
 }

@@ -45,7 +45,7 @@ type Config struct {
 
 	TlsConfig *tls.Config
 
-	ServiceRegistryBackend *consul.ServiceRegistry
+	ServiceRegistryBackend *consul.ServiceRegister
 	ServiceResolverBackend *consul.ServiceResolver
 
 	WebHandlers []WebHandler
@@ -227,12 +227,10 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	ginBackend.Use(c.GinMiddlewares...)
 
 	s := &WebServer{
-		Name:                   name,
-		ServiceRegistryBackend: c.ServiceRegistryBackend,
-		ServiceResolverBackend: c.ServiceResolverBackend,
-		ShutdownDelayDuration:  c.ShutdownDelayDuration,
-		grpcBackend:            grpcBackend,
-		ginBackend:             ginBackend,
+		Name:                  name,
+		ShutdownDelayDuration: c.ShutdownDelayDuration,
+		grpcBackend:           grpcBackend,
+		ginBackend:            ginBackend,
 
 		postStartHooks:   map[string]postStartHookEntry{},
 		preShutdownHooks: map[string]preShutdownHookEntry{},

@@ -19,9 +19,9 @@ type IndexTemplateInfo struct {
 
 func GetIndexTemplateInfo(prefix string, filename string) IndexTemplateInfo {
 	return IndexTemplateInfo{
-		Name:        provider.GlobalProvider().Proto().GetService().GetDisplayName(),
-		Version:     provider.GlobalProvider().Proto().GetAppInfo().GetBuildVersion(),
-		Description: provider.GlobalProvider().Proto().GetService().GetDescription(),
+		Name:        provider.GlobalProvider().Proto.GetService().GetDisplayName(),
+		Version:     provider.GlobalProvider().Proto.GetAppInfo().GetBuildVersion(),
+		Description: provider.GlobalProvider().Proto.GetService().GetDescription(),
 		BaseUrl:     path.Join(prefix, filename),
 	}
 }

@@ -30,8 +30,7 @@ func (p *program) Stop(s service.Service) (err error) {
 	return
 }
 func Setup(action string) {
-	c := provider.GlobalProvider()
-	proto := c.Proto()
+	proto := provider.GlobalProvider().Proto
 	fmt.Println(banner.Banner(proto.GetService().GetName(), proto.GetAppInfo().GetBuildVersion()))
 	switch action {
 	case "install", "stop":

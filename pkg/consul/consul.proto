@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package sole.api.v1.viper.consul;
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/pkg/consul;consul";
+
+message Consul {
+  string consul_address = 1; // host:port, addr of consul server
+  ServiceRegistry service_registry = 2;// for service registry
+  ServiceResolver service_resolver = 3;// for service resolver
+
+  message ServiceRegistry{
+    google.protobuf.Duration register_interval = 1;// interval to register services to consul
+    google.protobuf.Duration health_check_interval = 2;
+    repeated Service services = 3;
+    string default_service_address = 4;// host:port, default addr of services to register if not empty
+    message Service{
+      string name = 1;// service name
+      string address = 2;// host:port
+      string health_check_url = 3;
+    }
+  }
+
+  message ServiceResolver{
+    google.protobuf.Duration resolve_interval = 1;// interval to pull server nodes from consul
+    repeated Service services = 2;
+    message Service{
+      string name = 1;// service name
+      ResolverType resolver_type = 2;
+    }
+    enum ResolverType{
+      resolver_type_random = 0;
+      resolver_type_consist = 1;
+    }
+  }
+}
