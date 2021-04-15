@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net"
 	"sync"
 	"time"
 
@@ -155,12 +156,13 @@ func (srv *ServiceResolver) QueryServices() error {
 		service.services = nodes
 		service.updateAt = time.Now()
 		if service.ResolverType == ResolverTypeConsist {
-			var nodeAddrs []string
+			var serviceAddrs []string
 			for _, node := range nodes {
-				nodeAddrs = append(nodeAddrs, node.Node.Address)
+				addr := net.JoinHostPort(node.Service.Address, fmt.Sprintf("%d", node.Service.Port))
+				serviceAddrs = append(serviceAddrs, addr)
 			}
 			service.nodeAddrs = hashring.NewStringNodeLocator(service.NodeLocatorOptions...)
-			service.nodeAddrs.AddNodes(nodeAddrs...)
+			service.nodeAddrs.AddNodes(serviceAddrs...)
 		}
 		srv.serviceByName.Store(name, service)
 		return true
@@ -190,7 +192,9 @@ func (srv *ServiceResolver) PickNode(name string, consistKey string) (addr strin
 		return service.nodeAddrs.Get(consistKey)
 	}
 
-	return service.services[rand.Intn(len(service.services))].Node.Address, true
+	s := service.services[rand.Intn(len(service.services))]
+	addr = net.JoinHostPort(s.Service.Address, fmt.Sprintf("%d", s.Service.Port))
+	return addr, true
 }
 
 func (srv *ServiceResolver) AddService(service ServiceQuery) error {
