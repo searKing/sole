@@ -6,7 +6,6 @@ package webserver
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net"
 	"runtime/debug"
 	"time"
@@ -48,28 +47,12 @@ type Config struct {
 	ServiceRegistryBackend *consul.ServiceRegister
 	ServiceResolverBackend *consul.ServiceResolver
 
-	WebHandlers []WebHandler
-
-	// done values in this values for this map are ignored.
-	PostStartHooks   map[string]postStartHookEntry
-	PreShutdownHooks map[string]preShutdownHookEntry
-
 	// BindAddress is the host name to use for bind (local internet) facing URLs (e.g. Loopback)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	BindAddress string
 	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	ExternalAddress string
-	//===========================================================================
-	// Fields you probably don't care about changing
-	//===========================================================================
-
-	// The default set of healthz checks. There might be more added via AddHealthChecks dynamically.
-	HealthzChecks []healthz.HealthCheck
-	// The default set of livez checks. There might be more added via AddHealthChecks dynamically.
-	LivezChecks []healthz.HealthCheck
-	// The default set of readyz-only checks. There might be more added via AddReadyzChecks dynamically.
-	ReadyzChecks []healthz.HealthCheck
 	// ShutdownDelayDuration allows to block shutdown for some time, e.g. until endpoints pointing to this API server
 	// have converged on all node. During this time, the API server keeps serving, /healthz will return 200,
 	// but /readyz will return failure.
@@ -86,77 +69,6 @@ type completedConfig struct {
 type CompletedConfig struct {
 	// Embed a private pointer that cannot be instantiated outside of this package.
 	*completedConfig
-}
-
-// AddWebHandler adds a grpc and/or gin handler to our config to be exposed by the grpc gateway endpoints
-// of our configured webserver.
-func (c *Config) AddWebHandler(handlers ...WebHandler) {
-	c.WebHandlers = append(c.WebHandlers, handlers...)
-}
-
-// AddHealthChecks adds a health check to our config to be exposed by the health endpoints
-// of our configured webserver. We should prefer this to adding healthChecks directly to
-// the config unless we explicitly want to add a healthcheck only to a specific health endpoint.
-func (c *Config) AddHealthChecks(healthChecks ...healthz.HealthCheck) {
-	for _, check := range healthChecks {
-		c.HealthzChecks = append(c.HealthzChecks, check)
-		c.LivezChecks = append(c.LivezChecks, check)
-		c.ReadyzChecks = append(c.ReadyzChecks, check)
-	}
-}
-
-// AddPostStartHook allows you to add a PostStartHook that will later be added to the server itself in a New call.
-// Name conflicts will cause an error.
-func (c *Config) AddPostStartHook(name string, hook PostStartHookFunc) error {
-	if len(name) == 0 {
-		return fmt.Errorf("missing name")
-	}
-	if hook == nil {
-		return fmt.Errorf("hook func may not be nil: %q", name)
-	}
-
-	if postStartHook, exists := c.PostStartHooks[name]; exists {
-		// this is programmer error, but it can be hard to debug
-		return fmt.Errorf("unable to add %q because it was already registered by: %s", name, postStartHook.originatingStack)
-	}
-	c.PostStartHooks[name] = postStartHookEntry{hook: hook, originatingStack: string(debug.Stack())}
-
-	return nil
-}
-
-// AddPostStartHookOrDie allows you to add a PostStartHook, but dies on failure.
-func (c *Config) AddPostStartHookOrDie(name string, hook PostStartHookFunc) {
-	if err := c.AddPostStartHook(name, hook); err != nil {
-		logrus.WithError(err).Fatalf("Error registering PostStartHook %q", name)
-	}
-}
-
-// AddPreShutdownHook allows you to add a PreShutdownHook.
-func (s *Config) AddPreShutdownHook(name string, hook PreShutdownHookFunc) error {
-	if len(name) == 0 {
-		return fmt.Errorf("missing name")
-	}
-	if hook == nil {
-		return nil
-	}
-	if s.PreShutdownHooks == nil {
-		s.PreShutdownHooks = make(map[string]preShutdownHookEntry)
-	}
-
-	if _, exists := s.PreShutdownHooks[name]; exists {
-		return fmt.Errorf("unable to add %q because it is already registered", name)
-	}
-
-	s.PreShutdownHooks[name] = preShutdownHookEntry{hook: hook}
-
-	return nil
-}
-
-// AddPreShutdownHookOrDie allows you to add a PostStartHook, but dies on failure
-func (s *Config) AddPreShutdownHookOrDie(name string, hook PreShutdownHookFunc) {
-	if err := s.AddPreShutdownHook(name, hook); err != nil {
-		logrus.Fatalf("Error registering PreShutdownHook %q: %v", name, err)
-	}
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
@@ -226,6 +138,8 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	ginBackend.Use(gin_.UseHTTPPreflight())
 	ginBackend.Use(c.GinMiddlewares...)
 
+	defaultHealthChecks := []healthz.HealthCheck{healthz.PingHealthCheck, healthz.LogHealthCheck}
+
 	s := &WebServer{
 		Name:                  name,
 		ShutdownDelayDuration: c.ShutdownDelayDuration,
@@ -234,41 +148,19 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 
 		postStartHooks:   map[string]postStartHookEntry{},
 		preShutdownHooks: map[string]preShutdownHookEntry{},
-
-		healthzChecks:   c.HealthzChecks,
-		livezChecks:     c.LivezChecks,
-		readyzChecks:    c.ReadyzChecks,
-		readinessStopCh: make(chan struct{}),
+		healthzChecks:    defaultHealthChecks,
+		livezChecks:      defaultHealthChecks,
+		readyzChecks:     defaultHealthChecks,
+		readinessStopCh:  make(chan struct{}),
 	}
-
-	// add poststarthooks that were preconfigured.  Using the add method will give us an error if the same name has already been registered.
-	for name, preconfiguredPostStartHook := range c.PostStartHooks {
-		if err := s.AddPostStartHook(name, preconfiguredPostStartHook.hook); err != nil {
-			return nil, err
-		}
-	}
-	for name, preconfiguredPreShutdownHook := range c.PreShutdownHooks {
-		if err := s.AddPreShutdownHook(name, preconfiguredPreShutdownHook.hook); err != nil {
-			return nil, err
-		}
-	}
-
-	// parseViper grpc & http handlers
-	s.InstallWebHandlers(c.Config.WebHandlers...)
 
 	return s, nil
 }
 
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
-	defaultHealthChecks := []healthz.HealthCheck{healthz.PingHealthCheck, healthz.LogHealthCheck}
 
 	return &Config{
-		PreShutdownHooks:      map[string]preShutdownHookEntry{},
-		PostStartHooks:        map[string]postStartHookEntry{},
-		HealthzChecks:         append([]healthz.HealthCheck{}, defaultHealthChecks...),
-		ReadyzChecks:          append([]healthz.HealthCheck{}, defaultHealthChecks...),
-		LivezChecks:           append([]healthz.HealthCheck{}, defaultHealthChecks...),
 		ShutdownDelayDuration: time.Duration(0),
 		Proto: Web{
 			BindAddr: &Web_Net{

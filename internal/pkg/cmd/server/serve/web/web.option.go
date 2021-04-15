@@ -8,13 +8,12 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/sirupsen/logrus"
-
-	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/consul"
 	"github.com/searKing/sole/web/golang"
+	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/provider"
+	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/webserver"
 )
 
@@ -50,7 +49,20 @@ func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 	s.WebServerOptions.Proto.ForceDisableTls = provider.ForceDisableTls
-	s.WebServerOptions.AddWebHandler(golang.NewHandler())
+	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
+}
+
+// Run runs the specified APIServer.  This should never exit.
+func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
+	// To help debugging, immediately log version
+	logrus.Infof("Version: %+v", version.GetVersion())
+	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
+
+	server, err := s.WebServerOptions.Complete().New("sole")
+	if err != nil {
+		return err
+	}
+	server.InstallWebHandlers(golang.NewHandler())
 	{
 		// register webserver as a service
 		if register := s.Provider.ServiceRegister; register != nil {
@@ -60,7 +72,7 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 				}
 				r := consul.ServiceRegistration{}
 				if err := r.SetDefault().SetAddr(s.WebServerOptions.Proto.GetBackendServeHostPort()); err != nil {
-					return CompletedServerRunOptions{}, err
+					return err
 				}
 				r.Name = domain
 				r.HealthCheckUrl = "/healthz"
@@ -68,14 +80,14 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 				if err := register.AddService(r); err != nil {
 					logrus.WithError(err).WithField("domain", domain).
 						Errorf("register web server as service in consul")
-					return CompletedServerRunOptions{}, err
+					return err
 				}
 			}
 
-			s.WebServerOptions.AddPostStartHookOrDie("service-register-backend", func(ctx context.Context) error {
+			server.AddPostStartHookOrDie("service-register-backend", func(ctx context.Context) error {
 				return register.Run(ctx)
 			})
-			s.WebServerOptions.AddPreShutdownHookOrDie("service-register-backend", func() error {
+			server.AddPreShutdownHookOrDie("service-register-backend", func() error {
 				register.Shutdown()
 				return nil
 			})
@@ -95,31 +107,18 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 				r.Complete()
 				if err := resolver.AddService(r); err != nil {
 					logrus.WithError(err).Errorf("resolver web server as service in consul")
-					return CompletedServerRunOptions{}, err
+					return err
 				}
 			}
 
-			s.WebServerOptions.AddPostStartHookOrDie("service-resolver-backend", func(ctx context.Context) error {
+			server.AddPostStartHookOrDie("service-resolver-backend", func(ctx context.Context) error {
 				return resolver.Run(ctx)
 			})
-			s.WebServerOptions.AddPreShutdownHookOrDie("service-resolver-backend", func() error {
+			server.AddPreShutdownHookOrDie("service-resolver-backend", func() error {
 				resolver.Shutdown()
 				return nil
 			})
 		}
-	}
-	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
-}
-
-// Run runs the specified APIServer.  This should never exit.
-func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
-	// To help debugging, immediately log version
-	logrus.Infof("Version: %+v", version.GetVersion())
-	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
-
-	server, err := s.WebServerOptions.Complete().New("sole")
-	if err != nil {
-		return err
 	}
 
 	prepared, err := server.PrepareRun()
