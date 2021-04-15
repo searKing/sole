@@ -8,7 +8,6 @@ option go_package = "github.com/searKing/sole/api/v1/viper;viper";
 message ViperProto {
   AppInfo app_info = 1;
   Service service = 2;
-  Consul consul = 3;
 }
 
 message AppInfo {
@@ -22,9 +21,4 @@ message Service {
   string display_name = 2; // 服务全称
   string description = 3; // 服务描述
   string id = 4; // 服务实例ID
-}
-
-message Consul {
-  bool enabled = 1;
-  string address = 2; // host:port
 }
