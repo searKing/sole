@@ -73,20 +73,8 @@ func (c *completedConfig) loadViperOrDie() {
 
 // installSystemSecretOrDie allows you to check or generate system secret, but dies on failure.
 func (c *Config) installSystemSecretOrDie() {
-	var SystemSecret []byte
-	var RotatedSystemSecrets [][]byte
+	var SystemSecret = c.Proto.GetSystemSecret()
 
-	secrets := c.Proto.GetSystemSecrets()
-	if len(secrets) > 0 {
-		SystemSecret = secrets[0]
-	}
-	if len(secrets) > 1 {
-		for _, secret := range secrets[1:] {
-			RotatedSystemSecrets = append(RotatedSystemSecrets, secret)
-		}
-	}
-
-	RotatedSystemSecrets = append(RotatedSystemSecrets, c.Proto.GetRotatedSystemSecrets()...)
 	logger := logrus.WithField("module", "provider.system_secret")
 	if len(SystemSecret) == 0 {
 		logger.Warnf("Configuration secrets.system is not set, generating a temporary, random secret...")
@@ -99,7 +87,7 @@ func (c *Config) installSystemSecretOrDie() {
 	if len(SystemSecret) >= 16 {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
 		SystemSecret = HashByteSecret(SystemSecret)
-		c.Proto.SystemSecrets = [][]byte{SystemSecret}
+		c.Proto.SystemSecret = SystemSecret
 		return
 	}
 
@@ -121,5 +109,5 @@ func (c *Config) installKeyCipherOrDie() *Pasta {
 	c.installSystemSecretOrDie()
 	c.installRotatedSystemSecret()
 
-	return NewFromKey(c.Proto.GetSystemSecrets()[0], c.Proto.GetRotatedSystemSecrets())
+	return NewFromKey(c.Proto.GetSystemSecret(), c.Proto.GetRotatedSystemSecrets())
 }
