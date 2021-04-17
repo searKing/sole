@@ -8,7 +8,9 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/consul"
+	vipergetter "github.com/searKing/sole/pkg/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -24,10 +26,8 @@ import (
 
 //go:generate go-option -type=Config
 type Config struct {
-	KeyInViper string
-	Viper      *viper.Viper // If set, overrides params below
-
-	proto *viper_.ViperProto
+	GetViper func() *viper.Viper // If set, overrides params below
+	proto    *viper_.ViperProto
 
 	Logs       *logs.Config
 	OpenTracer *opentrace.Config
@@ -54,22 +54,21 @@ type CompletedConfig struct {
 func NewConfig() *Config {
 	return &Config{
 		proto:      NewDefaultViperProto(),
-		Logs:       logs.NewViperConfig("log"),
-		OpenTracer: opentrace.NewViperConfig("tracing"),
-		KeyCipher:  pasta.NewViperConfig("secret"),
-		Sql:        sql.NewViperConfig("database"),
-		Redis:      redis_.NewViperConfig("redis"),
-		Consul:     consul.NewViperConfig("consul"),
+		Logs:       logs.NewViperConfig(vipergetter.GetViper("log", version.ServiceName)),
+		OpenTracer: opentrace.NewViperConfig(vipergetter.GetViper("tracing", version.ServiceName)),
+		KeyCipher:  pasta.NewViperConfig(vipergetter.GetViper("secret", version.ServiceName)),
+		Sql:        sql.NewViperConfig(vipergetter.GetViper("database", version.ServiceName)),
+		Redis:      redis_.NewViperConfig(vipergetter.GetViper("redis", version.ServiceName)),
+		Consul:     consul.NewViperConfig(vipergetter.GetViper("consul", version.ServiceName)),
 	}
 }
 
 // NewViperConfig returns a Config struct with the global viper instance
 // key representing a sub tree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(key string) *Config {
+func NewViperConfig(getViper func() *viper.Viper) *Config {
 	c := NewConfig()
-	c.Viper = viper.GetViper()
-	c.KeyInViper = key
+	c.GetViper = getViper
 	return c
 }
 
@@ -159,10 +158,11 @@ func (c completedConfig) Apply(ctx context.Context) error {
 }
 
 func (c *Config) loadViper() error {
-	v := c.Viper
-	if v != nil && c.KeyInViper != "" {
-		v = v.Sub(c.KeyInViper)
+	var v *viper.Viper
+	if c.GetViper != nil {
+		v = c.GetViper()
 	}
+
 	if c.proto == nil {
 		c.proto = &viper_.ViperProto{}
 	}

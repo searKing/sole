@@ -49,7 +49,7 @@ type ServiceQuery struct {
 
 func (r *ServiceQuery) SetDefault() *ServiceQuery {
 	r.ResolverType = ResolverTypeConsist
-	r.PassingOnly = true
+	r.PassingOnly = false
 	return r
 }
 func (r *ServiceQuery) Complete() {}

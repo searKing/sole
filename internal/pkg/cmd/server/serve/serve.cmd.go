@@ -10,6 +10,7 @@ import (
 
 	filepath_ "github.com/searKing/golang/go/path/filepath"
 	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	viper_ "github.com/searKing/sole/pkg/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/jwalterweatherman"
@@ -59,7 +60,7 @@ To learn more about each individual command, run:
 			logrus.WithError(err).WithField("config_path", cfgFile).Fatalf("load config")
 		}
 
-		cfg := provider.NewViperConfig("")
+		cfg := provider.NewViperConfig(viper_.GetViper("", version.ServiceName))
 		return cfg.Complete().Apply(cmd.Context())
 	}
 

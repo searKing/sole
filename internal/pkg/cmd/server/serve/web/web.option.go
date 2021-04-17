@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/searKing/sole/pkg/consul"
+	"github.com/searKing/sole/pkg/viper"
 	"github.com/searKing/sole/web/golang"
 	"github.com/sirupsen/logrus"
 
@@ -36,7 +37,7 @@ type CompletedServerRunOptions struct {
 func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		Provider:         provider.GlobalProvider(),
-		WebServerOptions: webserver.NewViperConfig("web"),
+		WebServerOptions: webserver.NewViperConfig(viper.GetViper("web", version.ServiceName)),
 	}
 }
 

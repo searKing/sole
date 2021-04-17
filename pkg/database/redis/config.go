@@ -15,8 +15,7 @@ import (
 )
 
 type Config struct {
-	KeyInViper string
-	Viper      *viper.Viper // If set, overrides params below
+	GetViper func() *viper.Viper // If set, overrides params below
 	Proto      Redis
 }
 
@@ -40,10 +39,9 @@ func NewConfig() *Config {
 // NewViperConfig returns a Config struct with the global viper instance
 // key representing a sub tree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(key string) *Config {
+func NewViperConfig(getViper func() *viper.Viper) *Config {
 	c := NewConfig()
-	c.Viper = viper.GetViper()
-	c.KeyInViper = key
+	c.GetViper = getViper
 	return c
 }
 
@@ -99,9 +97,9 @@ func (c completedConfig) New() (redis.UniversalClient, error) {
 }
 
 func (c *Config) loadViper() error {
-	v := c.Viper
-	if v != nil && c.KeyInViper != "" {
-		v = v.Sub(c.KeyInViper)
+	var v *viper.Viper
+	if c.GetViper != nil {
+		v = c.GetViper()
 	}
 
 	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
