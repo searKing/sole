@@ -17,6 +17,7 @@ func GetViper(subName string, envPrefix string) func() *viper.Viper {
 		}
 		if subName != "" {
 			v = v.Sub(subName)
+			envPrefix = envPrefix + "." + subName
 		}
 		if v == nil {
 			return nil
