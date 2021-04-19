@@ -81,17 +81,12 @@ func (c *Config) installSystemSecretOrDie() {
 		secretBytes := GenerateSecret(32)
 		logger.Warnf("Generated secret: %s", string(secretBytes))
 		logger.Warnln("Do not use generate secrets in production. The secret will be leaked to the logs.")
-		SystemSecret = secretBytes
+		SystemSecret = string(secretBytes)
 	}
 
-	if len(SystemSecret) >= 16 {
-		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		SystemSecret = HashByteSecret(SystemSecret)
-		c.Proto.SystemSecret = SystemSecret
-		return
-	}
-
-	logger.Fatalf("system secret must be undefined or have at least 16 characters but only has %d characters.", len(SystemSecret))
+	// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
+	SystemSecret = string(HashByteSecret([]byte(SystemSecret)))
+	c.Proto.SystemSecret = SystemSecret
 	return
 }
 
@@ -100,7 +95,7 @@ func (c *Config) installRotatedSystemSecret() {
 	secrets := c.Proto.GetRotatedSystemSecrets()
 	for i, secret := range secrets {
 		// hashes the secret for consumption by the pasta encryption algorithm which expects exactly 32 bytes.
-		c.Proto.RotatedSystemSecrets[i] = HashByteSecret(secret)
+		c.Proto.RotatedSystemSecrets[i] = string(HashByteSecret([]byte(secret)))
 	}
 }
 
@@ -109,5 +104,9 @@ func (c *Config) installKeyCipherOrDie() *Pasta {
 	c.installSystemSecretOrDie()
 	c.installRotatedSystemSecret()
 
-	return NewFromKey(c.Proto.GetSystemSecret(), c.Proto.GetRotatedSystemSecrets())
+	var secrets [][]byte
+	for _, s := range c.Proto.GetRotatedSystemSecrets() {
+		secrets = append(secrets, []byte(s))
+	}
+	return NewFromKey([]byte(c.Proto.GetSystemSecret()), secrets)
 }

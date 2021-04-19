@@ -5,6 +5,6 @@ package sole.api.v1.viper.crypto.pasta;
 option go_package = "github.com/searKing/sole/pkg/crypto/pasta;pasta";
 
 message Secret {
-  bytes system_secret = 1; // new
-  repeated bytes rotated_system_secrets = 2; // old, older,..., oldest
+  string system_secret = 1; // new
+  repeated string rotated_system_secrets = 2; // old, older,..., oldest
 }
