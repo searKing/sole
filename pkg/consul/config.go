@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	net_ "github.com/searKing/golang/go/net"
 	strings_ "github.com/searKing/golang/go/strings"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/sole/pkg/protobuf"
@@ -18,7 +19,7 @@ import (
 
 type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
-	Proto Consul
+	Proto    Consul
 }
 
 type completedConfig struct {
@@ -37,7 +38,8 @@ type CompletedConfig struct {
 func NewConfig() *Config {
 	return &Config{
 		Proto: Consul{
-			ConsulAddress:   "127.0.0.1:8500",
+			Address:         "",
+			DefaultAddress:  "127.0.0.1:8500",
 			ServiceRegistry: nil,
 			ServiceResolver: nil,
 		},
@@ -72,6 +74,8 @@ func (c *Config) Complete() CompletedConfig {
 			completeError: err,
 		}}
 	}
+
+	c.Proto.Address = net_.HostportOrDefault(c.Proto.GetAddress(), c.Proto.GetDefaultAddress())
 	return CompletedConfig{&completedConfig{Config: c}}
 }
 
@@ -122,7 +126,7 @@ func (c *completedConfig) installServiceRegister() (*ServiceRegister, error) {
 		reg.Complete()
 		services = append(services, reg)
 	}
-	return NewServiceRegister(c.Proto.GetConsulAddress(), services...)
+	return NewServiceRegister(c.Proto.GetAddress(), services...)
 }
 
 func (c *completedConfig) installServiceResolver() (*ServiceResolver, error) {
@@ -142,5 +146,5 @@ func (c *completedConfig) installServiceResolver() (*ServiceResolver, error) {
 		reg.Complete()
 		services = append(services, reg)
 	}
-	return NewServiceResolver(c.Proto.GetConsulAddress(), services...), nil
+	return NewServiceResolver(c.Proto.GetAddress(), services...), nil
 }

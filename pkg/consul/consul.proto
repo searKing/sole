@@ -6,9 +6,10 @@ import "google/protobuf/duration.proto";
 option go_package = "github.com/searKing/sole/pkg/consul;consul";
 
 message Consul {
-  string consul_address = 1; // host:port, addr of consul server
-  ServiceRegistry service_registry = 2;// for service registry
-  ServiceResolver service_resolver = 3;// for service resolver
+  string address = 1; // host:port, addr of consul server, default ip and port is default_consul_address
+  string default_address = 2;// host:port, addr of consul server, default is 127.0.0.1:8500
+  ServiceRegistry service_registry = 3;// for service registry
+  ServiceResolver service_resolver = 4;// for service resolver
 
   message ServiceRegistry{
     google.protobuf.Duration register_interval = 1;// interval to register services to consul
