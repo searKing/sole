@@ -34,7 +34,7 @@ import (
 
 type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
-	Proto      Web
+	Proto    Web
 
 	GatewayOptions []grpc.GatewayOption
 	GinMiddlewares []gin.HandlerFunc
@@ -193,7 +193,7 @@ func (c *Config) loadViper() error {
 
 func (s *Config) parseViper() {
 	s.BindAddress = s.Proto.GetBackendBindHostPort()
-	s.ExternalAddress = s.Proto.GetBackendServeHostPort()
+	s.ExternalAddress = s.Proto.GetBackendServeHostPort(true)
 
 	{
 		corsConfig := cors.NewConfig()

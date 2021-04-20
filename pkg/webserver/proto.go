@@ -53,13 +53,15 @@ func (web *Web) GetBackendAdvertiseHostPort() string {
 }
 
 // GetBackendServeHostPort returns a address to expose without domain, if not set, use resolver to resolve a ip
-func (web *Web) GetBackendServeHostPort() string {
-	host := web.GetAdvertiseAddr().GetHost()
-	if host != "" {
-		return getHostPort(host, web.GetAdvertiseAddr().GetPort())
+func (web *Web) GetBackendServeHostPort(advertise bool) string {
+	if advertise {
+		host := web.GetAdvertiseAddr().GetHost()
+		if host != "" {
+			return getHostPort(host, web.GetAdvertiseAddr().GetPort())
+		}
 	}
 
-	host = web.GetBindAddr().GetHost()
+	host := web.GetBindAddr().GetHost()
 	if host != "" && host != "0.0.0.0" {
 		return getHostPort(host, web.GetBindAddr().GetPort())
 	}
@@ -69,7 +71,7 @@ func (web *Web) GetBackendServeHostPort() string {
 func (web *Web) ResolveBackendLocalUrl(relativePaths ...string) string {
 	return resolveLocalUrl(
 		web.HTTPScheme(),
-		web.GetBackendServeHostPort(),
+		web.GetBackendServeHostPort(true),
 		filepath.Join(relativePaths...)).String()
 }
 

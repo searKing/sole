@@ -72,7 +72,7 @@ func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
 					continue
 				}
 				r := consul.ServiceRegistration{}
-				if err := r.SetDefault().SetAddr(s.WebServerOptions.Proto.GetBackendServeHostPort()); err != nil {
+				if err = r.SetDefault().SetAddr(s.WebServerOptions.Proto.GetBackendServeHostPort(true)); err != nil {
 					return err
 				}
 				r.Name = domain
