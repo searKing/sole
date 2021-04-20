@@ -49,7 +49,7 @@ type ServiceQuery struct {
 
 func (r *ServiceQuery) SetDefault() *ServiceQuery {
 	r.ResolverType = ResolverTypeConsist
-	r.PassingOnly = false
+	r.PassingOnly = true
 	return r
 }
 func (r *ServiceQuery) Complete() {}
@@ -135,6 +135,7 @@ func (srv *ServiceResolver) Shutdown() {
 }
 
 func (srv *ServiceResolver) QueryServices() error {
+	logger := srv.logger()
 	config := api.DefaultConfig()
 	config.Address = srv.ConsulAddress
 	client, err := api.NewClient(config)
@@ -164,6 +165,12 @@ func (srv *ServiceResolver) QueryServices() error {
 			service.nodeAddrs = hashring.NewStringNodeLocator(service.NodeLocatorOptions...)
 			service.nodeAddrs.AddNodes(serviceAddrs...)
 		}
+
+		logger.WithField("service_name", service.Name).
+			WithField("resolver_type", service.ResolverType).
+			WithField("node_addrs", service.nodeAddrs).
+			WithField("passing_oly", service.PassingOnly).
+			Infof("resolve service from consul")
 		srv.serviceByName.Store(name, service)
 		return true
 	})
