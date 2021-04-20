@@ -156,19 +156,19 @@ func (srv *ServiceResolver) QueryServices() error {
 		}
 		service.services = nodes
 		service.updateAt = time.Now()
+		var serviceAddrs []string
+		for _, node := range nodes {
+			addr := net.JoinHostPort(node.Service.Address, fmt.Sprintf("%d", node.Service.Port))
+			serviceAddrs = append(serviceAddrs, addr)
+		}
 		if service.ResolverType == ResolverTypeConsist {
-			var serviceAddrs []string
-			for _, node := range nodes {
-				addr := net.JoinHostPort(node.Service.Address, fmt.Sprintf("%d", node.Service.Port))
-				serviceAddrs = append(serviceAddrs, addr)
-			}
 			service.nodeAddrs = hashring.NewStringNodeLocator(service.NodeLocatorOptions...)
 			service.nodeAddrs.AddNodes(serviceAddrs...)
 		}
 
 		logger.WithField("service_name", service.Name).
 			WithField("resolver_type", service.ResolverType).
-			WithField("node_addrs", service.nodeAddrs).
+			WithField("node_addrs", serviceAddrs).
 			WithField("passing_oly", service.PassingOnly).
 			Infof("resolve service from consul")
 		srv.serviceByName.Store(name, service)
