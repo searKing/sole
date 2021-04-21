@@ -27,7 +27,7 @@ type serviceRegistrationMap sync.Map
 
 type ServiceRegistration struct {
 	Name                string
-	Id                  string
+	Id                  string // default is <Name>-<Ip>-<Port>
 	Tags                []string
 	Ip                  string
 	Port                int
@@ -60,7 +60,9 @@ func (r *ServiceRegistration) SetAddr(addr string) error {
 }
 
 func (r *ServiceRegistration) Complete() {
-	r.Id = fmt.Sprintf("%v-%v-%v", r.Name, r.Ip, r.Id)
+	if r.Id == "" {
+		r.Id = fmt.Sprintf("%s-%s-%d", r.Name, r.Ip, r.Port)
+	}
 }
 
 func (r *ServiceRegistration) GetCheck() (*api.AgentServiceCheck, error) {
