@@ -113,13 +113,13 @@ func (srv *ServiceResolver) Serve(ctx context.Context) error {
 	srv.mu.Unlock()
 
 	time_.Until(ctx, func(ctx context.Context) {
-		logger.Infof("querying services to consul")
+		logger.Debugf("querying services to consul")
 		err := srv.QueryServices()
 		if err != nil {
 			logger.WithError(err).Errorf("query services failed")
 			return
 		}
-		logger.Infof("query services by consul")
+		logger.Debugf("query services by consul")
 	}, srv.ResolverInterval)
 	logger.Info("stopped query services from consul")
 	return nil

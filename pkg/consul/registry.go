@@ -140,13 +140,13 @@ func (srv *ServiceRegister) Serve(ctx context.Context) error {
 	srv.mu.Unlock()
 
 	time_.Until(ctx, func(ctx context.Context) {
-		logger.Infof("registering services to consul")
+		logger.Debugf("registering services to consul")
 		err := srv.Register()
 		if err != nil {
 			logger.WithError(err).Errorf("register services failed")
 			return
 		}
-		logger.Infof("register services by consul")
+		logger.Debugf("register services by consul")
 	}, srv.RegisterInterval)
 
 	logger.Infoln("unregistering services to consul")
