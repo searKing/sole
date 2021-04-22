@@ -8,8 +8,9 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/searKing/sole/internal/pkg/version"
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/searKing/sole/pkg/consul"
+	"github.com/searKing/sole/pkg/database/leveldb"
 	vipergetter "github.com/searKing/sole/pkg/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -29,12 +30,14 @@ type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
 	proto    *viper_.ViperProto
 
+	AppInfo    *appinfo.Config
 	Logs       *logs.Config
 	OpenTracer *opentrace.Config
 
 	KeyCipher *pasta.Config
 	Sql       *sql.Config
 	Redis     *redis_.Config
+	LevelDB   *leveldb.Config
 	Consul    *consul.Config
 }
 
@@ -54,12 +57,14 @@ type CompletedConfig struct {
 func NewConfig() *Config {
 	return &Config{
 		proto:      NewDefaultViperProto(),
-		Logs:       logs.NewViperConfig(vipergetter.GetViper("log", version.ServiceName)),
-		OpenTracer: opentrace.NewViperConfig(vipergetter.GetViper("tracing", version.ServiceName)),
-		KeyCipher:  pasta.NewViperConfig(vipergetter.GetViper("secret", version.ServiceName)),
-		Sql:        sql.NewViperConfig(vipergetter.GetViper("database", version.ServiceName)),
-		Redis:      redis_.NewViperConfig(vipergetter.GetViper("redis", version.ServiceName)),
-		Consul:     consul.NewViperConfig(vipergetter.GetViper("consul", version.ServiceName)),
+		Logs:       logs.NewViperConfig(vipergetter.GetViper("log", appinfo.ServiceName)),
+		AppInfo:    appinfo.NewViperConfig(vipergetter.GetViper("app_info", appinfo.ServiceName)),
+		OpenTracer: opentrace.NewViperConfig(vipergetter.GetViper("tracing", appinfo.ServiceName)),
+		KeyCipher:  pasta.NewViperConfig(vipergetter.GetViper("secret", appinfo.ServiceName)),
+		Sql:        sql.NewViperConfig(vipergetter.GetViper("database", appinfo.ServiceName)),
+		Redis:      redis_.NewViperConfig(vipergetter.GetViper("redis", appinfo.ServiceName)),
+		LevelDB:    leveldb.NewViperConfig(vipergetter.GetViper("leveldb", appinfo.ServiceName)),
+		Consul:     consul.NewViperConfig(vipergetter.GetViper("consul", appinfo.ServiceName)),
 	}
 }
 
@@ -90,6 +95,10 @@ func (c *Config) Complete() CompletedConfig {
 // New usually called after Complete
 func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 	var sqlDB *sqlx.DB
+
+	if err := c.AppInfo.Complete().Apply(); err != nil {
+		return nil, err
+	}
 
 	if err := c.Logs.Complete().Apply(); err != nil {
 		return nil, err
@@ -125,6 +134,14 @@ func (c completedConfig) New(ctx context.Context) (*Provider, error) {
 			return nil, err
 		}
 		p.Redis = redis
+	}
+
+	if c.LevelDB != nil {
+		lvl, err := c.LevelDB.Complete().New()
+		if err != nil {
+			return nil, err
+		}
+		p.LevelDB = lvl
 	}
 
 	if c.Consul != nil {

@@ -122,7 +122,7 @@ func (c *Config) installSqlDBOrDie(ctx context.Context) *sqlx.DB {
 		// ignore
 		return nil
 	case "":
-		logrus.Fatalf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters.`)
+		logrus.Fatalf(`dsn is not set, use "memory" for an in memory storage or the documented database adapters.`)
 	}
 
 	maxWait := protobuf.DurationOrDefault(c.Proto.GetMaxWaitDuration(), 5*time.Second, "max_wait")

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+	"github.com/searKing/golang/third_party/github.com/syndtr/goleveldb/leveldb"
 	"github.com/searKing/sole/pkg/consul"
 	"github.com/searKing/sole/pkg/crypto/pasta"
 
@@ -24,6 +25,7 @@ type Provider struct {
 	KeyCipher       *pasta.Pasta
 	SqlDB           *sqlx.DB
 	Redis           redis.UniversalClient
+	LevelDB         *leveldb.ConsistentDB
 	ServiceRegister *consul.ServiceRegister
 	ServiceResolver *consul.ServiceResolver
 

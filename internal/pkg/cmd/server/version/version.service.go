@@ -7,11 +7,11 @@ package version
 import (
 	"fmt"
 
-	"github.com/searKing/sole/internal/pkg/version"
+	"github.com/searKing/sole/pkg/appinfo"
 )
 
 func Run() {
-	fmt.Printf("Version:    %s\n", version.Version)
-	fmt.Printf("Git Hash:   %s\n", version.GitHash)
-	fmt.Printf("Build Time: %s\n", version.BuildTime)
+	fmt.Printf("Version:    %s\n", appinfo.Version)
+	fmt.Printf("Git Hash:   %s\n", appinfo.GitHash)
+	fmt.Printf("Build Time: %s\n", appinfo.BuildTime)
 }

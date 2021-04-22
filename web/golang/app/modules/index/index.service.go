@@ -7,7 +7,7 @@ package index
 import (
 	"path"
 
-	"github.com/searKing/sole/internal/pkg/provider"
+	"github.com/searKing/sole/pkg/appinfo"
 )
 
 type IndexTemplateInfo struct {
@@ -19,9 +19,9 @@ type IndexTemplateInfo struct {
 
 func GetIndexTemplateInfo(prefix string, filename string) IndexTemplateInfo {
 	return IndexTemplateInfo{
-		Name:        provider.GlobalProvider().Proto.GetService().GetDisplayName(),
-		Version:     provider.GlobalProvider().Proto.GetAppInfo().GetBuildVersion(),
-		Description: provider.GlobalProvider().Proto.GetService().GetDescription(),
+		Name:        appinfo.ServiceDisplayName,
+		Version:     appinfo.GetVersion().String(),
+		Description: appinfo.ServiceDescription,
 		BaseUrl:     path.Join(prefix, filename),
 	}
 }

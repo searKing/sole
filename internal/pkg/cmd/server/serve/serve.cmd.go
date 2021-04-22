@@ -10,6 +10,7 @@ import (
 
 	filepath_ "github.com/searKing/golang/go/path/filepath"
 	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/searKing/sole/pkg/appinfo"
 	viper_ "github.com/searKing/sole/pkg/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -19,7 +20,6 @@ import (
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/all"
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve/web"
 	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/searKing/sole/internal/pkg/version"
 )
 
 // New represent the serve command
@@ -36,7 +36,7 @@ To learn more about each individual command, run:
 
 - %[1]s help serve all
 - %[1]s help serve web
-`, version.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          nil,
@@ -56,11 +56,11 @@ To learn more about each individual command, run:
 		// viper allows you to load config from default, config path、env and so on, but dies on failure.
 		jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
 		jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
-		if err := viperhelper.MergeAll(viper.GetViper(), cfgFile, version.ServiceName); err != nil {
+		if err := viperhelper.MergeAll(viper.GetViper(), cfgFile, appinfo.ServiceName); err != nil {
 			logrus.WithError(err).WithField("config_path", cfgFile).Fatalf("load config")
 		}
 
-		cfg := provider.NewViperConfig(viper_.GetViper("", version.ServiceName))
+		cfg := provider.NewViperConfig(viper_.GetViper("", appinfo.ServiceName))
 		return cfg.Complete().Apply(cmd.Context())
 	}
 
@@ -75,5 +75,5 @@ To learn more about each individual command, run:
 // DefaultConfigPath returns config file's default path
 func DefaultConfigPath() string {
 	// 	return filepath_.Pathify(fmt.Sprintf("$HOME/.%s.yaml", version.ServiceName))
-	return filepath_.Pathify(fmt.Sprintf("./conf/%s.yaml", version.ServiceName))
+	return filepath_.Pathify(fmt.Sprintf("./conf/%s.yaml", appinfo.ServiceName))
 }

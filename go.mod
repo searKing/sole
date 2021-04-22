@@ -33,6 +33,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.7.1
+	github.com/syndtr/goleveldb v1.0.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	go.uber.org/automaxprocs v1.4.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392 // indirect

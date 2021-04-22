@@ -8,12 +8,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/version"
 )
 
-// represent the all command
+// New represent the all command
 func New(ctx context.Context) *cobra.Command {
 	return &cobra.Command{
 		Use:   "all",
@@ -30,7 +29,7 @@ you can also set environments by prepending key value pairs: "KEY=VALUE KEY2=VAL
 service possible controls are listed below. This command exposes exposes command line flags, which are listed below
 the controls section.
 
-`, version.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		RunE:         CommandE(ctx),

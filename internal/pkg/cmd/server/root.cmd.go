@@ -7,20 +7,26 @@ package server
 import (
 	"context"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/serve"
 	"github.com/searKing/sole/internal/pkg/cmd/server/version"
-	version_ "github.com/searKing/sole/internal/pkg/version"
 )
 
-// This represents the base command when called without any sub commands
+func init() {
+	appinfo.ServiceName = "sole"
+	appinfo.ServiceDescription = "sole is a cloud native high throughput service manager server, " +
+		"allowing you to manage all services."
+}
+
+// NewCommand This represents the base command when called without any sub commands
 func NewCommand(ctx context.Context) *cobra.Command {
 	// This represents the base command when called without any subcommands
 	rootCmd := &cobra.Command{
-		Use:     version_.ServiceName,
-		Short:   version_.ServiceDescription,
-		Version: version_.GetVersion().String(),
+		Use:     appinfo.ServiceName,
+		Short:   appinfo.ServiceDescription,
+		Version: appinfo.GetVersion().String(),
 		// Uncomment the following line if your bare application
 		// has an action associated with it:
 		//Run: func(cmd *cobra.Command, args []string) {},

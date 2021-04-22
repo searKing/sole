@@ -8,13 +8,13 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/searKing/sole/pkg/consul"
 	"github.com/searKing/sole/pkg/viper"
 	"github.com/searKing/sole/web/golang"
 	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/searKing/sole/internal/pkg/version"
 	"github.com/searKing/sole/pkg/webserver"
 )
 
@@ -37,7 +37,7 @@ type CompletedServerRunOptions struct {
 func NewServerRunOptions() *ServerRunOptions {
 	return &ServerRunOptions{
 		Provider:         provider.GlobalProvider(),
-		WebServerOptions: webserver.NewViperConfig(viper.GetViper("web", version.ServiceName)),
+		WebServerOptions: webserver.NewViperConfig(viper.GetViper("web", appinfo.ServiceName)),
 	}
 }
 
@@ -56,7 +56,7 @@ func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 // Run runs the specified APIServer.  This should never exit.
 func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
 	// To help debugging, immediately log version
-	logrus.Infof("Version: %+v", version.GetVersion())
+	logrus.Infof("Version: %+v", appinfo.GetVersion())
 	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
 
 	server, err := s.WebServerOptions.Complete().New("sole")

@@ -10,9 +10,9 @@ git_build_time=$(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 GO := go
 GO_DOWNLOAD_FLAGS := --insecure
 GO_BUILD_FLAGS := -gcflags "-N -l" \
--ldflags "-s -X 'github.com/searKing/sole/internal/pkg/provider/viper.Version=${git_tag}' \
--X 'github.com/searKing/sole/internal/pkg/provider/viper.BuildTime=${git_build_time}' \
--X 'github.com/searKing/sole/internal/pkg/provider/viper.GitHash=${git_commit}'"
+-ldflags "-s -X 'github.com/searKing/sole/pkg/appinfo.Version=${git_tag}' \
+-X 'github.com/searKing/sole/pkg/appinfo.BuildTime=${git_build_time}' \
+-X 'github.com/searKing/sole/pkg/appinfo.GitHash=${git_commit}'"
 
 .PHONY: all
 all: all-mod
