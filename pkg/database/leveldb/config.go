@@ -6,12 +6,11 @@ package leveldb
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/golang/third_party/github.com/syndtr/goleveldb/leveldb"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-
-	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 )
 
 type Config struct {
@@ -33,7 +32,11 @@ type CompletedConfig struct {
 
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
-	return &Config{}
+	return &Config{
+		Proto: LevelDB{
+			PathPrefix: "./database/leveldb/db_",
+		},
+	}
 }
 
 // NewViperConfig returns a Config struct with the global viper instance
