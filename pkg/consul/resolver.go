@@ -169,7 +169,7 @@ func (srv *ServiceResolver) QueryServices() error {
 		logger.WithField("service_name", service.Name).
 			WithField("resolver_type", service.ResolverType).
 			WithField("node_addrs", serviceAddrs).
-			WithField("passing_oly", service.PassingOnly).
+			WithField("passing_only", service.PassingOnly).
 			Infof("resolve service from consul")
 		srv.serviceByName.Store(name, service)
 		return true

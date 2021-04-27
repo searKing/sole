@@ -107,14 +107,14 @@ func handleRootHealth(name string, checks ...HealthCheck) http.HandlerFunc {
 
 // adaptCheckToHandler returns an http.HandlerFunc that serves the provided checks.
 func adaptCheckToHandler(c func(r *http.Request) error) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		err := c(r)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("internal server error: %v", err), http.StatusInternalServerError)
 		} else {
-			fmt.Fprint(w, "ok")
+			_, _ = fmt.Fprint(w, "ok")
 		}
-	})
+	}
 }
 
 // checkerNames returns the names of the checks in the same order as passed in.
