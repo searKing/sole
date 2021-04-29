@@ -16,7 +16,7 @@ message Web {
 
   LocalIpResolver local_ip_resolver = 6; // for resolve local ip to expose, used if advertise_addr is empty
 
-  bool no_grpc_gateway_proxy = 7; // disable http proxy for grpc_gateway client
+  bool no_grpc_proxy = 7; // disable http proxy for grpc client to connect grpc server
 
   message Net {
     string host = 1;

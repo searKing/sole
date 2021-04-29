@@ -107,7 +107,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		logrus.StandardLogger().WriterLevel(logrus.WarnLevel),
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
 	opts := grpc.WithDefault()
-	if c.Proto.GetNoGrpcGatewayProxy() {
+	if c.Proto.GetNoGrpcProxy() {
 		opts = append(opts, grpc.WithGrpcDialOption(grpc_.WithNoProxy()))
 	}
 	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
