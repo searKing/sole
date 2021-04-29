@@ -16,7 +16,6 @@ import (
 	"github.com/luna-duclos/instrumentedsql/opentracing"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	_ "go.uber.org/automaxprocs"
 
 	"github.com/searKing/golang/go/database/dsn"
 	strings_ "github.com/searKing/golang/go/strings"
@@ -78,7 +77,7 @@ func (db *DB) fieldLogger() logrus.FieldLogger {
 // GetDatabaseRetry tries to connect to a database and fails after failAfter.
 func (db *DB) GetDatabaseRetry(ctx context.Context, maxWait time.Duration, failAfter time.Duration) (*sqlx.DB, error) {
 	// how long to sleep on retry failure
-	var tempDelay = time_.NewExponentialBackOff(
+	var tempDelay = time_.NewDefaultExponentialBackOff(
 		time_.WithExponentialBackOffOptionMaxInterval(maxWait),
 		time_.WithExponentialBackOffOptionMaxElapsedDuration(failAfter))
 	var err error

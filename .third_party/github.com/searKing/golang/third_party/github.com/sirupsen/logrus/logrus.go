@@ -5,68 +5,51 @@
 package logrus
 
 import (
+	"io"
 	"log"
-	"sync"
 
 	"github.com/sirupsen/logrus"
+
+	log_ "github.com/searKing/golang/go/log"
 )
 
-type FieldLogger struct {
-	logger logrus.FieldLogger
-	mu     sync.Mutex
+func StandardWriter(level logrus.Level) io.Writer {
+	return Writer(logrus.StandardLogger(), level)
 }
 
-var stdFieldLogger = New(nil)
-
-func New(l logrus.FieldLogger) *FieldLogger {
-	return &FieldLogger{
-		logger: l,
+func Writer(l logrus.FieldLogger, level logrus.Level) io.Writer {
+	var f log_.PrintfFunc
+	switch level {
+	case logrus.PanicLevel:
+		f = l.Panicf
+	case logrus.FatalLevel:
+		f = l.Fatalf
+	case logrus.ErrorLevel:
+		f = l.Errorf
+	case logrus.WarnLevel:
+		f = l.Warnf
+	case logrus.InfoLevel:
+		f = l.Infof
+	case logrus.DebugLevel:
+		f = l.Debugf
+	case logrus.TraceLevel:
+		if l, ok := l.(logrus.Ext1FieldLogger); ok {
+			f = l.Tracef
+		} else {
+			f = l.Printf
+		}
+	default:
+		f = l.Printf
 	}
+	return f
 }
 
-func (b *FieldLogger) Write(p []byte) (n int, err error) {
-	b.GetLogger().Printf("%s", string(p))
-	return len(p), nil
+// AsStdLogger returns *log.Logger from logrus.FieldLogger
+func AsStdLogger(l logrus.FieldLogger, level logrus.Level, prefix string, flag int) *log.Logger {
+	return log.New(Writer(l, level), prefix, flag)
 }
 
-func (b *FieldLogger) GetStdLogger() *log.Logger {
-	return log.New(New(b.GetLogger()), "", 0)
-}
-
-func (b *FieldLogger) GetLogger() logrus.FieldLogger {
-	if b == nil {
-		return stdFieldLogger.GetLogger()
-	}
-	if b.logger != nil {
-		return b.logger
-	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.logger == nil {
-		b.logger = logrus.StandardLogger()
-		b.logger.Warning("No logger was set, defaulting to standard logger.")
-	}
-	return b.logger
-}
-
-func (b *FieldLogger) SetStdLogger(l *log.Logger) {
-	if l == nil {
-		return
-	}
-	logger := logrus.New()
-	logger.Out = l.Writer()
-	b.SetLogger(logger)
-}
-
-func (b *FieldLogger) SetLogger(l logrus.FieldLogger) {
-	if b == nil {
-		return
-	}
-	if l == nil {
-		return
-	}
-
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.logger = l
+// AsStdLoggerWithLevel is only a helper of AsStdLogger
+func AsStdLoggerWithLevel(l logrus.FieldLogger, level logrus.Level) *log.Logger {
+	return AsStdLogger(l, level, "", 0)
 }
