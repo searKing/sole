@@ -48,6 +48,9 @@ service Intents {
     option (google.api.http) = {
       get: "/v2/{parent=projects/*/agent}/intents"
       additional_bindings {
+        get: "/v2/{parent=projects/*/locations/*/agent}/intents"
+      }
+      additional_bindings {
         get: "/v2/{parent=projects/*/agent/environments/*}/intents"
       }
     };
@@ -59,6 +62,9 @@ service Intents {
   rpc GetIntent(GetIntentRequest) returns (Intent) {
     option (google.api.http) = {
       get: "/v2/{name=projects/*/agent/intents/*}"
+      additional_bindings {
+        get: "/v2/{name=projects/*/locations/*/agent/intents/*}"
+      }
     };
     option (google.api.method_signature) = "name";
     option (google.api.method_signature) = "name,language_code";
@@ -69,6 +75,10 @@ service Intents {
     option (google.api.http) = {
       post: "/v2/{parent=projects/*/agent}/intents"
       body: "intent"
+      additional_bindings {
+        post: "/v2/{parent=projects/*/locations/*/agent}/intents"
+        body: "intent"
+      }
     };
     option (google.api.method_signature) = "parent,intent";
     option (google.api.method_signature) = "parent,intent,language_code";
@@ -79,6 +89,10 @@ service Intents {
     option (google.api.http) = {
       patch: "/v2/{intent.name=projects/*/agent/intents/*}"
       body: "intent"
+      additional_bindings {
+        patch: "/v2/{intent.name=projects/*/locations/*/agent/intents/*}"
+        body: "intent"
+      }
     };
     option (google.api.method_signature) = "intent,language_code";
     option (google.api.method_signature) = "intent,language_code,update_mask";
@@ -88,6 +102,9 @@ service Intents {
   rpc DeleteIntent(DeleteIntentRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v2/{name=projects/*/agent/intents/*}"
+      additional_bindings {
+        delete: "/v2/{name=projects/*/locations/*/agent/intents/*}"
+      }
     };
     option (google.api.method_signature) = "name";
   }
@@ -99,6 +116,10 @@ service Intents {
     option (google.api.http) = {
       post: "/v2/{parent=projects/*/agent}/intents:batchUpdate"
       body: "*"
+      additional_bindings {
+        post: "/v2/{parent=projects/*/locations/*/agent}/intents:batchUpdate"
+        body: "*"
+      }
     };
     option (google.api.method_signature) = "parent,intent_batch_uri";
     option (google.api.method_signature) = "parent,intent_batch_inline";
@@ -115,6 +136,10 @@ service Intents {
     option (google.api.http) = {
       post: "/v2/{parent=projects/*/agent}/intents:batchDelete"
       body: "*"
+      additional_bindings {
+        post: "/v2/{parent=projects/*/locations/*/agent}/intents:batchDelete"
+        body: "*"
+      }
     };
     option (google.api.method_signature) = "parent,intents";
     option (google.longrunning.operation_info) = {
@@ -773,6 +798,17 @@ message Intent {
   // taken into account during inference in `ML ONLY` match mode. Also,
   // auto-markup in the UI is turned off.
   bool ml_disabled = 19 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Indicates that a live agent should be brought in to handle the
+  // interaction with the user. In most cases, when you set this flag to true,
+  // you would also want to set end_interaction to true as well. Default is
+  // false.
+  bool live_agent_handoff = 20 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Indicates that this intent ends an interaction. Some integrations
+  // (e.g., Actions on Google or Dialogflow phone gateway) use this information
+  // to close interaction with an end user. Default is false.
+  bool end_interaction = 21 [(google.api.field_behavior) = OPTIONAL];
 
   // Optional. The list of context names required for this intent to be
   // triggered.
