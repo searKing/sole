@@ -33,7 +33,7 @@ type Web struct {
 	// for debug
 	ForceDisableTls    bool                 `protobuf:"varint,5,opt,name=force_disable_tls,json=forceDisableTls,proto3" json:"force_disable_tls,omitempty"`            // disable tls
 	LocalIpResolver    *Web_LocalIpResolver `protobuf:"bytes,6,opt,name=local_ip_resolver,json=localIpResolver,proto3" json:"local_ip_resolver,omitempty"`             // for resolve local ip to expose, used if advertise_addr is empty
-	NoGrpcGatewayProxy bool                 `protobuf:"varint,7,opt,name=no_grpc_gateway_proxy,json=noGrpcGatewayProxy,proto3" json:"no_grpc_gateway_proxy,omitempty"` // disable grpc and grpc_gateway
+	NoGrpcGatewayProxy bool                 `protobuf:"varint,7,opt,name=no_grpc_gateway_proxy,json=noGrpcGatewayProxy,proto3" json:"no_grpc_gateway_proxy,omitempty"` // disable http proxy for grpc_gateway client
 }
 
 func (x *Web) Reset() {
