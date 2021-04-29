@@ -22,14 +22,20 @@ proto_library(
     name = "dialogflow_proto",
     srcs = [
         "agent.proto",
+        "answer_record.proto",
         "audio_config.proto",
         "context.proto",
+        "conversation.proto",
+        "conversation_event.proto",
+        "conversation_profile.proto",
         "document.proto",
         "entity_type.proto",
         "environment.proto",
         "gcs.proto",
+        "human_agent_assistant_event.proto",
         "intent.proto",
         "knowledge_base.proto",
+        "participant.proto",
         "session.proto",
         "session_entity_type.proto",
         "validation_result.proto",
@@ -43,6 +49,7 @@ proto_library(
         "//google/longrunning:operations_proto",
         "//google/rpc:status_proto",
         "//google/type:latlng_proto",
+        "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:empty_proto",
         "@com_google_protobuf//:field_mask_proto",
@@ -148,6 +155,7 @@ go_gapic_library(
         "//google/longrunning:longrunning_go_proto",
         "@com_google_cloud_go//longrunning:go_default_library",
         "@com_google_cloud_go//longrunning/autogen:go_default_library",
+        "@io_bazel_rules_go//proto/wkt:any_go_proto",
         "@io_bazel_rules_go//proto/wkt:duration_go_proto",
         "@io_bazel_rules_go//proto/wkt:struct_go_proto",
     ],
@@ -274,7 +282,7 @@ nodejs_gapic_assembly_pkg(
 load(
     "@com_google_googleapis_imports//:imports.bzl",
     "ruby_gapic_assembly_pkg",
-    "ruby_gapic_library",
+    "ruby_cloud_gapic_library",
     "ruby_grpc_library",
     "ruby_proto_library",
 )
@@ -290,13 +298,11 @@ ruby_grpc_library(
     deps = [":dialogflow_ruby_proto"],
 )
 
-ruby_gapic_library(
+ruby_cloud_gapic_library(
     name = "dialogflow_ruby_gapic",
-    src = ":dialogflow_proto_with_info",
-    gapic_yaml = "dialogflow_gapic.yaml",
+    srcs = [":dialogflow_proto_with_info",],
+    extra_protoc_parameters = ["ruby-cloud-gem-name=google-cloud-dialogflow-v2beta1"],
     grpc_service_config = "dialogflow_grpc_service_config.json",
-    package = "google.cloud.dialogflow.v2beta1",
-    service_yaml = "dialogflow_v2beta1.yaml",
     deps = [
         ":dialogflow_ruby_grpc",
         ":dialogflow_ruby_proto",
