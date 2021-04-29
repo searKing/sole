@@ -1,6 +1,7 @@
 package runtime_test
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -11,9 +12,39 @@ import (
 func TestGetCaller(t *testing.T) {
 	// Example:
 	// github.com/searKing/golang/go/runtime_test.TestGetCaller
-	caller := runtime.GetCaller()
+	caller := runtime.GetCaller(1)
 	if match, _ := regexp.MatchString(`TestGetCaller(.*)`, caller); !match {
 		t.Errorf("mismatch symbolized function name: %s", caller)
+	}
+}
+
+func caller() string {
+	function, file, line := runtime.GetCallerFuncFileLine(1)
+	return fmt.Sprintf("%s() %s:%d", function, file, line)
+}
+
+func TestGetCallerFunctionLine(t *testing.T) {
+	// Example:
+	// github.com/searKing/golang/go/runtime_test.caller() /Users/.../workspace/src/github.com/searKing/golang/go/runtime/extern_test.go:29
+	cfl := caller()
+	if match, _ := regexp.MatchString(
+		`github\.com/searKing/golang/go/runtime_test\.caller\(\) .*github.com/searKing/golang/go/runtime/extern_test.go:([0-9]+)`, cfl); !match {
+		t.Errorf("mismatch caller's caller file line: %s", cfl)
+	}
+}
+
+func shortCaller() string {
+	function, file, line := runtime.GetShortCallerFuncFileLine(1)
+	return fmt.Sprintf("%s() %s:%d", function, file, line)
+}
+
+func TestGetShortCallerFuncFileLine(t *testing.T) {
+	// Example:
+	// shortCaller() extern_test.go:44
+	cfl := shortCaller()
+	if match, _ := regexp.MatchString(
+		`shortCaller\(\) extern_test.go:([0-9]+)`, cfl); !match {
+		t.Errorf("mismatch caller's caller file line: %s", cfl)
 	}
 }
 

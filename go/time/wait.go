@@ -14,10 +14,16 @@ import (
 // Forever calls f every period for ever.
 //
 // Forever is syntactic sugar on top of Until.
+// Example: time.Second
+// 2021/04/09 12:45:08 Apr  9 12:45:08
+// 2021/04/09 12:45:09 Apr  9 12:45:09
+// 2021/04/09 12:45:10 Apr  9 12:45:10
+// 2021/04/09 12:45:11 Apr  9 12:45:11
+// 2021/04/09 12:45:12 Apr  9 12:45:12
+// 2021/04/09 12:45:13 Apr  9 12:45:13
+// 2021/04/09 12:45:14 Apr  9 12:45:14
 func Forever(f func(), period time.Duration) {
-	Until(context.Background(), func(ctx context.Context) {
-		f()
-	}, period)
+	Until(context.Background(), func(ctx context.Context) { f() }, period)
 }
 
 // Until loops until context is done, running f every period.
@@ -25,11 +31,19 @@ func Forever(f func(), period time.Duration) {
 // Until is syntactic sugar on top of JitterUntil with zero jitter factor and
 // with sliding = true (which means the timer for period starts after the f
 // completes).
+// Example: time.Second for period and sleep in f
+// 2021/04/09 12:48:03 Apr  9 12:48:03
+// 2021/04/09 12:48:05 Apr  9 12:48:05
+// 2021/04/09 12:48:07 Apr  9 12:48:07
+// 2021/04/09 12:48:09 Apr  9 12:48:09
+// 2021/04/09 12:48:11 Apr  9 12:48:11
+// 2021/04/09 12:48:13 Apr  9 12:48:13
 func Until(ctx context.Context, f func(ctx context.Context), period time.Duration) {
 	JitterUntil(ctx, f, true,
-		WithExponentialBackOffOptionRandomizationFactor(0.5),
+		WithExponentialBackOffOptionRandomizationFactor(0),
 		WithExponentialBackOffOptionMultiplier(1),
-		WithExponentialBackOffOptionInitialInterval(period))
+		WithExponentialBackOffOptionInitialInterval(period),
+		WithExponentialBackOffOptionMaxElapsedDuration(-1))
 }
 
 // NonSlidingUntil loops until context is done, running f every
@@ -38,11 +52,20 @@ func Until(ctx context.Context, f func(ctx context.Context), period time.Duratio
 // NonSlidingUntil is syntactic sugar on top of JitterUntil with zero jitter
 // factor, with sliding = false (meaning the timer for period starts at the same
 // time as the function starts).
+// Example: time.Second for period and sleep in f
+// 2021/04/09 12:45:08 Apr  9 12:45:08
+// 2021/04/09 12:45:09 Apr  9 12:45:09
+// 2021/04/09 12:45:10 Apr  9 12:45:10
+// 2021/04/09 12:45:11 Apr  9 12:45:11
+// 2021/04/09 12:45:12 Apr  9 12:45:12
+// 2021/04/09 12:45:13 Apr  9 12:45:13
+// 2021/04/09 12:45:14 Apr  9 12:45:14
 func NonSlidingUntil(ctx context.Context, f func(ctx context.Context), period time.Duration) {
 	JitterUntil(ctx, f, false,
-		WithExponentialBackOffOptionRandomizationFactor(0.5),
+		WithExponentialBackOffOptionRandomizationFactor(0),
 		WithExponentialBackOffOptionMultiplier(1),
-		WithExponentialBackOffOptionInitialInterval(period))
+		WithExponentialBackOffOptionInitialInterval(period),
+		WithExponentialBackOffOptionMaxElapsedDuration(-1))
 }
 
 // JitterUntil loops until context is done, running f every period.
@@ -74,7 +97,9 @@ func BackoffUntil(ctx context.Context, f func(ctx context.Context), backoff Back
 		default:
 		}
 
+		var cost Cost
 		if !sliding {
+			cost.Start()
 			elapsed, ok = backoff.NextBackOff()
 		}
 
@@ -82,13 +107,19 @@ func BackoffUntil(ctx context.Context, f func(ctx context.Context), backoff Back
 			defer runtime.DefaultPanic.Recover()
 			f(ctx)
 		}()
+		if !sliding {
+			elapsed -= cost.Elapse()
+		}
 
 		if sliding {
 			elapsed, ok = backoff.NextBackOff()
 		}
+		if !ok {
+			return
+		}
 
 		func() {
-			if !ok || elapsed < 0 {
+			if elapsed <= 0 {
 				return
 			}
 			timer := time.NewTimer(elapsed)
