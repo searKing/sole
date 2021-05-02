@@ -6,7 +6,6 @@ package redis
 
 import (
 	"github.com/go-redis/redis/v8"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
