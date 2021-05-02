@@ -234,7 +234,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
     fi
   fi
   if [ -n "${g_with_go_grpc_gateway}" ]; then
-    grpc_gateway_option="${grpc_gateway_option},paths=source_relative:."
+    grpc_gateway_option="${grpc_gateway_option},paths=source_relative:. --grpc-gateway_opt=allow_delete_body=true"
   fi
   if [ -n "${g_with_openapiv2}" ]; then
     openapiv2_option="${openapiv2_option}:."
