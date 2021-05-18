@@ -10,13 +10,15 @@ message Web {
   Net advertise_addr = 2; // for expose
   TLS tls = 3; // for tls such as https
   CORS cors = 4; // for cors
+  int64 max_concurrency_unary = 5; // for concurrent parallel requests of unary server, The default is 0 (no limit is given)
+  int64 max_concurrency_stream = 6; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
 
   // for debug
-  bool force_disable_tls = 5; // disable tls
+  bool force_disable_tls = 7; // disable tls
 
-  LocalIpResolver local_ip_resolver = 6; // for resolve local ip to expose, used if advertise_addr is empty
+  LocalIpResolver local_ip_resolver = 8; // for resolve local ip to expose, used if advertise_addr is empty
 
-  bool no_grpc_proxy = 7; // disable http proxy for grpc client to connect grpc server
+  bool no_grpc_proxy = 9; // disable http proxy for grpc client to connect grpc server
 
   message Net {
     string host = 1;
@@ -90,5 +92,4 @@ message Web {
     // debug flag adds additional output to debug server side CORS issues
     bool debug = 10;
   }
-
 }

@@ -5,6 +5,7 @@
 package webserver
 
 import (
+	"context"
 	"crypto/tls"
 	"net"
 	"runtime/debug"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"github.com/searKing/golang/go/time/rate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	grpc_ "google.golang.org/grpc"
@@ -120,6 +122,33 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		return status.Errorf(codes.Internal, "%s", p)
 	}))))
 
+	if c.Proto.GetMaxConcurrencyUnary() > 0 {
+		limiter := rate.NewFullBurstLimiter(int(c.Proto.GetMaxConcurrencyUnary()))
+		opts = append(opts, grpc.WithGrpcUnaryServerChain(
+			func(ctx context.Context, req interface{},
+				info *grpc_.UnaryServerInfo, handler grpc_.UnaryHandler) (resp interface{}, err error) {
+				if limiter.Allow() {
+					return handler(ctx, req)
+				}
+				err = status.Errorf(codes.ResourceExhausted,
+					"%s is rejected by ratelimit middleware, please retry later", info.FullMethod)
+				logrus.WithError(err).Errorf("refuesd by grpc")
+				return nil, err
+			}))
+	}
+	if c.Proto.GetMaxConcurrencyStream() > 0 {
+		limiter := rate.NewFullBurstLimiter(int(c.Proto.GetMaxConcurrencyStream()))
+		opts = append(opts, grpc.WithGrpcStreamServerChain(
+			func(srv interface{}, ss grpc_.ServerStream, info *grpc_.StreamServerInfo, handler grpc_.StreamHandler) error {
+				if limiter.Allow() {
+					return handler(srv, ss)
+				}
+				err := status.Errorf(codes.ResourceExhausted,
+					"%s is rejected by ratelimit middleware, please retry later", info.FullMethod)
+				logrus.WithError(err).Errorf("refuesd by grpc")
+				return err
+			}))
+	}
 	{
 		if c.CORS != nil {
 			opts = append(opts, grpc.WithHttpWrapper(c.CORS.Complete().New().Handler))
