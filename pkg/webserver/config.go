@@ -128,6 +128,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 			func(ctx context.Context, req interface{},
 				info *grpc_.UnaryServerInfo, handler grpc_.UnaryHandler) (resp interface{}, err error) {
 				if limiter.Allow() {
+					defer limiter.PutToken()
 					return handler(ctx, req)
 				}
 				err = status.Errorf(codes.ResourceExhausted,
@@ -141,6 +142,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		opts = append(opts, grpc.WithGrpcStreamServerChain(
 			func(srv interface{}, ss grpc_.ServerStream, info *grpc_.StreamServerInfo, handler grpc_.StreamHandler) error {
 				if limiter.Allow() {
+					defer limiter.PutToken()
 					return handler(srv, ss)
 				}
 				err := status.Errorf(codes.ResourceExhausted,
