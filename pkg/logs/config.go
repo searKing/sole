@@ -20,7 +20,7 @@ import (
 
 type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
-	Proto Log
+	Proto    Log
 }
 
 type completedConfig struct {
@@ -136,5 +136,10 @@ func (c *completedConfig) install() error {
 			WithError(err).Error("add rotation wrapper for log")
 		return err
 	}
+	logrus.WithField("module", "log").
+			WithField("path", c.Proto.GetPath()).
+		WithField("duration", RotateDuration).
+		WithField("max_count", RotateMaxCount).
+		WithField("max_age", RotateMaxAge).Infof("add rotation wrapper for log")
 	return nil
 }
