@@ -21,7 +21,7 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.0.170
+	github.com/searKing/golang v1.0.173
 	github.com/searKing/golang/tools/cmd/protoc-gen-go-tag v0.0.0-20210305033433-3133a74ad7bd
 	github.com/segmentio/kafka-go v0.4.15
 	github.com/sirupsen/logrus v1.7.0
