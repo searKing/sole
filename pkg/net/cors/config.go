@@ -11,43 +11,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/cors"
 	gincors "github.com/rs/cors/wrapper/gin"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	"github.com/searKing/sole/pkg/protobuf"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	// returns Access-Control-Allow-Origin: * if false
-	UseConditional bool
-
-	// AllowedOrigins is a list of origins a cross-domain request can be executed from.
-	// If the special "*" value is present in the list, all origins will be allowed.
-	// An origin may contain a wildcard (*) to replace 0 or more characters
-	// (i.e.: http://*.domain.com). Usage of wildcards implies a small performance penalty.
-	// Only one wildcard can be used per origin.
-	// Default value is ["*"]
-	AllowedOrigins []string
-	// AllowedMethods is a list of methods the client is allowed to use with
-	// cross-domain requests. Default value is simple methods (HEAD, GET and POST).
-	AllowedMethods []string
-	// AllowedHeaders is list of non simple headers the client is allowed to use with
-	// cross-domain requests.
-	// If the special "*" value is present in the list, all headers will be allowed.
-	// Default value is [] but "Origin" is always appended to the list.
-	AllowedHeaders []string
-	// ExposedHeaders indicates which headers are safe to expose to the API of a CORS
-	// API specification
-	ExposedHeaders []string
-	// MaxAge indicates how long (in seconds) the results of a preflight request
-	// can be cached
-	MaxAge time.Duration
-	// AllowCredentials indicates whether the request can include user credentials like
-	// cookies, HTTP authentication or client side SSL certificates.
-	AllowCredentials bool
-	// OptionsPassthrough instructs preflight to let other potential next handlers to
-	// process the OPTIONS method. Turn this on if your application handles OPTIONS.
-	OptionsPassthrough bool
+	GetViper func() *viper.Viper // If set, overrides params below
+	Proto    CORS
 }
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -58,42 +37,74 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{
-			http.MethodHead,
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete},
-		AllowedHeaders: []string{"*"},
+		Proto: CORS{
+			AllowedOrigins: []string{"*"},
+			AllowedMethods: []string{
+				http.MethodHead,
+				http.MethodGet,
+				http.MethodPost,
+				http.MethodPut,
+				http.MethodPatch,
+				http.MethodDelete},
+			AllowedHeaders: []string{"*"},
+		},
 	}
 }
 
+// NewViperConfig returns a Config struct with the global viper instance
+// key representing a sub tree of this instance.
+// NewViperConfig is case-insensitive for a key.
+func NewViperConfig(getViper func() *viper.Viper) *Config {
+	c := NewConfig()
+	c.GetViper = getViper
+	return c
+}
+
 // Validate checks Config and return a slice of found errs.
-func (s *Config) Validate() []error {
+func (c *Config) Validate() []error {
 	return nil
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
-func (s *Config) Complete() CompletedConfig {
+func (c *Config) Complete() CompletedConfig {
+	if err := c.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        c,
+			completeError: err,
+		}}
+	}
 	var options completedConfig
 
 	// set defaults
-	options.Config = s
-	return CompletedConfig{&completedConfig{s}}
+	options.Config = c
+	return CompletedConfig{&completedConfig{Config: c}}
+}
+
+func (c *Config) loadViper() error {
+	var v *viper.Viper
+	if c.GetViper != nil {
+		v = c.GetViper()
+	}
+
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
+		logrus.WithError(err).Errorf("load cors config from viper")
+		return err
+	}
+	return nil
 }
 
 func (c completedConfig) options() cors.Options {
+	maxAge := protobuf.DurationOrDefault(c.Proto.GetMaxAge(), 0, "max_age")
+
 	return cors.Options{
-		AllowedOrigins:     c.AllowedOrigins,
-		AllowedMethods:     c.AllowedMethods,
-		AllowedHeaders:     c.AllowedHeaders,
-		ExposedHeaders:     c.ExposedHeaders,
-		AllowCredentials:   c.AllowCredentials,
-		MaxAge:             int(c.MaxAge.Truncate(time.Second).Seconds()),
-		OptionsPassthrough: c.OptionsPassthrough,
+		AllowedOrigins:     c.Proto.AllowedOrigins,
+		AllowedMethods:     c.Proto.AllowedMethods,
+		AllowedHeaders:     c.Proto.AllowedHeaders,
+		ExposedHeaders:     c.Proto.ExposedHeaders,
+		AllowCredentials:   c.Proto.AllowCredentials,
+		MaxAge:             int(maxAge.Truncate(time.Second).Seconds()),
+		OptionsPassthrough: c.Proto.OptionsPassthrough,
 	}
 }
 

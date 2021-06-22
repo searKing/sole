@@ -26,8 +26,6 @@ import (
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 
-	"github.com/searKing/sole/pkg/protobuf"
-
 	"github.com/searKing/sole/pkg/consul"
 
 	"github.com/searKing/sole/pkg/net/cors"
@@ -227,23 +225,16 @@ func (s *Config) parseViper() {
 	s.ExternalAddress = s.Proto.GetBackendServeHostPort(true)
 
 	{
-		corsConfig := cors.NewConfig()
-		corsInfo := s.Proto.GetCors()
-		if corsInfo != nil {
-			if corsInfo.Enable {
-				maxAge := protobuf.DurationOrDefault(corsInfo.GetMaxAge(), 0, "max_age")
-				corsConfig.UseConditional = corsInfo.GetUseConditional()
-				corsConfig.AllowedOrigins = corsInfo.GetAllowedOrigins()
-				corsConfig.AllowedMethods = corsInfo.GetAllowedOrigins()
-				corsConfig.AllowedHeaders = corsInfo.GetAllowedHeaders()
-				corsConfig.ExposedHeaders = corsInfo.GetExposedHeaders()
-
-				corsConfig.MaxAge = maxAge
-				corsConfig.AllowCredentials = corsInfo.GetAllowCredentials()
-			} else {
-				corsConfig = nil
-			}
+		if s.GetViper == nil {
+			s.CORS = cors.NewViperConfig(nil)
+		} else {
+			s.CORS = cors.NewViperConfig(func() *viper.Viper {
+				v := s.GetViper()
+				if v == nil {
+					return nil
+				}
+				return v.Sub("core")
+			})
 		}
-		s.CORS = corsConfig
 	}
 }
