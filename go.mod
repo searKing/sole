@@ -21,11 +21,12 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.0.175
+	github.com/searKing/golang v1.0.176
 	github.com/segmentio/kafka-go v0.4.15
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
@@ -36,6 +37,7 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/square/go-jose.v2 v2.5.1
+
 )
 
 //replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0

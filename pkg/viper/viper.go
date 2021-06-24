@@ -22,7 +22,6 @@ func GetViper(subName string, envPrefix string) func() *viper.Viper {
 		if v == nil {
 			return nil
 		}
-		v.AutomaticEnv()
 		viperhelper.MergeConfigFromENV(v, envPrefix)
 		return v
 	}

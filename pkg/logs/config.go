@@ -5,17 +5,12 @@
 package logs
 
 import (
-	"os"
-	"path/filepath"
 	"time"
 
+	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
+	"github.com/searKing/sole/pkg/protobuf"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"google.golang.org/protobuf/types/known/durationpb"
-
-	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
-	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
-	"github.com/searKing/sole/pkg/protobuf"
 )
 
 type Config struct {
@@ -37,17 +32,9 @@ type CompletedConfig struct {
 
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
-	return &Config{
-		Proto: Log{
-			Level:            Log_info,
-			Format:           Log_text,
-			Path:             "./log/" + filepath.Base(os.Args[0]),
-			RotationDuration: durationpb.New(24 * time.Hour),
-			RotationMaxCount: 0,
-			RotationMaxAge:   durationpb.New(7 * 24 * time.Hour),
-			ReportCaller:     false,
-		},
-	}
+	var c Config
+	c.SetDefaultsConfig()
+	return &c
 }
 
 // NewViperConfig returns a Config struct with the global viper instance
@@ -90,8 +77,8 @@ func (c *Config) loadViper() error {
 	if c.GetViper != nil {
 		v = c.GetViper()
 	}
-
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
+	err := c.SetViperConfig(v)
+	if err != nil {
 		logrus.WithError(err).Errorf("load logs config from viper")
 		return err
 	}
@@ -137,7 +124,7 @@ func (c *completedConfig) install() error {
 		return err
 	}
 	logrus.WithField("module", "log").
-			WithField("path", c.Proto.GetPath()).
+		WithField("path", c.Proto.GetPath()).
 		WithField("duration", RotateDuration).
 		WithField("max_count", RotateMaxCount).
 		WithField("max_age", RotateMaxAge).Infof("add rotation wrapper for log")
