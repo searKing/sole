@@ -115,11 +115,13 @@ func (c *completedConfig) install() error {
 		c.Proto.GetPath(),
 		logrus_.WithRotateInterval(RotateDuration),
 		logrus_.WithMaxCount(RotateMaxCount),
-		logrus_.WithMaxAge(RotateMaxAge)); err != nil {
+		logrus_.WithMaxAge(RotateMaxAge),
+		logrus_.WithMuteDirectlyOutput(c.Proto.GetMuteDirectlyOutput())); err != nil {
 		logrus.WithField("module", "log").WithField("path", c.Proto.GetPath()).
 			WithField("duration", RotateDuration).
 			WithField("max_count", RotateMaxCount).
 			WithField("max_age", RotateMaxAge).
+			WithField("mute_directly_output", c.Proto.GetMuteDirectlyOutput()).
 			WithError(err).Error("add rotation wrapper for log")
 		return err
 	}
@@ -127,6 +129,8 @@ func (c *completedConfig) install() error {
 		WithField("path", c.Proto.GetPath()).
 		WithField("duration", RotateDuration).
 		WithField("max_count", RotateMaxCount).
-		WithField("max_age", RotateMaxAge).Infof("add rotation wrapper for log")
+		WithField("max_age", RotateMaxAge).
+		WithField("mute_directly_output", c.Proto.GetMuteDirectlyOutput()).
+		Infof("add rotation wrapper for log")
 	return nil
 }
