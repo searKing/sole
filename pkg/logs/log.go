@@ -21,7 +21,8 @@ func init() {
 
 	errors.ErrorHandlers = append(errors.ErrorHandlers, func(err error) {
 		if err != nil {
-			logrus.Errorf("Observed an error: %s", err)
+			caller, file, line := runtime.GetShortCallerFuncFileLine(2)
+			logrus.Errorf("Observed an error: %s at %s() %s:%d", err, caller, file, line)
 		}
 	})
 }
