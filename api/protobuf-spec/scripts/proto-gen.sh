@@ -187,6 +187,7 @@ done
 
 find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_file; do
   proto_base_name="$(basename "${proto_file}" .proto)"
+  proto_dir="$(dirname "${proto_file}")"
 
   cpp_option=""
   go_option=""
@@ -222,6 +223,9 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   fi
 
   api_conf_yaml="${proto_base_name}.yaml"
+  if [ -n "${proto_dir}" ]; then
+    api_conf_yaml="${proto_dir}/${api_conf_yaml}"
+  fi
   if [[ -f "${api_conf_yaml}" ]]; then
     if [ -n "${g_with_go_grpc_gateway}" ]; then
       grpc_gateway_option="${grpc_gateway_option},grpc_api_configuration=${api_conf_yaml}"
