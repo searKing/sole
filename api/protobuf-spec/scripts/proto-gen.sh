@@ -179,17 +179,14 @@ for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-govalidators proto
   protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
   protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
   protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
-  protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/cmd/protoc-gen-go-tag
+  protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/protoc-gen-go-tag
   protoc-gen-govalidators: go get -u github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
   "
   echo 1>&2 "$tool: $q"
 done
 
 find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_file; do
-  proto_name="$(basename "${proto_file}")"
   proto_base_name="$(basename "${proto_file}" .proto)"
-  proto_dir="$(dirname "${proto_file}")"
-  pushd "${proto_dir}" 1>/dev/null 2>&1 || exit
 
   cpp_option=""
   go_option=""
@@ -245,10 +242,8 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_validators_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_name}" || exit
-  printf "\r\033[K%s compilied " "${proto_file}"
-
-  popd 1>/dev/null 2>&1 || exit
+  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_validators_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_file}" || exit
+  printf "\r\033[K%s compilied \n" "${proto_file}"
 done
 printf "\r\033[Kproto-gen done...\n"
 
