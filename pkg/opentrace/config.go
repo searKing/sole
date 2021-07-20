@@ -20,8 +20,8 @@ import (
 )
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Tracing
+	GetViper  func() *viper.Viper // If set, overrides params below
+	Proto     Tracing
 	Validator *validator.Validate
 }
 
@@ -40,9 +40,9 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		Tracing: Tracing{
+		Proto: Tracing{
 			Enable: false,
-			Type:   Tracing_urber_jaeger,
+			Type:   Tracing_uber_jaeger,
 		},
 	}
 }
@@ -93,7 +93,7 @@ func (c *Config) loadViper() error {
 		v = c.GetViper()
 	}
 
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Tracing); err != nil {
+	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
 		logrus.WithError(err).Errorf("load opentrace config from viper")
 		return err
 	}
@@ -102,7 +102,7 @@ func (c *Config) loadViper() error {
 
 func (c *completedConfig) install() (io.Closer, error) {
 	var Configuration jeagerConf.Configuration
-	trace := c.Tracing
+	trace := &c.Proto
 	if !trace.GetEnable() {
 		Configuration.Disabled = true
 		return Configuration.InitGlobalTracer(trace.GetServiceName())
@@ -123,7 +123,7 @@ func (c *completedConfig) install() (io.Closer, error) {
 	}
 	var configs []jeagerConf.Option
 	switch trace.GetType() {
-	case Tracing_urber_jaeger:
+	case Tracing_uber_jaeger:
 		break
 	case Tracing_zipkin:
 		zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
@@ -137,5 +137,5 @@ func (c *completedConfig) install() (io.Closer, error) {
 		return nil, fmt.Errorf("malformed trace type: %s", trace.GetType())
 	}
 
-	return Configuration.InitGlobalTracer(c.ServiceName, configs...)
+	return Configuration.InitGlobalTracer(c.Proto.GetServiceName(), configs...)
 }

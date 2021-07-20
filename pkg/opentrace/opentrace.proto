@@ -44,7 +44,7 @@ message Tracing {
     }
   }
   enum Type {
-    urber_jaeger = 0; //uber-jaeger
+    uber_jaeger = 0; //uber-jaeger
     zipkin = 1; //zipkin
   }
 }
