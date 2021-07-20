@@ -5,6 +5,7 @@
 package leveldb
 
 import (
+	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/golang/third_party/github.com/syndtr/goleveldb/leveldb"
@@ -14,8 +15,9 @@ import (
 )
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Proto    LevelDB
+	GetViper  func() *viper.Viper // If set, overrides params below
+	Proto     LevelDB
+	Validator *validator.Validate
 }
 
 type completedConfig struct {
@@ -48,9 +50,9 @@ func NewViperConfig(getViper func() *viper.Viper) *Config {
 	return c
 }
 
-// Validate checks Config and return a slice of found errs.
-func (c *Config) Validate() []error {
-	return nil
+// Validate checks Config.
+func (c *completedConfig) Validate() error {
+	return c.Validator.Struct(c)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
@@ -63,6 +65,9 @@ func (c *Config) Complete() CompletedConfig {
 			completeError: err,
 		}}
 	}
+	if c.Validator == nil {
+		c.Validator = validator.New()
+	}
 	return CompletedConfig{&completedConfig{Config: c}}
 }
 
@@ -72,6 +77,10 @@ func (c *Config) Complete() CompletedConfig {
 func (c completedConfig) New() (*leveldb.ConsistentDB, error) {
 	if c.completeError != nil {
 		return nil, c.completeError
+	}
+	err := c.Validate()
+	if err != nil {
+		return nil, err
 	}
 
 	return leveldb.NewConsistentDB(c.Proto.GetPathPrefix(), int(c.Proto.GetPoolSize()), &opt.Options{

@@ -7,6 +7,7 @@ package logs
 import (
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	"github.com/searKing/sole/pkg/protobuf"
 	"github.com/sirupsen/logrus"
@@ -14,8 +15,9 @@ import (
 )
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Proto    Log
+	GetViper  func() *viper.Viper // If set, overrides params below
+	Proto     Log
+	Validator *validator.Validate
 }
 
 type completedConfig struct {
@@ -46,9 +48,9 @@ func NewViperConfig(getViper func() *viper.Viper) *Config {
 	return c
 }
 
-// Validate checks Config and return a slice of found errs.
-func (c *Config) Validate() []error {
-	return nil
+// Validate checks Config.
+func (c *completedConfig) Validate() error {
+	return c.Validator.Struct(c)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
@@ -60,6 +62,9 @@ func (c *Config) Complete() CompletedConfig {
 			completeError: err,
 		}}
 	}
+	if c.Validator == nil {
+		c.Validator = validator.New()
+	}
 	return CompletedConfig{&completedConfig{Config: c}}
 }
 
@@ -68,6 +73,10 @@ func (c *Config) Complete() CompletedConfig {
 func (c completedConfig) Apply() error {
 	if c.completeError != nil {
 		return c.completeError
+	}
+	err := c.Validate()
+	if err != nil {
+		return err
 	}
 	return c.install()
 }

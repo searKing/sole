@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/cors"
 	gincors "github.com/rs/cors/wrapper/gin"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
@@ -20,6 +21,7 @@ import (
 type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
 	Proto    CORS
+	Validator            *validator.Validate
 }
 
 type completedConfig struct {
@@ -61,8 +63,8 @@ func NewViperConfig(getViper func() *viper.Viper) *Config {
 }
 
 // Validate checks Config and return a slice of found errs.
-func (c *Config) Validate() []error {
-	return nil
+func (c *completedConfig) Validate() error {
+	return c.Validator.Struct(c)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
@@ -74,10 +76,9 @@ func (c *Config) Complete() CompletedConfig {
 			completeError: err,
 		}}
 	}
-	var options completedConfig
-
-	// set defaults
-	options.Config = c
+	if c.Validator == nil {
+		c.Validator = validator.New()
+	}
 	return CompletedConfig{&completedConfig{Config: c}}
 }
 

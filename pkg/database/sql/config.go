@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
+	"github.com/searKing/golang/go/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -23,8 +25,9 @@ import (
 )
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Proto      Database
+	GetViper  func() *viper.Viper // If set, overrides params below
+	Proto     Database
+	Validator *validator.Validate
 }
 
 type completedConfig struct {
@@ -59,9 +62,11 @@ func NewViperConfig(getViper func() *viper.Viper) *Config {
 	return c
 }
 
-// Validate checks Config and return a slice of found errs.
-func (c *Config) Validate() []error {
+// Validate checks Config.
+func (c *completedConfig) Validate() error {
 	var errs []error
+	errs = append(errs, c.Validator.Struct(c))
+
 	dsnUrl := c.Proto.GetDsn()
 	switch dsnUrl {
 	case "memory":
@@ -70,7 +75,7 @@ func (c *Config) Validate() []error {
 	case "":
 		errs = append(errs, fmt.Errorf(`config.database.dsn is not set, use "memory" for an in memory storage or the documented database adapters`))
 	}
-	return errs
+	return errors.Multi(errs...)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
@@ -83,6 +88,9 @@ func (c *Config) Complete() CompletedConfig {
 			completeError: err,
 		}}
 	}
+	if c.Validator == nil {
+		c.Validator = validator.New()
+	}
 	return CompletedConfig{&completedConfig{Config: c}}
 }
 
@@ -92,6 +100,11 @@ func (c *Config) Complete() CompletedConfig {
 func (c completedConfig) New(ctx context.Context) *sqlx.DB {
 	if c.completeError != nil {
 		logrus.WithError(c.completeError).Fatalf("complete config")
+		return nil
+	}
+	err := c.Validate()
+	if err != nil {
+		logrus.WithError(err).Fatalf("validate config")
 		return nil
 	}
 	return c.installSqlDBOrDie(ctx)

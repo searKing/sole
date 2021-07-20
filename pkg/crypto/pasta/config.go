@@ -5,6 +5,7 @@
 package pasta
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -12,12 +13,16 @@ import (
 )
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Proto    Secret
+	GetViper  func() *viper.Viper // If set, overrides params below
+	Proto     Secret
+	Validator *validator.Validate
 }
 
 type completedConfig struct {
 	*Config
+
+	// for Complete Only
+	completeError error
 }
 
 type CompletedConfig struct {
@@ -39,36 +44,54 @@ func NewViperConfig(getViper func() *viper.Viper) *Config {
 	return c
 }
 
-// Validate checks Config and return a slice of found errs.
-func (s *Config) Validate() []error {
-	return nil
+// Validate checks Config.
+func (c *completedConfig) Validate() error {
+	return c.Validator.Struct(c)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
 func (o *Config) Complete() CompletedConfig {
-	return CompletedConfig{&completedConfig{o}}
+	if err := o.loadViper(); err != nil {
+		return CompletedConfig{&completedConfig{
+			Config:        o,
+			completeError: err,
+		}}
+	}
+	if o.Validator == nil {
+		o.Validator = validator.New()
+	}
+	return CompletedConfig{&completedConfig{Config: o}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
 func (c completedConfig) New() *Pasta {
-	c.loadViperOrDie()
+	if c.completeError != nil {
+		logrus.WithError(c.completeError).Errorf("complete secret config")
+		return nil
+	}
+	err := c.Validate()
+	if err != nil {
+		logrus.WithError(err).Errorf("validate secret config")
+		return nil
+	}
 	return c.installKeyCipherOrDie()
 }
 
-func (c *completedConfig) loadViperOrDie() {
+func (c *Config) loadViper() error {
 	var v *viper.Viper
 	if c.GetViper != nil {
 		v = c.GetViper()
 	}
 
 	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
-		logrus.WithError(err).Fatalf("load secret config from viper")
-		return
+		logrus.WithError(err).Errorf("load secret config from viper")
+		return err
 	}
+	return nil
 }
 
 // installSystemSecretOrDie allows you to check or generate system secret, but dies on failure.
