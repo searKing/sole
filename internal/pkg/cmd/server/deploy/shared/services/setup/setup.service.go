@@ -10,7 +10,7 @@ import (
 	"github.com/common-nighthawk/go-figure"
 	"github.com/kardianos/service"
 	"github.com/searKing/sole/internal/pkg/banner"
-	"github.com/searKing/sole/internal/pkg/provider"
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,17 +30,16 @@ func (p *program) Stop(s service.Service) (err error) {
 	return
 }
 func Setup(action string) {
-	proto := provider.GlobalProvider().Proto
-	fmt.Println(banner.Banner(proto.GetService().GetName(), proto.GetAppInfo().GetBuildVersion()))
+	fmt.Println(banner.Banner(appinfo.ServiceName, appinfo.GetVersion().String()))
 	switch action {
 	case "install", "stop":
-		figure.NewFigure(proto.GetService().GetDisplayName(), "", false).Print()
+		figure.NewFigure(appinfo.ServiceDisplayName, "", false).Print()
 	}
 
 	svcConfig := &service.Config{
-		Name:        proto.GetService().GetName(),
-		DisplayName: proto.GetService().GetDisplayName(),
-		Description: proto.GetService().GetDescription(),
+		Name:        appinfo.ServiceName,
+		DisplayName: appinfo.ServiceDisplayName,
+		Description: appinfo.ServiceDescription,
 		Arguments:   []string{"serve", "all"},
 	}
 	s, err := service.New(&program{}, svcConfig)
