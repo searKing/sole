@@ -91,7 +91,10 @@ func (s *WebServer) PrepareRun() (preparedWebServer, error) {
 func (s preparedWebServer) Run(ctx context.Context) error {
 	ctx, cancel := context.WithCancel(ctx)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer cancel()
 
 		<-ctx.Done()
@@ -119,7 +122,7 @@ func (s preparedWebServer) Run(ctx context.Context) error {
 	}
 
 	// wait for the delayed stopCh before closing the handler chain (it rejects everything after Wait has been called).
-	<-ctx.Done()
+	wg.Wait()
 
 	return nil
 }
