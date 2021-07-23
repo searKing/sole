@@ -24,14 +24,15 @@ func RegisterDefaults(scheme *runtime.Scheme) error {
 // SetDefaultsConfig assigns default values for the Config
 func (c *Config) SetDefaultsConfig() *Config {
 	c.Proto = Log{
-		Level:              Log_info,
-		Format:             Log_text,
-		Path:               "./log/" + filepath.Base(os.Args[0]),
-		RotationDuration:   durationpb.New(24 * time.Hour),
-		RotationMaxCount:   0,
-		RotationMaxAge:     durationpb.New(7 * 24 * time.Hour),
-		ReportCaller:       false,
-		MuteDirectlyOutput: true,
+		Level:                   Log_info,
+		Format:                  Log_text,
+		Path:                    "./log/" + filepath.Base(os.Args[0]),
+		RotationDuration:        durationpb.New(24 * time.Hour),
+		RotationMaxCount:        0,
+		RotationMaxAge:          durationpb.New(7 * 24 * time.Hour),
+		ReportCaller:            false,
+		MuteDirectlyOutput:      true,
+		MuteDirectlyOutputLevel: Log_warn,
 	}
 	return c
 }

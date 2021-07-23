@@ -30,5 +30,6 @@ message Log {
   int32 rotation_max_count = 5; //日志循环覆盖保留分片个数
   google.protobuf.Duration rotation_max_age = 6; // 文件最大保存时间
   bool report_caller = 7;// 调用者堆栈
-  bool mute_directly_output=8;// warn及更高级别日志是否打印到标准输出
+  bool mute_directly_output = 8;// warn及更高级别日志是否打印到标准输出
+  Level mute_directly_output_level = 9 ; // 标准输出日志最低打印等级
 }

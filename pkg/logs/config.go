@@ -120,13 +120,24 @@ func (c *completedConfig) install() error {
 
 	logrus.SetReportCaller(c.Proto.GetReportCaller())
 
+	muteDirectlyOutputLogLevel, err := logrus.ParseLevel(c.Proto.GetMuteDirectlyOutputLevel().String())
+	if err != nil {
+		muteDirectlyOutputLogLevel = logrus.WarnLevel
+		logrus.WithField("module", "log").
+			WithField("mute_directly_output_log_level", c.Proto.GetMuteDirectlyOutputLevel()).
+			WithError(err).
+			Warnf("malformed log level, use %s instead", muteDirectlyOutputLogLevel)
+	}
+
 	if err := logrus_.WithRotate(logrus.StandardLogger(),
 		c.Proto.GetPath(),
 		logrus_.WithRotateInterval(RotateDuration),
 		logrus_.WithMaxCount(RotateMaxCount),
 		logrus_.WithMaxAge(RotateMaxAge),
-		logrus_.WithMuteDirectlyOutput(c.Proto.GetMuteDirectlyOutput())); err != nil {
-		logrus.WithField("module", "log").WithField("path", c.Proto.GetPath()).
+		logrus_.WithMuteDirectlyOutput(c.Proto.GetMuteDirectlyOutput()),
+		logrus_.WithMuteDirectlyOutputLogLevel(muteDirectlyOutputLogLevel)); err != nil {
+		logrus.WithField("module", "log").
+			WithField("path", c.Proto.GetPath()).
 			WithField("duration", RotateDuration).
 			WithField("max_count", RotateMaxCount).
 			WithField("max_age", RotateMaxAge).
