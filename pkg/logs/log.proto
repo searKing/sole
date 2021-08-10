@@ -26,10 +26,11 @@ message Log {
   Level level = 1 ; // 日志最低打印等级
   Format format = 2 ; // 日志格式
   string path = 3; //日志存储路径
-  google.protobuf.Duration rotation_duration = 4; // 日志循环覆盖分片时间
-  int32 rotation_max_count = 5; //日志循环覆盖保留分片个数
-  google.protobuf.Duration rotation_max_age = 6; // 文件最大保存时间
-  bool report_caller = 7;// 调用者堆栈
-  bool mute_directly_output = 8;// warn及更高级别日志是否打印到标准输出
-  Level mute_directly_output_level = 9 ; // 标准输出日志最低打印等级
+  google.protobuf.Duration rotation_duration = 4; // 日志循环覆盖最大分片时间
+  int64 rotation_size_in_byte = 5; //日志循环最大分片大小,单位为Byte
+  int64 rotation_max_count = 6; //日志循环覆盖保留分片个数
+  google.protobuf.Duration rotation_max_age = 7; // 文件最大保存时间
+  bool report_caller = 8;// 调用者堆栈
+  bool mute_directly_output = 9;// warn及更高级别日志是否打印到标准输出
+  Level mute_directly_output_level = 10; // 标准输出日志最低打印等级
 }

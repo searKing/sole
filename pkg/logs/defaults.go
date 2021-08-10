@@ -30,6 +30,7 @@ func (c *Config) SetDefaultsConfig() *Config {
 		RotationDuration:        durationpb.New(24 * time.Hour),
 		RotationMaxCount:        0,
 		RotationMaxAge:          durationpb.New(7 * 24 * time.Hour),
+		RotationSizeInByte:      0,
 		ReportCaller:            false,
 		MuteDirectlyOutput:      true,
 		MuteDirectlyOutputLevel: Log_warn,

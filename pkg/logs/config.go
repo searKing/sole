@@ -116,6 +116,7 @@ func (c *completedConfig) install() error {
 
 	var RotateDuration = protobuf.DurationOrDefault(c.Proto.GetRotationDuration(), 24*time.Hour, "rotation_duration")
 	var RotateMaxAge = protobuf.DurationOrDefault(c.Proto.GetRotationMaxAge(), 7*24*time.Hour, "rotation_max_age")
+	var RotateSizeInByte = c.Proto.GetRotationSizeInByte()
 	var RotateMaxCount = int(c.Proto.GetRotationMaxCount())
 
 	logrus.SetReportCaller(c.Proto.GetReportCaller())
@@ -134,6 +135,7 @@ func (c *completedConfig) install() error {
 		logrus_.WithRotateInterval(RotateDuration),
 		logrus_.WithMaxCount(RotateMaxCount),
 		logrus_.WithMaxAge(RotateMaxAge),
+		logrus_.WithRotateSize(RotateSizeInByte),
 		logrus_.WithMuteDirectlyOutput(c.Proto.GetMuteDirectlyOutput()),
 		logrus_.WithMuteDirectlyOutputLogLevel(muteDirectlyOutputLogLevel)); err != nil {
 		logrus.WithField("module", "log").
@@ -141,6 +143,7 @@ func (c *completedConfig) install() error {
 			WithField("duration", RotateDuration).
 			WithField("max_count", RotateMaxCount).
 			WithField("max_age", RotateMaxAge).
+			WithField("rotate_size_in_byte", RotateSizeInByte).
 			WithField("mute_directly_output", c.Proto.GetMuteDirectlyOutput()).
 			WithError(err).Error("add rotation wrapper for log")
 		return err
