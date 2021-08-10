@@ -69,8 +69,8 @@ func (c *Config) Complete() CompletedConfig {
 		}}
 	}
 
-	if c.Proto.GetServiceId() != "" {
-		c.Proto.ServiceId = c.Proto.GetServiceName() + "-" + uuid.New().String()
+	if c.Proto.GetServiceId() == "" {
+		c.Proto.ServiceId = uuid.New().String()
 	}
 	if c.Validator == nil {
 		c.Validator = validator.New()
