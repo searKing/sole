@@ -15,3 +15,10 @@ func NamedTimeoutCheck(name string, timeout time.Duration, check func(r *http.Re
 		return check(r, timeout)
 	})
 }
+
+// NamedDeadlineCheck returns a healthz checker for the given name, deadline and function.
+func NamedDeadlineCheck(name string, d time.Time, check func(r *http.Request, d time.Time) error) HealthCheck {
+	return NamedCheck(name, func(r *http.Request) error {
+		return check(r, d)
+	})
+}
