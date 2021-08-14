@@ -13,11 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// NamedCheck returns a healthz checker for the given name and function.
-func NamedCheck(name string, check func(r *http.Request) error) HealthCheck {
-	return &healthChecker{name, check}
-}
-
 // InstallHandler registers handlers for health checking on the path
 // "/healthz" to mux. *All handlers* for mux must be specified in
 // exactly one call to InstallHandler. Calling InstallHandler more
