@@ -20,7 +20,7 @@ func Post(ctx context.Context, url string, contentType string, data []byte, requ
 		return nil, errors.New("empty data")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(data))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, err
 	}
