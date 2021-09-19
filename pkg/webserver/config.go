@@ -5,7 +5,6 @@
 package webserver
 
 import (
-	"context"
 	"crypto/tls"
 	"net"
 	"runtime/debug"
@@ -13,7 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	"github.com/searKing/golang/go/time/rate"
+	"github.com/searKing/golang/third_party/google.golang.org/grpc/interceptors/burstlimit"
+	"github.com/searKing/golang/third_party/google.golang.org/grpc/interceptors/timeoutlimit"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	grpc_ "google.golang.org/grpc"
@@ -111,43 +111,30 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		opts = append(opts, grpc.WithGrpcDialOption(grpc_.WithNoProxy()))
 	}
 	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
-	opts = append(opts, grpc.WithGrpcUnaryServerChain(grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
-		logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
-		return status.Errorf(codes.Internal, "%s", p)
-	}))))
-	opts = append(opts, grpc.WithGrpcStreamServerChain(grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
-		logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
-		return status.Errorf(codes.Internal, "%s", p)
-	}))))
-
-	if c.Proto.GetMaxConcurrencyUnary() > 0 {
-		limiter := rate.NewFullBurstLimiter(int(c.Proto.GetMaxConcurrencyUnary()))
-		opts = append(opts, grpc.WithGrpcUnaryServerChain(
-			func(ctx context.Context, req interface{},
-				info *grpc_.UnaryServerInfo, handler grpc_.UnaryHandler) (resp interface{}, err error) {
-				if limiter.Allow() {
-					defer limiter.PutToken()
-					return handler(ctx, req)
-				}
-				err = status.Errorf(codes.ResourceExhausted,
-					"%s is rejected by ratelimit middleware, please retry later", info.FullMethod)
-				logrus.WithError(err).Errorf("refuesd by grpc")
-				return nil, err
-			}))
+	{
+		// recover
+		opts = append(opts, grpc.WithGrpcUnaryServerChain(grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+			return status.Errorf(codes.Internal, "%s", p)
+		}))))
+		opts = append(opts, grpc.WithGrpcStreamServerChain(grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+			return status.Errorf(codes.Internal, "%s", p)
+		}))))
 	}
-	if c.Proto.GetMaxConcurrencyStream() > 0 {
-		limiter := rate.NewFullBurstLimiter(int(c.Proto.GetMaxConcurrencyStream()))
+	{
+		// handle request timeout
+		opts = append(opts, grpc.WithGrpcUnaryServerChain(
+			timeoutlimit.UnaryServerInterceptor(c.Proto.GetHandledTimeoutUnary().AsDuration())))
 		opts = append(opts, grpc.WithGrpcStreamServerChain(
-			func(srv interface{}, ss grpc_.ServerStream, info *grpc_.StreamServerInfo, handler grpc_.StreamHandler) error {
-				if limiter.Allow() {
-					defer limiter.PutToken()
-					return handler(srv, ss)
-				}
-				err := status.Errorf(codes.ResourceExhausted,
-					"%s is rejected by ratelimit middleware, please retry later", info.FullMethod)
-				logrus.WithError(err).Errorf("refuesd by grpc")
-				return err
-			}))
+			timeoutlimit.StreamServerInterceptor(c.Proto.GetHandledTimeoutStream().AsDuration())))
+	}
+	{
+		// burst limit
+		opts = append(opts, grpc.WithGrpcUnaryServerChain(
+			burstlimit.UnaryServerInterceptor(int(c.Proto.GetMaxConcurrencyUnary()), c.Proto.GetBurstLimitTimeoutUnary().AsDuration())))
+		opts = append(opts, grpc.WithGrpcStreamServerChain(
+			burstlimit.StreamServerInterceptor(int(c.Proto.GetMaxConcurrencyStream()), c.Proto.GetBurstLimitTimeoutStream().AsDuration())))
 	}
 	{
 		if c.CORS != nil {

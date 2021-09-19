@@ -21,7 +21,7 @@ require (
 	github.com/pkg/profile v1.5.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.1.24
+	github.com/searKing/golang v1.1.28
 	github.com/segmentio/kafka-go v0.4.15
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
@@ -41,4 +41,4 @@ require (
 
 //replace go.opentelemetry.io/otel v0.16.0 => github.com/open-telemetry/opentelemetry-go v0.16.0
 
-//replace github.com/searKing/golang v1.1.24 => ../../../github.com/searKing/golang
+//replace github.com/searKing/golang v1.1.28 => ../../../github.com/searKing/golang

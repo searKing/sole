@@ -11,14 +11,19 @@ message Web {
   TLS tls = 3; // for tls such as https
   CORS cors = 4; // for cors
   int64 max_concurrency_unary = 5; // for concurrent parallel requests of unary server, The default is 0 (no limit is given)
-  int64 max_concurrency_stream = 6; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
+  google.protobuf.Duration burst_limit_timeout_unary = 6; // for concurrent parallel requests of unary server, The default is 0 (no limit is given)
+  int64 max_concurrency_stream = 7; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
+  google.protobuf.Duration burst_limit_timeout_stream = 8; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
+  google.protobuf.Duration handled_timeout_unary = 9; // for max handing time of unary server, The default is 0 (no limit is given)
+  google.protobuf.Duration handled_timeout_stream = 10; // for max handing time of unary server, The default is 0 (no limit is given)
+
 
   // for debug
-  bool force_disable_tls = 7; // disable tls
+  bool force_disable_tls = 11; // disable tls
 
-  LocalIpResolver local_ip_resolver = 8; // for resolve local ip to expose, used if advertise_addr is empty
+  LocalIpResolver local_ip_resolver = 12; // for resolve local ip to expose, used if advertise_addr is empty
 
-  bool no_grpc_proxy = 9; // disable http proxy for grpc client to connect grpc server
+  bool no_grpc_proxy = 13; // disable http proxy for grpc client to connect grpc server
 
   message Net {
     string host = 1;
