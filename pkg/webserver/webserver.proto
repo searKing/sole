@@ -16,14 +16,16 @@ message Web {
   google.protobuf.Duration burst_limit_timeout_stream = 8; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
   google.protobuf.Duration handled_timeout_unary = 9; // for max handing time of unary server, The default is 0 (no limit is given)
   google.protobuf.Duration handled_timeout_stream = 10; // for max handing time of unary server, The default is 0 (no limit is given)
+  int64 max_receive_message_size_in_bytes = 11; // sets the maximum message size in bytes the grpc server can receive, The default is 0 (no limit is given).
+  int64 max_send_message_size_in_bytes = 12; // sets the maximum message size in bytes the grpc server can send, The default is 0 (no limit is given).
 
 
   // for debug
-  bool force_disable_tls = 11; // disable tls
+  bool force_disable_tls = 13; // disable tls
 
-  LocalIpResolver local_ip_resolver = 12; // for resolve local ip to expose, used if advertise_addr is empty
+  LocalIpResolver local_ip_resolver = 14; // for resolve local ip to expose, used if advertise_addr is empty
 
-  bool no_grpc_proxy = 13; // disable http proxy for grpc client to connect grpc server
+  bool no_grpc_proxy = 15; // disable http proxy for grpc client to connect grpc server
 
   message Net {
     string host = 1;

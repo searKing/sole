@@ -6,23 +6,24 @@ package webserver
 
 import (
 	"crypto/tls"
+	"math"
 	"net"
 	"runtime/debug"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"github.com/searKing/golang/third_party/google.golang.org/grpc/interceptors/burstlimit"
 	"github.com/searKing/golang/third_party/google.golang.org/grpc/interceptors/timeoutlimit"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	grpc_ "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
 
 	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
-	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 
@@ -32,11 +33,16 @@ import (
 	"github.com/searKing/sole/pkg/webserver/healthz"
 )
 
+// ClientMaxReceiveMessageSize use 4GB as the default message size limit.
+// grpc library default is 4MB
+var defaultClientMaxReceiveMessageSize = math.MaxInt32 // 1024 * 1024 * 4
+var defaultClientMaxSendMessageSize = math.MaxInt32
+
 type Config struct {
 	GetViper func() *viper.Viper // If set, overrides params below
 	Proto    Web
 
-	GatewayOptions []grpc.GatewayOption
+	GatewayOptions []grpc_.GatewayOption
 	GinMiddlewares []gin.HandlerFunc
 
 	CORS *cors.Config
@@ -106,45 +112,59 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		logrus.StandardLogger().WriterLevel(logrus.InfoLevel),
 		logrus.StandardLogger().WriterLevel(logrus.WarnLevel),
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
-	opts := grpc.WithDefault()
+	opts := grpc_.WithDefault()
 	if c.Proto.GetNoGrpcProxy() {
-		opts = append(opts, grpc.WithGrpcDialOption(grpc_.WithNoProxy()))
+		opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithNoProxy()))
 	}
-	opts = append(opts, grpc.WithLogrusLogger(logrus.StandardLogger()))
+	opts = append(opts, grpc_.WithLogrusLogger(logrus.StandardLogger()))
+	{
+		// 设置GRPC最大消息大小
+		opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithNoProxy()))
+		if c.Proto.GetMaxReceiveMessageSizeInBytes() > 0 {
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(int(c.Proto.GetMaxReceiveMessageSizeInBytes())))))
+		} else {
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultClientMaxReceiveMessageSize))))
+		}
+		if c.Proto.GetMaxSendMessageSizeInBytes() > 0 {
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(int(c.Proto.GetMaxSendMessageSizeInBytes())))))
+		} else {
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(defaultClientMaxSendMessageSize))))
+		}
+	}
 	{
 		// recover
-		opts = append(opts, grpc.WithGrpcUnaryServerChain(grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+		opts = append(opts, grpc_.WithGrpcUnaryServerChain(grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(func(p interface{}) (err error) {
 			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
 			return status.Errorf(codes.Internal, "%s", p)
 		}))))
-		opts = append(opts, grpc.WithGrpcStreamServerChain(grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(func(p interface{}) (err error) {
+		opts = append(opts, grpc_.WithGrpcStreamServerChain(grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(func(p interface{}) (err error) {
 			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
 			return status.Errorf(codes.Internal, "%s", p)
 		}))))
 	}
 	{
 		// handle request timeout
-		opts = append(opts, grpc.WithGrpcUnaryServerChain(
+		opts = append(opts, grpc_.WithGrpcUnaryServerChain(
 			timeoutlimit.UnaryServerInterceptor(c.Proto.GetHandledTimeoutUnary().AsDuration())))
-		opts = append(opts, grpc.WithGrpcStreamServerChain(
+		opts = append(opts, grpc_.WithGrpcStreamServerChain(
 			timeoutlimit.StreamServerInterceptor(c.Proto.GetHandledTimeoutStream().AsDuration())))
 	}
 	{
 		// burst limit
-		opts = append(opts, grpc.WithGrpcUnaryServerChain(
+		opts = append(opts, grpc_.WithGrpcUnaryServerChain(
 			burstlimit.UnaryServerInterceptor(int(c.Proto.GetMaxConcurrencyUnary()), c.Proto.GetBurstLimitTimeoutUnary().AsDuration())))
-		opts = append(opts, grpc.WithGrpcStreamServerChain(
+		opts = append(opts, grpc_.WithGrpcStreamServerChain(
 			burstlimit.StreamServerInterceptor(int(c.Proto.GetMaxConcurrencyStream()), c.Proto.GetBurstLimitTimeoutStream().AsDuration())))
 	}
 	{
 		if c.CORS != nil {
-			opts = append(opts, grpc.WithHttpWrapper(c.CORS.Complete().New().Handler))
+			opts = append(opts, grpc_.WithHttpWrapper(c.CORS.Complete().New().Handler))
 			c.GinMiddlewares = append(c.GinMiddlewares, c.CORS.Complete().NewGinHandler())
 		}
 	}
 
 	opts = append(opts, c.GatewayOptions...)
-	grpcBackend := grpc.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
+	grpcBackend := grpc_.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
 	grpcBackend.ApplyOptions()
 	grpcBackend.ErrorLog = logrus_.AsStdLogger(logrus.StandardLogger(), logrus.ErrorLevel, "", 0)
 	ginBackend := gin.New()
