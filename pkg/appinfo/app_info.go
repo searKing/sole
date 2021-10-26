@@ -98,7 +98,7 @@ func (c *Config) loadViper() error {
 	}
 
 	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
-		logrus.WithError(err).Errorf("load logs config from viper")
+		logrus.WithError(err).Errorf("load appinfo config from viper")
 		return err
 	}
 	return nil
