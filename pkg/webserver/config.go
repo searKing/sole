@@ -111,7 +111,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		return nil, c.completeError
 	}
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(
-		logrus.StandardLogger().WriterLevel(logrus.InfoLevel),
+		logrus.StandardLogger().WriterLevel(logrus.DebugLevel),
 		logrus.StandardLogger().WriterLevel(logrus.WarnLevel),
 		logrus.StandardLogger().WriterLevel(logrus.ErrorLevel)))
 	opts := grpc_.WithDefault()
