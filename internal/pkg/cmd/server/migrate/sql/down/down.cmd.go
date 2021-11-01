@@ -7,12 +7,11 @@ package down
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the down command
+// New represent the down command
 func New() *cobra.Command {
 
 	return &cobra.Command{
@@ -27,7 +26,7 @@ This decreases risk of failure and decreases time required.
 ### WARNING ###
 
 Before running this command on an existing database, create a back up!
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		//Run:          controller(),

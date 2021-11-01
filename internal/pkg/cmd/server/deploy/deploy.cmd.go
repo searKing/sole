@@ -7,16 +7,16 @@ package deploy
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/install"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/start"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/stop"
 	"github.com/searKing/sole/internal/pkg/cmd/server/deploy/uninstall"
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the deploy command
+// New represent the deployment command
 func New() *cobra.Command {
 	deployCmd := &cobra.Command{
 		Use:   "deploy",
@@ -29,7 +29,7 @@ To learn more about each individual command, run:
 - %[1]s help deploy uninstall
 - %[1]s help deploy start
 - %[1]s help deploy stop
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 	}

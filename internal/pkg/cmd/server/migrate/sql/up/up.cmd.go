@@ -7,12 +7,11 @@ package up
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the up command
+// New represent the up command
 func New() *cobra.Command {
 	return &cobra.Command{
 		Use:   "up",
@@ -26,7 +25,7 @@ This decreases risk of failure and decreases time required.
 ### WARNING ###
 
 Before running this command on an existing database, create a back up!
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		//Run:          controller(),

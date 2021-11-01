@@ -7,12 +7,11 @@ package uninstall
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the uninstall command
+// New represent the uninstall command
 func New() *cobra.Command {
 	return &cobra.Command{
 		Use:   "uninstall",
@@ -23,7 +22,7 @@ greater rights. Will return an error if the service is not present.
 To learn more about each individual command, run:
 
 - %[1]s help uninstall
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),

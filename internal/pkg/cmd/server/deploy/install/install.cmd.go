@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// represent the install command
+// New represent the install command
 func New() *cobra.Command {
 	return &cobra.Command{
 		Use:   "install",

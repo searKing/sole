@@ -7,12 +7,11 @@ package start
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
-
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the start command
+// New represent the start command
 func New() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
@@ -22,7 +21,7 @@ func New() *cobra.Command {
 To learn more about each individual command, run:
 
 - %[1]s help deploy start
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 		Run:          controller(),

@@ -7,14 +7,14 @@ package sql
 import (
 	"fmt"
 
+	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/spf13/cobra"
 
 	"github.com/searKing/sole/internal/pkg/cmd/server/migrate/sql/down"
 	"github.com/searKing/sole/internal/pkg/cmd/server/migrate/sql/up"
-	"github.com/searKing/sole/internal/pkg/provider"
 )
 
-// represent the all command
+// New represent the all command
 func New() *cobra.Command {
 
 	sqlCmd := &cobra.Command{
@@ -28,7 +28,7 @@ This decreases risk of failure and decreases time required.
 ### WARNING ###
 
 Before running this command on an existing database, create a back up!
-`, provider.ServiceName),
+`, appinfo.ServiceName),
 		// stop printing usage when the command errors
 		SilenceUsage: true,
 	}
