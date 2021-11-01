@@ -6,8 +6,10 @@ package webserver
 
 import (
 	"crypto/tls"
+	"fmt"
 	"math"
 	"net"
+	"os"
 	"runtime/debug"
 	"time"
 
@@ -135,10 +137,22 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 		// recover
 		opts = append(opts, grpc_.WithGrpcUnaryServerChain(grpcrecovery.UnaryServerInterceptor(grpcrecovery.WithRecoveryHandler(func(p interface{}) (err error) {
 			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+			{
+				_, _ = os.Stderr.Write([]byte(fmt.Sprintf("panic: %s", p)))
+				debug.PrintStack()
+				_, _ = os.Stderr.Write([]byte(" [recovered]"))
+				_, _ = os.Stderr.Write([]byte("\n"))
+			}
 			return status.Errorf(codes.Internal, "%s", p)
 		}))))
 		opts = append(opts, grpc_.WithGrpcStreamServerChain(grpcrecovery.StreamServerInterceptor(grpcrecovery.WithRecoveryHandler(func(p interface{}) (err error) {
 			logrus.WithError(status.Errorf(codes.Internal, "%s at %s", p, debug.Stack())).Errorf("recovered in grpc")
+			{
+				_, _ = os.Stderr.Write([]byte(fmt.Sprintf("panic: %s", p)))
+				debug.PrintStack()
+				_, _ = os.Stderr.Write([]byte(" [recovered]"))
+				_, _ = os.Stderr.Write([]byte("\n"))
+			}
 			return status.Errorf(codes.Internal, "%s", p)
 		}))))
 	}
