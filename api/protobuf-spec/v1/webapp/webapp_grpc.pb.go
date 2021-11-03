@@ -137,5 +137,5 @@ var WebAppService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "webapp.proto",
+	Metadata: "v1/webapp/webapp.proto",
 }

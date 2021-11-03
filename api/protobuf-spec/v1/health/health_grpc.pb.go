@@ -215,5 +215,5 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "health.proto",
+	Metadata: "v1/health/health.proto",
 }

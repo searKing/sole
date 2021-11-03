@@ -139,5 +139,5 @@ var DebugService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "debug.proto",
+	Metadata: "v1/debug/debug.proto",
 }

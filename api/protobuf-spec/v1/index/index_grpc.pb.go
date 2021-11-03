@@ -101,5 +101,5 @@ var IndexService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "index.proto",
+	Metadata: "v1/index/index.proto",
 }

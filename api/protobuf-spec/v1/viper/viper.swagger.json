@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "viper.proto",
+    "title": "v1/viper/viper.proto",
     "version": "version not set"
   },
   "consumes": [
@@ -15,14 +15,11 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "typeUrl": {
+        "@type": {
           "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
         }
-      }
+      },
+      "additionalProperties": {}
     },
     "rpcStatus": {
       "type": "object",

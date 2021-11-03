@@ -99,5 +99,5 @@ var DateService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "date.proto",
+	Metadata: "v1/date/date.proto",
 }

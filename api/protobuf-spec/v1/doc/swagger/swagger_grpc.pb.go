@@ -177,5 +177,5 @@ var SwaggerService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "swagger.proto",
+	Metadata: "v1/doc/swagger/swagger.proto",
 }
