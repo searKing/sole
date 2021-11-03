@@ -194,11 +194,8 @@ php_grpc_library(
 
 php_gapic_library(
     name = "datatransfer_php_gapic",
-    src = ":datatransfer_proto_with_info",
-    gapic_yaml = "bigquerydatatransfer_gapic.yaml",
+    srcs = [":datatransfer_proto_with_info"],
     grpc_service_config = "bigquerydatatransfer_grpc_service_config.json",
-    package = "google.cloud.bigquery.datatransfer.v1",
-    service_yaml = "bigquerydatatransfer_v1.yaml",
     deps = [
         ":datatransfer_php_grpc",
         ":datatransfer_php_proto",
@@ -248,8 +245,8 @@ nodejs_gapic_assembly_pkg(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "ruby_gapic_assembly_pkg",
     "ruby_cloud_gapic_library",
+    "ruby_gapic_assembly_pkg",
     "ruby_grpc_library",
     "ruby_proto_library",
 )

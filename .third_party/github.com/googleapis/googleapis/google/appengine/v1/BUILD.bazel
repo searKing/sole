@@ -228,10 +228,8 @@ php_grpc_library(
 
 php_gapic_library(
     name = "appengine_php_gapic",
-    src = ":appengine_proto_with_info",
-    gapic_yaml = "appengine_gapic.yaml",
+    srcs = [":appengine_proto_with_info"],
     grpc_service_config = "appengine_grpc_service_config.json",
-    package = "google.appengine.v1",
     service_yaml = "appengine_v1.yaml",
     deps = [
         ":appengine_php_grpc",

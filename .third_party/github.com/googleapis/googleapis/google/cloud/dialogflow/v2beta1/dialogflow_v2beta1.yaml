@@ -12,11 +12,13 @@ apis:
 - name: google.cloud.dialogflow.v2beta1.Documents
 - name: google.cloud.dialogflow.v2beta1.EntityTypes
 - name: google.cloud.dialogflow.v2beta1.Environments
+- name: google.cloud.dialogflow.v2beta1.Fulfillments
 - name: google.cloud.dialogflow.v2beta1.Intents
 - name: google.cloud.dialogflow.v2beta1.KnowledgeBases
 - name: google.cloud.dialogflow.v2beta1.Participants
 - name: google.cloud.dialogflow.v2beta1.SessionEntityTypes
 - name: google.cloud.dialogflow.v2beta1.Sessions
+- name: google.cloud.dialogflow.v2beta1.Versions
 
 types:
 - name: google.cloud.dialogflow.v2beta1.BatchUpdateEntityTypesResponse
@@ -49,6 +51,12 @@ documentation:
 
     For more information, see the
     [Dialogflow documentation](https://cloud.google.com/dialogflow/docs).
+  rules:
+  - selector: google.cloud.location.Locations.GetLocation
+    description: Gets information about a location.
+
+  - selector: google.cloud.location.Locations.ListLocations
+    description: Lists information about the supported locations for this service.
 
 backend:
   rules:
@@ -66,7 +74,11 @@ backend:
     deadline: 60.0
   - selector: 'google.cloud.dialogflow.v2beta1.EntityTypes.*'
     deadline: 60.0
-  - selector: google.cloud.dialogflow.v2beta1.Environments.ListEnvironments
+  - selector: 'google.cloud.dialogflow.v2beta1.Environments.*'
+    deadline: 60.0
+  - selector: google.cloud.dialogflow.v2beta1.Fulfillments.GetFulfillment
+    deadline: 60.0
+  - selector: google.cloud.dialogflow.v2beta1.Fulfillments.UpdateFulfillment
     deadline: 60.0
   - selector: 'google.cloud.dialogflow.v2beta1.Intents.*'
     deadline: 60.0
@@ -76,19 +88,27 @@ backend:
     deadline: 60.0
   - selector: google.cloud.dialogflow.v2beta1.Participants.AnalyzeContent
     deadline: 220.0
-  - selector: google.cloud.dialogflow.v2beta1.Participants.StreamingAnalyzeContent
-    deadline: 220.0
   - selector: 'google.cloud.dialogflow.v2beta1.SessionEntityTypes.*'
     deadline: 60.0
   - selector: google.cloud.dialogflow.v2beta1.Sessions.DetectIntent
     deadline: 220.0
   - selector: google.cloud.dialogflow.v2beta1.Sessions.StreamingDetectIntent
     deadline: 220.0
+  - selector: 'google.cloud.dialogflow.v2beta1.Versions.*'
+    deadline: 60.0
+  - selector: google.cloud.location.Locations.GetLocation
+    deadline: 60.0
+  - selector: google.cloud.location.Locations.ListLocations
+    deadline: 60.0
   - selector: 'google.longrunning.Operations.*'
     deadline: 60.0
 
 http:
   rules:
+  - selector: google.cloud.location.Locations.GetLocation
+    get: '/v2beta1/{name=projects/*/locations/*}'
+  - selector: google.cloud.location.Locations.ListLocations
+    get: '/v2beta1/{name=projects/*}/locations'
   - selector: google.longrunning.Operations.CancelOperation
     post: '/v2beta1/{name=projects/*/operations/*}:cancel'
     additional_bindings:
@@ -139,7 +159,17 @@ authentication:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/dialogflow
-  - selector: google.cloud.dialogflow.v2beta1.Environments.ListEnvironments
+  - selector: 'google.cloud.dialogflow.v2beta1.Environments.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/dialogflow
+  - selector: google.cloud.dialogflow.v2beta1.Fulfillments.GetFulfillment
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/dialogflow
+  - selector: google.cloud.dialogflow.v2beta1.Fulfillments.UpdateFulfillment
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,
@@ -170,6 +200,21 @@ authentication:
         https://www.googleapis.com/auth/cloud-platform,
         https://www.googleapis.com/auth/dialogflow
   - selector: google.cloud.dialogflow.v2beta1.Sessions.StreamingDetectIntent
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/dialogflow
+  - selector: 'google.cloud.dialogflow.v2beta1.Versions.*'
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/dialogflow
+  - selector: google.cloud.location.Locations.GetLocation
+    oauth:
+      canonical_scopes: |-
+        https://www.googleapis.com/auth/cloud-platform,
+        https://www.googleapis.com/auth/dialogflow
+  - selector: google.cloud.location.Locations.ListLocations
     oauth:
       canonical_scopes: |-
         https://www.googleapis.com/auth/cloud-platform,

@@ -31,6 +31,7 @@ proto_library(
         "document.proto",
         "entity_type.proto",
         "environment.proto",
+        "fulfillment.proto",
         "gcs.proto",
         "human_agent_assistant_event.proto",
         "intent.proto",
@@ -39,6 +40,7 @@ proto_library(
         "session.proto",
         "session_entity_type.proto",
         "validation_result.proto",
+        "version.proto",
         "webhook.proto",
     ],
     deps = [
@@ -49,6 +51,7 @@ proto_library(
         "//google/longrunning:operations_proto",
         "//google/rpc:status_proto",
         "//google/type:latlng_proto",
+        "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:empty_proto",
         "@com_google_protobuf//:field_mask_proto",
@@ -91,18 +94,36 @@ java_grpc_library(
 java_gapic_library(
     name = "dialogflow_java_gapic",
     srcs = [":dialogflow_proto_with_info"],
+    gapic_yaml = None,
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    service_yaml = "dialogflow_v2.yaml",
     test_deps = [
         ":dialogflow_java_grpc",
     ],
     deps = [
         ":dialogflow_java_proto",
+        "//google/api:api_java_proto",
     ],
 )
 
 java_gapic_test(
     name = "dialogflow_java_gapic_test_suite",
     test_classes = [
+        "com.google.cloud.dialogflow.v2.AgentsClientTest",
+        "com.google.cloud.dialogflow.v2.AnswerRecordsClientTest",
+        "com.google.cloud.dialogflow.v2.ContextsClientTest",
+        "com.google.cloud.dialogflow.v2.ConversationProfilesClientTest",
+        "com.google.cloud.dialogflow.v2.ConversationsClientTest",
+        "com.google.cloud.dialogflow.v2.DocumentsClientTest",
+        "com.google.cloud.dialogflow.v2.EntityTypesClientTest",
+        "com.google.cloud.dialogflow.v2.EnvironmentsClientTest",
+        "com.google.cloud.dialogflow.v2.FulfillmentsClientTest",
+        "com.google.cloud.dialogflow.v2.IntentsClientTest",
+        "com.google.cloud.dialogflow.v2.KnowledgeBasesClientTest",
+        "com.google.cloud.dialogflow.v2.ParticipantsClientTest",
+        "com.google.cloud.dialogflow.v2.SessionEntityTypesClientTest",
+        "com.google.cloud.dialogflow.v2.SessionsClientTest",
+        "com.google.cloud.dialogflow.v2.VersionsClientTest",
     ],
     runtime_deps = [":dialogflow_java_gapic_test"],
 )
@@ -154,6 +175,7 @@ go_gapic_library(
         "//google/longrunning:longrunning_go_proto",
         "@com_google_cloud_go//longrunning:go_default_library",
         "@com_google_cloud_go//longrunning/autogen:go_default_library",
+        "@io_bazel_rules_go//proto/wkt:any_go_proto",
         "@io_bazel_rules_go//proto/wkt:duration_go_proto",
         "@io_bazel_rules_go//proto/wkt:struct_go_proto",
     ],
@@ -224,10 +246,8 @@ php_grpc_library(
 
 php_gapic_library(
     name = "dialogflow_php_gapic",
-    src = ":dialogflow_proto_with_info",
-    gapic_yaml = "dialogflow_gapic.yaml",
+    srcs = [":dialogflow_proto_with_info"],
     grpc_service_config = "dialogflow_grpc_service_config.json",
-    package = "google.cloud.dialogflow.v2",
     service_yaml = "dialogflow_v2.yaml",
     deps = [
         ":dialogflow_php_grpc",
@@ -279,8 +299,8 @@ nodejs_gapic_assembly_pkg(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "ruby_gapic_assembly_pkg",
     "ruby_cloud_gapic_library",
+    "ruby_gapic_assembly_pkg",
     "ruby_grpc_library",
     "ruby_proto_library",
 )
@@ -300,14 +320,14 @@ ruby_cloud_gapic_library(
     name = "dialogflow_ruby_gapic",
     srcs = [":dialogflow_proto_with_info"],
     extra_protoc_parameters = [
-        "ruby-cloud-gem-name=google-cloud-dialogflow-v2",
-        "ruby-cloud-env-prefix=DIALOGFLOW",
-        "ruby-cloud-product-url=https://cloud.google.com/dialogflow",
         "ruby-cloud-api-id=dialogflow.googleapis.com",
         "ruby-cloud-api-shortname=dialogflow",
+        "ruby-cloud-env-prefix=DIALOGFLOW",
+        "ruby-cloud-gem-name=google-cloud-dialogflow-v2",
+        "ruby-cloud-product-url=https://cloud.google.com/dialogflow",
     ],
     grpc_service_config = "dialogflow_grpc_service_config.json",
-    ruby_cloud_description = "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices. You can use it to build interfaces (such as chatbots and conversational IVR) that enable natural and rich interactions between your users and your business.",
+    ruby_cloud_description = "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices. You can use it to build interfaces (such as chatbots and conversational IVR) that enable natural and rich interactions between your users and your business. This client is for Dialogflow ES, providing the standard agent type suitable for small and simple agents.",
     ruby_cloud_title = "Dialogflow V2",
     deps = [
         ":dialogflow_ruby_grpc",
@@ -371,20 +391,4 @@ csharp_gapic_assembly_pkg(
 ##############################################################################
 # C++
 ##############################################################################
-load(
-    "@com_google_googleapis_imports//:imports.bzl",
-    "cc_grpc_library",
-    "cc_proto_library",
-)
-
-cc_proto_library(
-    name = "dialogflow_cc_proto",
-    deps = [":dialogflow_proto"],
-)
-
-cc_grpc_library(
-    name = "dialogflow_cc_grpc",
-    srcs = [":dialogflow_proto"],
-    grpc_only = True,
-    deps = [":dialogflow_cc_proto"],
-)
+# Put your C++ rules here
