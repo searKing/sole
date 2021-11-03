@@ -18,21 +18,24 @@ var (
 	importPrefix               = flag.String("import_prefix", "", "prefix to be added to go package paths for imported proto files")
 	file                       = flag.String("file", "-", "where to load data from")
 	allowDeleteBody            = flag.Bool("allow_delete_body", false, "unless set, HTTP DELETE methods may not have a body")
-	grpcAPIConfiguration       = flag.String("grpc_api_configuration", "", "path to gRPC API Configuration in YAML format")
+	grpcAPIConfiguration       = flag.String("grpc_api_configuration", "", "path to file which describes the gRPC API Configuration in YAML format")
 	allowMerge                 = flag.Bool("allow_merge", false, "if set, generation one OpenAPI file out of multiple protos")
 	mergeFileName              = flag.String("merge_file_name", "apidocs", "target OpenAPI file name prefix after merge")
 	useJSONNamesForFields      = flag.Bool("json_names_for_fields", true, "if disabled, the original proto name will be used for generating OpenAPI definitions")
-	repeatedPathParamSeparator = flag.String("repeated_path_param_separator", "csv", "configures how repeated fields should be split. Allowed values are `csv`, `pipes`, `ssv` and `tsv`.")
+	repeatedPathParamSeparator = flag.String("repeated_path_param_separator", "csv", "configures how repeated fields should be split. Allowed values are `csv`, `pipes`, `ssv` and `tsv`")
 	versionFlag                = flag.Bool("version", false, "print the current version")
 	allowRepeatedFieldsInBody  = flag.Bool("allow_repeated_fields_in_body", false, "allows to use repeated field in `body` and `response_body` field of `google.api.http` annotation option")
-	includePackageInTags       = flag.Bool("include_package_in_tags", false, "if unset, the gRPC service name is added to the `Tags` field of each operation. if set and the `package` directive is shown in the proto file, the package name will be prepended to the service name")
-	useFQNForOpenAPIName       = flag.Bool("fqn_for_openapi_name", false, "if set, the object's OpenAPI names will use the fully qualify name from the proto definition (ie my.package.MyMessage.MyInnerMessage")
+	includePackageInTags       = flag.Bool("include_package_in_tags", false, "if unset, the gRPC service name is added to the `Tags` field of each operation. If set and the `package` directive is shown in the proto file, the package name will be prepended to the service name")
+	useFQNForOpenAPIName       = flag.Bool("fqn_for_openapi_name", false, "if set, the object's OpenAPI names will use the fully qualified names from the proto definition (ie my.package.MyMessage.MyInnerMessage). DEPRECATED: prefer `openapi_naming_strategy=fqn`")
+	openAPINamingStrategy      = flag.String("openapi_naming_strategy", "", "use the given OpenAPI naming strategy. Allowed values are `legacy`, `fqn`, `simple`. If unset, either `legacy` or `fqn` are selected, depending on the value of the `fqn_for_openapi_name` flag")
 	useGoTemplate              = flag.Bool("use_go_templates", false, "if set, you can use Go templates in protofile comments")
 	disableDefaultErrors       = flag.Bool("disable_default_errors", false, "if set, disables generation of default errors. This is useful if you have defined custom error handling")
 	enumsAsInts                = flag.Bool("enums_as_ints", false, "whether to render enum values as integers, as opposed to string values")
 	simpleOperationIDs         = flag.Bool("simple_operation_ids", false, "whether to remove the service prefix in the operationID generation. Can introduce duplicate operationIDs, use with caution.")
-	openAPIConfiguration       = flag.String("openapi_configuration", "", "path to OpenAPI Configuration in YAML format")
+	proto3OptionalNullable     = flag.Bool("proto3_optional_nullable", false, "whether Proto3 Optional fields should be marked as x-nullable")
+	openAPIConfiguration       = flag.String("openapi_configuration", "", "path to file which describes the OpenAPI Configuration in YAML format")
 	generateUnboundMethods     = flag.Bool("generate_unbound_methods", false, "generate swagger metadata even for RPC methods that have no HttpRule annotation")
+	recursiveDepth             = flag.Int("recursive-depth", 1000, "maximum recursion count allowed for a field type")
 )
 
 // Variables set by goreleaser at build time
@@ -83,12 +86,32 @@ func main() {
 	reg.SetUseJSONNamesForFields(*useJSONNamesForFields)
 	reg.SetAllowRepeatedFieldsInBody(*allowRepeatedFieldsInBody)
 	reg.SetIncludePackageInTags(*includePackageInTags)
+
 	reg.SetUseFQNForOpenAPIName(*useFQNForOpenAPIName)
+	// Set the naming strategy either directly from the flag, or via the value of the legacy fqn_for_openapi_name
+	// flag.
+	namingStrategy := *openAPINamingStrategy
+	if *useFQNForOpenAPIName {
+		if namingStrategy != "" {
+			glog.Fatal("The deprecated `fqn_for_openapi_name` flag must remain unset if `openapi_naming_strategy` is set.")
+		}
+		glog.Warning("The `fqn_for_openapi_name` flag is deprecated. Please use `openapi_naming_strategy=fqn` instead.")
+		namingStrategy = "fqn"
+	} else if namingStrategy == "" {
+		namingStrategy = "legacy"
+	}
+	if strategyFn := genopenapi.LookupNamingStrategy(namingStrategy); strategyFn == nil {
+		emitError(fmt.Errorf("invalid naming strategy %q", namingStrategy))
+		return
+	}
+	reg.SetOpenAPINamingStrategy(namingStrategy)
 	reg.SetUseGoTemplate(*useGoTemplate)
 	reg.SetEnumsAsInts(*enumsAsInts)
 	reg.SetDisableDefaultErrors(*disableDefaultErrors)
 	reg.SetSimpleOperationIDs(*simpleOperationIDs)
+	reg.SetProto3OptionalNullable(*proto3OptionalNullable)
 	reg.SetGenerateUnboundMethods(*generateUnboundMethods)
+	reg.SetRecursiveDepth(*recursiveDepth)
 	if err := reg.SetRepeatedPathParamSeparator(*repeatedPathParamSeparator); err != nil {
 		emitError(err)
 		return
@@ -146,7 +169,9 @@ func emitFiles(out []*descriptor.ResponseFile) {
 	for idx, item := range out {
 		files[idx] = item.CodeGeneratorResponse_File
 	}
-	emitResp(&pluginpb.CodeGeneratorResponse{File: files})
+	resp := &pluginpb.CodeGeneratorResponse{File: files}
+	codegenerator.SetSupportedFeaturesOnCodeGeneratorResponse(resp)
+	emitResp(resp)
 }
 
 func emitError(err error) {

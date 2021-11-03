@@ -26,6 +26,13 @@ type openapiInfoObject struct {
 	extensions []extension
 }
 
+// https://swagger.io/specification/#tagObject
+type openapiTagObject struct {
+	Name         string                              `json:"name"`
+	Description  string                              `json:"description,omitempty"`
+	ExternalDocs *openapiExternalDocumentationObject `json:"externalDocs,omitempty"`
+}
+
 // http://swagger.io/specification/#contactObject
 type openapiContactObject struct {
 	Name  string `json:"name,omitempty"`
@@ -54,6 +61,7 @@ type extension struct {
 type openapiSwaggerObject struct {
 	Swagger             string                              `json:"swagger"`
 	Info                openapiInfoObject                   `json:"info"`
+	Tags                []openapiTagObject                  `json:"tags,omitempty"`
 	Host                string                              `json:"host,omitempty"`
 	BasePath            string                              `json:"basePath,omitempty"`
 	Schemes             []string                            `json:"schemes,omitempty"`
@@ -142,12 +150,18 @@ type openapiParameterObject struct {
 }
 
 // core part of schema, which is common to itemsObject and schemaObject.
-// http://swagger.io/specification/#itemsObject
+// http://swagger.io/specification/v2/#itemsObject
+// The OAS3 spec (https://swagger.io/specification/#schemaObject) defines the
+// `nullable` field as part of a Schema Object. This behavior has been
+// "back-ported" to OAS2 as the Specification Extension `x-nullable`, and is
+// supported by generation tools such as swagger-codegen and go-swagger.
+// For protoc-gen-openapiv3, we'd want to add `nullable` instead.
 type schemaCore struct {
-	Type    string          `json:"type,omitempty"`
-	Format  string          `json:"format,omitempty"`
-	Ref     string          `json:"$ref,omitempty"`
-	Example json.RawMessage `json:"example,omitempty"`
+	Type      string          `json:"type,omitempty"`
+	Format    string          `json:"format,omitempty"`
+	Ref       string          `json:"$ref,omitempty"`
+	XNullable bool            `json:"x-nullable,omitempty"`
+	Example   json.RawMessage `json:"example,omitempty"`
 
 	Items *openapiItemsObject `json:"items,omitempty"`
 
@@ -177,8 +191,20 @@ type openapiResponseObject struct {
 	Description string                 `json:"description"`
 	Schema      openapiSchemaObject    `json:"schema"`
 	Examples    map[string]interface{} `json:"examples,omitempty"`
+	Headers     openapiHeadersObject   `json:"headers,omitempty"`
 
 	extensions []extension
+}
+
+type openapiHeadersObject map[string]openapiHeaderObject
+
+// http://swagger.io/specification/#headerObject
+type openapiHeaderObject struct {
+	Description string          `json:"description,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Format      string          `json:"format,omitempty"`
+	Default     json.RawMessage `json:"default,omitempty"`
+	Pattern     string          `json:"pattern,omitempty"`
 }
 
 type keyVal struct {
