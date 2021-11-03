@@ -7,17 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	durationpb "github.com/golang/protobuf/ptypes/duration"
-	emptypb "github.com/golang/protobuf/ptypes/empty"
-	structpb "github.com/golang/protobuf/ptypes/struct"
-	timestamppb "github.com/golang/protobuf/ptypes/timestamp"
-	wrapperspb "github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime/internal/examplepb"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestJSONPbMarshal(t *testing.T) {
@@ -142,13 +142,31 @@ func TestJSONPbMarshalFields(t *testing.T) {
 		}
 	}
 
+	nums := []examplepb.NumericEnum{examplepb.NumericEnum_ZERO, examplepb.NumericEnum_ONE}
+
+	buf, err := m.Marshal(nums)
+	if err != nil {
+		t.Errorf("m.Marshal(%#v) failed with %v; want success", nums, err)
+	}
+	if got, want := string(buf), `[0,1]`; got != want {
+		t.Errorf("m.Marshal(%#v) = %q; want %q", nums, got, want)
+	}
+
 	m.UseEnumNumbers = false
-	buf, err := m.Marshal(examplepb.NumericEnum_ONE)
+	buf, err = m.Marshal(examplepb.NumericEnum_ONE)
 	if err != nil {
 		t.Errorf("m.Marshal(%#v) failed with %v; want success", examplepb.NumericEnum_ONE, err)
 	}
 	if got, want := string(buf), `"ONE"`; got != want {
 		t.Errorf("m.Marshal(%#v) = %q; want %q", examplepb.NumericEnum_ONE, got, want)
+	}
+
+	buf, err = m.Marshal(nums)
+	if err != nil {
+		t.Errorf("m.Marshal(%#v) failed with %v; want success", nums, err)
+	}
+	if got, want := string(buf), `["ZERO","ONE"]`; got != want {
+		t.Errorf("m.Marshal(%#v) = %q; want %q", nums, got, want)
 	}
 }
 
@@ -647,6 +665,24 @@ var (
 		// TODO(yugui) Add other well-known types once jsonpb supports them
 	}
 )
+
+func TestJSONPbUnmarshalNullField(t *testing.T) {
+	var out map[string]interface{}
+
+	const json = `{"foo": null}`
+	marshaler := &runtime.JSONPb{}
+	if err := marshaler.Unmarshal([]byte(json), &out); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	value, hasKey := out["foo"]
+	if !hasKey {
+		t.Fatalf("unmarshaled map did not have key 'foo'")
+	}
+	if value != nil {
+		t.Fatalf("unexpected value: %v", value)
+	}
+}
 
 func TestJSONPbMarshalResponseBodies(t *testing.T) {
 	marshaler := &runtime.JSONPb{}

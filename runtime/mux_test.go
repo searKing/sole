@@ -308,6 +308,28 @@ func TestMuxServeHTTP(t *testing.T) {
 			},
 			respStatus: http.StatusBadRequest,
 		},
+		{
+			patterns: []stubPattern{
+				{
+					method: "POST",
+					ops:    []int{int(utilities.OpLitPush), 0, int(utilities.OpPush), 0, int(utilities.OpConcatN), 1, int(utilities.OpCapture), 1},
+					pool:   []string{"foo", "id"},
+				},
+				{
+					method: "POST",
+					ops:    []int{int(utilities.OpLitPush), 0, int(utilities.OpPush), 0, int(utilities.OpConcatN), 1, int(utilities.OpCapture), 1},
+					pool:   []string{"foo", "id"},
+					verb:   "verb:subverb",
+				},
+			},
+			reqMethod: "POST",
+			reqPath:   "/foo/bar:verb:subverb",
+			headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			respStatus:  http.StatusOK,
+			respContent: "POST /foo/{id=*}:verb:subverb",
+		},
 	} {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var opts []runtime.ServeMuxOption
@@ -397,6 +419,12 @@ var defaultRouteMatcherTests = []struct {
 	valid  bool
 }{
 	{
+		"Test route /",
+		"GET",
+		"/",
+		true,
+	},
+	{
 		"Simple Endpoint",
 		"GET",
 		"/v1/{bucket}/do:action",
@@ -437,5 +465,4 @@ func TestServeMux_HandlePath(t *testing.T) {
 			}
 		})
 	}
-
 }

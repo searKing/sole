@@ -5,6 +5,11 @@
     "description": "Generate Unannotated Methods Echo Service\nSimilar to echo_service.proto but without annotations and without external configuration.\n\nGenerate Unannotated Methods Echo Service API consists of a single service which returns\na message.",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "GenerateUnboundMethodsEchoService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -134,14 +139,11 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "typeUrl": {
+        "@type": {
           "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
         }
-      }
+      },
+      "additionalProperties": {}
     },
     "rpcStatus": {
       "type": "object",

@@ -18,7 +18,6 @@ import (
 	"testing"
 	"time"
 
-	emptypb "github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/go-cmp/cmp"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/examplepb"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/pathenum"
@@ -30,6 +29,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -47,10 +47,44 @@ func TestEcho(t *testing.T) {
 			testEchoOneof(t, 8088, apiPrefix, "application/json")
 			testEchoOneof1(t, 8088, apiPrefix, "application/json")
 			testEchoOneof2(t, 8088, apiPrefix, "application/json")
-			testEchoBody(t, 8088, apiPrefix)
+			testEchoBody(t, 8088, apiPrefix, true)
+			testEchoBody(t, 8088, apiPrefix, false)
 			// Use SendHeader/SetTrailer without gRPC server https://github.com/grpc-ecosystem/grpc-gateway/issues/517#issuecomment-684625645
-			testEchoBody(t, 8089, apiPrefix)
+			testEchoBody(t, 8089, apiPrefix, true)
+			testEchoBody(t, 8089, apiPrefix, false)
 		})
+	}
+}
+
+func TestEchoUnauthorized(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+		return
+	}
+	apiURL := "http://localhost:8088/v1/example/echo_unauthorized"
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		t.Errorf("http.Get(%q) failed with %v; want success", apiURL, err)
+		return
+	}
+	defer resp.Body.Close()
+	buf, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Errorf("ioutil.ReadAll(resp.Body) failed with %v; want success", err)
+		return
+	}
+	msg := new(statuspb.Status)
+	if err := marshaler.Unmarshal(buf, msg); err != nil {
+		t.Errorf("marshaler.Unmarshal(%s, msg) failed with %v; want success", buf, err)
+		return
+	}
+
+	if got, want := resp.StatusCode, http.StatusUnauthorized; got != want {
+		t.Errorf("resp.StatusCode = %d; want %d", got, want)
+	}
+
+	if value := resp.Header.Get("WWW-Authenticate"); value == "" {
+		t.Errorf("WWW-Authenticate header should not be empty")
 	}
 }
 
@@ -62,15 +96,13 @@ func TestEchoPatch(t *testing.T) {
 
 	sent := examplepb.DynamicMessage{
 		StructField: &structpb.Struct{Fields: map[string]*structpb.Value{
-		"struct_key": {Kind: &structpb.Value_StructValue{
-			StructValue: &structpb.Struct{Fields: map[string]*structpb.Value{
-				"layered_struct_key": {Kind: &structpb.Value_StringValue{StringValue: "struct_val"}},
-			}},
-		}}}},
-		ValueField: &structpb.Value{Kind: &structpb.Value_StructValue{StructValue:
-			&structpb.Struct{Fields: map[string]*structpb.Value{
-				"value_struct_key": {Kind: &structpb.Value_StringValue{StringValue: "value_struct_val"},
-			}}},
+			"struct_key": {Kind: &structpb.Value_StructValue{
+				StructValue: &structpb.Struct{Fields: map[string]*structpb.Value{
+					"layered_struct_key": {Kind: &structpb.Value_StringValue{StringValue: "struct_val"}},
+				}},
+			}}}},
+		ValueField: &structpb.Value{Kind: &structpb.Value_StructValue{StructValue: &structpb.Struct{Fields: map[string]*structpb.Value{
+			"value_struct_key": {Kind: &structpb.Value_StringValue{StringValue: "value_struct_val"}}}},
 		}},
 	}
 	payload, err := protojson.MarshalOptions{UseProtoNames: true}.Marshal(&sent)
@@ -280,7 +312,7 @@ func testEchoOneof2(t *testing.T, port int, apiPrefix string, contentType string
 	}
 }
 
-func testEchoBody(t *testing.T, port int, apiPrefix string) {
+func testEchoBody(t *testing.T, port int, apiPrefix string, useTrailers bool) {
 	sent := examplepb.UnannotatedSimpleMessage{Id: "example"}
 	payload, err := marshaler.Marshal(&sent)
 	if err != nil {
@@ -288,9 +320,19 @@ func testEchoBody(t *testing.T, port int, apiPrefix string) {
 	}
 
 	apiURL := fmt.Sprintf("http://localhost:%d/%s/example/echo_body", port, apiPrefix)
-	resp, err := http.Post(apiURL, "", bytes.NewReader(payload))
+
+	req, err := http.NewRequest("POST", apiURL, bytes.NewReader(payload))
 	if err != nil {
-		t.Errorf("http.Post(%q) failed with %v; want success", apiURL, err)
+		t.Errorf("http.NewRequest() failed with %v; want success", err)
+		return
+	}
+	if useTrailers {
+		req.Header.Set("TE", "trailers")
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Errorf("client.Do(%v) failed with %v; want success", req, err)
 		return
 	}
 	defer resp.Body.Close()
@@ -321,11 +363,18 @@ func testEchoBody(t *testing.T, port int, apiPrefix string) {
 		t.Errorf("Grpc-Metadata-Bar was %q, wanted %q", got, want)
 	}
 
-	if got, want := resp.Trailer.Get("Grpc-Trailer-Foo"), "foo2"; got != want {
-		t.Errorf("Grpc-Trailer-Foo was %q, wanted %q", got, want)
+	wantedTrailers := map[bool]map[string]string{
+		true: {
+			"Grpc-Trailer-Foo": "foo2",
+			"Grpc-Trailer-Bar": "bar2",
+		},
+		false: {},
 	}
-	if got, want := resp.Trailer.Get("Grpc-Trailer-Bar"), "bar2"; got != want {
-		t.Errorf("Grpc-Trailer-Bar was %q, wanted %q", got, want)
+
+	for trailer, want := range wantedTrailers[useTrailers] {
+		if got := resp.Trailer.Get(trailer); got != want {
+			t.Errorf("%s was %q, wanted %q", trailer, got, want)
+		}
 	}
 }
 
@@ -337,7 +386,8 @@ func TestABE(t *testing.T) {
 
 	testABECreate(t, 8088)
 	testABECreateBody(t, 8088)
-	testABEBulkCreate(t, 8088)
+	testABEBulkCreate(t, 8088, true)
+	testABEBulkCreate(t, 8088, false)
 	testABEBulkCreateWithError(t, 8088)
 	testABELookup(t, 8088)
 	testABELookupNotFound(t, 8088, true)
@@ -406,6 +456,7 @@ func testABECreate(t *testing.T, port int) {
 }
 
 func testABECreateBody(t *testing.T, port int) {
+	optionalStrVal := "optional-str"
 	want := &examplepb.ABitOfEverything{
 		FloatValue:               1.5,
 		DoubleValue:              2.5,
@@ -475,6 +526,7 @@ func testABECreateBody(t *testing.T, port int) {
 			Name:   "hoge",
 			Amount: 10,
 		},
+		OptionalStringValue: &optionalStrVal,
 	}
 	apiURL := fmt.Sprintf("http://localhost:%d/v1/example/a_bit_of_everything", port)
 	payload, err := marshaler.Marshal(want)
@@ -513,7 +565,7 @@ func testABECreateBody(t *testing.T, port int) {
 	}
 }
 
-func testABEBulkCreate(t *testing.T, port int) {
+func testABEBulkCreate(t *testing.T, port int, useTrailers bool) {
 	count := 0
 	r, w := io.Pipe()
 	go func(w io.WriteCloser) {
@@ -525,6 +577,7 @@ func testABEBulkCreate(t *testing.T, port int) {
 		for _, val := range []string{
 			"foo", "bar", "baz", "qux", "quux",
 		} {
+			strVal := fmt.Sprintf("strprefix/%s", val)
 			want := &examplepb.ABitOfEverything{
 				FloatValue:               1.5,
 				DoubleValue:              2.5,
@@ -534,7 +587,7 @@ func testABEBulkCreate(t *testing.T, port int) {
 				Fixed64Value:             9223372036854775807,
 				Fixed32Value:             4294967295,
 				BoolValue:                true,
-				StringValue:              fmt.Sprintf("strprefix/%s", val),
+				StringValue:              strVal,
 				Uint32Value:              4294967295,
 				Sfixed32Value:            2147483647,
 				Sfixed64Value:            -4611686018427387904,
@@ -578,6 +631,7 @@ func testABEBulkCreate(t *testing.T, port int) {
 					Name:   "hoge",
 					Amount: 10,
 				},
+				OptionalStringValue: &strVal,
 			}
 			out, err := marshaler.Marshal(want)
 			if err != nil {
@@ -596,11 +650,24 @@ func testABEBulkCreate(t *testing.T, port int) {
 		}
 	}(w)
 	apiURL := fmt.Sprintf("http://localhost:%d/v1/example/a_bit_of_everything/bulk", port)
-	resp, err := http.Post(apiURL, "application/json", r)
+
+	req, err := http.NewRequest("POST", apiURL, r)
 	if err != nil {
-		t.Errorf("http.Post(%q) failed with %v; want success", apiURL, err)
+		t.Errorf("http.NewRequest() failed with %v; want success", err)
 		return
 	}
+	req.Header.Set("Content-Type", "application/json")
+
+	if useTrailers {
+		req.Header.Set("TE", "trailers")
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Errorf("client.Do(%v) failed with %v; want success", req, err)
+		return
+	}
+
 	defer resp.Body.Close()
 	buf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -623,11 +690,18 @@ func testABEBulkCreate(t *testing.T, port int) {
 		t.Errorf("Grpc-Metadata-Count was %q, wanted %q", got, want)
 	}
 
-	if got, want := resp.Trailer.Get("Grpc-Trailer-Foo"), "foo2"; got != want {
-		t.Errorf("Grpc-Trailer-Foo was %q, wanted %q", got, want)
+	wantedTrailers := map[bool]map[string]string{
+		true: {
+			"Grpc-Trailer-Foo": "foo2",
+			"Grpc-Trailer-Bar": "bar2",
+		},
+		false: {},
 	}
-	if got, want := resp.Trailer.Get("Grpc-Trailer-Bar"), "bar2"; got != want {
-		t.Errorf("Grpc-Trailer-Bar was %q, wanted %q", got, want)
+
+	for trailer, want := range wantedTrailers[useTrailers] {
+		if got := resp.Trailer.Get(trailer); got != want {
+			t.Errorf("%s was %q, wanted %q", trailer, got, want)
+		}
 	}
 }
 
@@ -992,7 +1066,6 @@ func testABELookupNotFound(t *testing.T, port int, useTrailers bool) {
 	uuid := "not_exist"
 	apiURL = fmt.Sprintf("%s/%s", apiURL, uuid)
 
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
 		t.Errorf("http.NewRequest() failed with %v; want success", err)
@@ -1003,7 +1076,7 @@ func testABELookupNotFound(t *testing.T, port int, useTrailers bool) {
 		req.Header.Set("TE", "trailers")
 	}
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Errorf("client.Do(%v) failed with %v; want success", req, err)
 		return
@@ -1525,7 +1598,6 @@ func TestNotImplemented(t *testing.T) {
 		t.Errorf("ioutil.ReadAll(resp.Body) failed with %v; want success", err)
 		return
 	}
-
 	if got, want := resp.StatusCode, http.StatusNotImplemented; got != want {
 		t.Errorf("resp.StatusCode = %d; want %d", got, want)
 		t.Logf("%s", buf)
@@ -1837,6 +1909,7 @@ func testRequestQueryParams(t *testing.T, port int) {
 	formValues.Set("string_value", "hello-world")
 	formValues.Add("repeated_string_value", "demo1")
 	formValues.Add("repeated_string_value", "demo2")
+	formValues.Add("optional_string_value", "optional-val")
 
 	testCases := []struct {
 		name           string
@@ -1900,6 +1973,10 @@ func testRequestQueryParams(t *testing.T, port int) {
 				BoolValue:           true,
 				StringValue:         "hello-world",
 				RepeatedStringValue: []string{"demo1", "demo2"},
+				OptionalStringValue: func() *string {
+					val := formValues.Get("optional_string_value")
+					return &val
+				}(),
 			},
 			requestContent: strings.NewReader(formValues.Encode()),
 		},
