@@ -25,10 +25,13 @@ import "google/longrunning/operations.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
+option csharp_namespace = "Google.Cloud.CloudDms.V1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/clouddms/v1;clouddms";
 option java_multiple_files = true;
 option java_outer_classname = "ClouddmsProto";
 option java_package = "com.google.cloud.clouddms.v1";
+option php_namespace = "Google\\Cloud\\CloudDms\\V1";
+option ruby_package = "Google::Cloud::CloudDMS::V1";
 
 // Database Migration service
 service DataMigrationService {
@@ -310,7 +313,7 @@ message CreateMigrationJobRequest {
   string migration_job_id = 2 [(google.api.field_behavior) = REQUIRED];
 
   // Required. Represents a [migration
-  // job](https://cloud.google.com/database-migration/reference/rest/v1/projects.locations.migrationJobs)
+  // job](https://cloud.google.com/database-migration/docs/reference/rest/v1/projects.locations.migrationJobs)
   // object.
   MigrationJob migration_job = 3 [(google.api.field_behavior) = REQUIRED];
 

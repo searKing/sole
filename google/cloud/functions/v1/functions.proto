@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -233,7 +233,7 @@ message CloudFunction {
 
   // The location of the function source code.
   oneof source_code {
-    // The Google Cloud Storage URL, starting with gs://, pointing to the zip
+    // The Google Cloud Storage URL, starting with `gs://`, pointing to the zip
     // archive which contains the function.
     string source_archive_url = 3;
 
@@ -243,7 +243,11 @@ message CloudFunction {
     SourceRepository source_repository = 4;
 
     // The Google Cloud Storage signed URL used for source uploading, generated
-    // by [google.cloud.functions.v1.GenerateUploadUrl][]
+    // by calling [google.cloud.functions.v1.GenerateUploadUrl].
+    //
+    // The signature is validated on write methods (Create, Update)
+    // The signature is stripped from the Function object on read methods (Get,
+    // List)
     string source_upload_url = 16;
   }
 
@@ -271,7 +275,7 @@ message CloudFunction {
   // function, optional when updating an existing function. For a complete
   // list of possible choices, see the
   // [`gcloud` command
-  // reference](/sdk/gcloud/reference/functions/deploy#--runtime).
+  // reference](https://cloud.google.com/sdk/gcloud/reference/functions/deploy#--runtime).
   string runtime = 19;
 
   // The function execution timeout. Execution is considered failed and
@@ -306,8 +310,8 @@ message CloudFunction {
   // project. Otherwise, it must belong to a project within the same
   // organization. The format of this field is either
   // `projects/{project}/global/networks/{network}` or `{network}`, where
-  // {project} is a project id where the network is defined, and {network} is
-  // the short name of the network.
+  // `{project}` is a project id where the network is defined, and `{network}`
+  // is the short name of the network.
   //
   // This field is mutually exclusive with `vpc_connector` and will be replaced
   // by it.
@@ -371,8 +375,31 @@ message SourceRepository {
 
 // Describes HttpsTrigger, could be used to connect web hooks to function.
 message HttpsTrigger {
+  // Available security level settings.
+  //
+  // This controls the methods to enforce security (HTTPS) on a URL.
+  //
+  // If unspecified, SECURE_OPTIONAL will be used.
+  enum SecurityLevel {
+    // Unspecified.
+    SECURITY_LEVEL_UNSPECIFIED = 0;
+
+    // Requests for a URL that match this handler that do not use HTTPS are
+    // automatically redirected to the HTTPS URL with the same path. Query
+    // parameters are reserved for the redirect.
+    SECURE_ALWAYS = 1;
+
+    // Both HTTP and HTTPS requests with URLs that match the handler succeed
+    // without redirects. The application can examine the request to determine
+    // which protocol was used and respond accordingly.
+    SECURE_OPTIONAL = 2;
+  }
+
   // Output only. The deployed url for the function.
   string url = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The security level for the function.
+  SecurityLevel security_level = 2;
 }
 
 // Describes EventTrigger, used to request events be sent from another

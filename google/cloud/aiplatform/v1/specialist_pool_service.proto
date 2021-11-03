@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,10 +25,13 @@ import "google/cloud/aiplatform/v1/specialist_pool.proto";
 import "google/longrunning/operations.proto";
 import "google/protobuf/field_mask.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "SpecialistPoolServiceProto";
 option java_package = "com.google.cloud.aiplatform.v1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1";
+option ruby_package = "Google::Cloud::AIPlatform::V1";
 
 // A service for creating and managing Customer SpecialistPools.
 // When customers start Data Labeling jobs, they can reuse/create Specialist
@@ -121,7 +124,6 @@ message CreateSpecialistPoolOperationMetadata {
 message GetSpecialistPoolRequest {
   // Required. The name of the SpecialistPool resource.
   // The form is
-  //
   // `projects/{project}/locations/{location}/specialistPools/{specialist_pool}`.
   string name = 1 [
     (google.api.field_behavior) = REQUIRED,
@@ -195,7 +197,6 @@ message UpdateSpecialistPoolRequest {
 message UpdateSpecialistPoolOperationMetadata {
   // Output only. The name of the SpecialistPool to which the specialists are being added.
   // Format:
-  //
   // `projects/{project_id}/locations/{location_id}/specialistPools/{specialist_pool}`
   string specialist_pool = 1 [
     (google.api.field_behavior) = OUTPUT_ONLY,

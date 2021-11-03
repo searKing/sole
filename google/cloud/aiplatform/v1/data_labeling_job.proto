@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,13 @@ import "google/rpc/status.proto";
 import "google/type/money.proto";
 import "google/api/annotations.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "DataLabelingJobProto";
 option java_package = "com.google.cloud.aiplatform.v1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1";
+option ruby_package = "Google::Cloud::AIPlatform::V1";
 
 // DataLabelingJob is used to trigger a human labeling job on unlabeled data
 // from the following Dataset:
@@ -134,9 +137,9 @@ message DataLabelingJob {
   // the EncryptionSpec of the Dataset they are exported to.
   EncryptionSpec encryption_spec = 20;
 
-  // Parameters that configure the active learning pipeline. Active learning will
-  // label the data incrementally via several iterations. For every iteration,
-  // it will select a batch of data based on the sampling strategy.
+  // Parameters that configure the active learning pipeline. Active learning
+  // will label the data incrementally via several iterations. For every
+  // iteration, it will select a batch of data based on the sampling strategy.
   ActiveLearningConfig active_learning_config = 21;
 }
 

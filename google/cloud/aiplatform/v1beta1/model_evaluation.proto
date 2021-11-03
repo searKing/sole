@@ -23,10 +23,13 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1Beta1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1beta1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "ModelEvaluationProto";
 option java_package = "com.google.cloud.aiplatform.v1beta1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1beta1";
+option ruby_package = "Google::Cloud::AIPlatform::V1beta1";
 
 // A collection of metrics calculated by comparing Model's predictions on all of
 // the test data against annotations from the test data.
@@ -54,8 +57,8 @@ message ModelEvaluation {
 
   // Output only. Points to a YAML file stored on Google Cloud Storage describing the
   // [metrics][google.cloud.aiplatform.v1beta1.ModelEvaluation.metrics] of this ModelEvaluation. The schema is
-  // defined as an OpenAPI 3.0.2
-  // [Schema Object](https://tinyurl.com/y538mdwt#schema-object).
+  // defined as an OpenAPI 3.0.2 [Schema
+  // Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.2.md#schemaObject).
   string metrics_schema_uri = 2 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Output only. Evaluation metrics of the Model. The schema of the metrics is stored in

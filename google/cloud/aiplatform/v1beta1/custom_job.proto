@@ -28,10 +28,13 @@ import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
 import "google/api/annotations.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1Beta1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1beta1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "CustomJobProto";
 option java_package = "com.google.cloud.aiplatform.v1beta1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1beta1";
+option ruby_package = "Google::Cloud::AIPlatform::V1beta1";
 
 // Represents a job that runs custom workloads such as a Docker container or a
 // Python package. A CustomJob can have multiple worker pools and each worker
@@ -88,6 +91,19 @@ message CustomJob {
   // then all resources created by the CustomJob will be encrypted with the
   // provided encryption key.
   EncryptionSpec encryption_spec = 12;
+
+  // Output only. URIs for accessing [interactive
+  // shells](https://cloud.google.com/vertex-ai/docs/training/monitor-debug-interactive-shell)
+  // (one URI for each training node). Only available if
+  // [job_spec.enable_web_access][google.cloud.aiplatform.v1beta1.CustomJobSpec.enable_web_access] is `true`.
+  //
+  // The keys are names of each node in the training job; for example,
+  // `workerpool0-0` for the primary node, `workerpool1-0` for the first node in
+  // the second worker pool, and `workerpool1-1` for the second node in the
+  // second worker pool.
+  //
+  // The values are the URIs for each node's interactive shell.
+  map<string, string> web_access_uris = 16 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // Represents the spec of a CustomJob.
@@ -102,8 +118,9 @@ message CustomJobSpec {
 
   // Specifies the service account for workload run-as account.
   // Users submitting jobs must have act-as permission on this run-as account.
-  // If unspecified, the AI Platform Custom Code Service Agent for the
-  // CustomJob's project is used.
+  // If unspecified, the [Vertex AI Custom Code Service
+  // Agent](https://cloud.google.com/vertex-ai/docs/general/access-control#service-agents)
+  // for the CustomJob's project is used.
   string service_account = 4;
 
   // The full name of the Compute Engine
@@ -116,7 +133,9 @@ message CustomJobSpec {
   //
   // Private services access must already be configured for the network. If left
   // unspecified, the job is not peered with any network.
-  string network = 5;
+  string network = 5 [(google.api.resource_reference) = {
+                        type: "compute.googleapis.com/Network"
+                      }];
 
   // The Cloud Storage location to store the output of this CustomJob or
   // HyperparameterTuningJob. For HyperparameterTuningJob,
@@ -125,7 +144,7 @@ message CustomJobSpec {
   // [id][google.cloud.aiplatform.v1beta1.Trial.id] under its parent HyperparameterTuningJob's
   // baseOutputDirectory.
   //
-  // The following AI Platform environment variables will be passed to
+  // The following Vertex AI environment variables will be passed to
   // containers or python modules when this field is set:
   //
   //   For CustomJob:
@@ -140,6 +159,26 @@ message CustomJobSpec {
   //   * AIP_CHECKPOINT_DIR = `<base_output_directory>/<trial_id>/checkpoints/`
   //   * AIP_TENSORBOARD_LOG_DIR = `<base_output_directory>/<trial_id>/logs/`
   GcsDestination base_output_directory = 6;
+
+  // Optional. The name of a Vertex AI [Tensorboard][google.cloud.aiplatform.v1beta1.Tensorboard] resource to which this CustomJob
+  // will upload Tensorboard logs.
+  // Format:
+  // `projects/{project}/locations/{location}/tensorboards/{tensorboard}`
+  string tensorboard = 7 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {
+      type: "aiplatform.googleapis.com/Tensorboard"
+    }
+  ];
+
+  // Optional. Whether you want Vertex AI to enable [interactive shell
+  // access](https://cloud.google.com/vertex-ai/docs/training/monitor-debug-interactive-shell)
+  // to training containers.
+  //
+  // If set to `true`, you can access interactive shells at the URIs given
+  // by [CustomJob.web_access_uris][google.cloud.aiplatform.v1beta1.CustomJob.web_access_uris] or [Trial.web_access_uris][google.cloud.aiplatform.v1beta1.Trial.web_access_uris] (within
+  // [HyperparameterTuningJob.trials][google.cloud.aiplatform.v1beta1.HyperparameterTuningJob.trials]).
+  bool enable_web_access = 10 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Represents the spec of a worker pool in a job.
@@ -183,10 +222,10 @@ message ContainerSpec {
 // The spec of a Python packaged code.
 message PythonPackageSpec {
   // Required. The URI of a container image in Artifact Registry that will run the
-  // provided Python package. AI Platform provides a wide range of executor
+  // provided Python package. Vertex AI provides a wide range of executor
   // images with pre-installed packages to meet users' various use cases. See
   // the list of [pre-built containers for
-  // training](https://cloud.google.com/ai-platform-unified/docs/training/pre-built-containers).
+  // training](https://cloud.google.com/vertex-ai/docs/training/pre-built-containers).
   // You must use an image from this list.
   string executor_image_uri = 1 [(google.api.field_behavior) = REQUIRED];
 

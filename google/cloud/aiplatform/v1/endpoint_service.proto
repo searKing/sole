@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,15 @@ import "google/cloud/aiplatform/v1/operation.proto";
 import "google/longrunning/operations.proto";
 import "google/protobuf/field_mask.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "EndpointServiceProto";
 option java_package = "com.google.cloud.aiplatform.v1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1";
+option ruby_package = "Google::Cloud::AIPlatform::V1";
 
+// A service for managing Vertex AI's Endpoints.
 service EndpointService {
   option (google.api.default_host) = "aiplatform.googleapis.com";
   option (google.api.oauth_scopes) = "https://www.googleapis.com/auth/cloud-platform";
@@ -212,9 +216,7 @@ message UpdateEndpointRequest {
   // Required. The Endpoint which replaces the resource on the server.
   Endpoint endpoint = 1 [(google.api.field_behavior) = REQUIRED];
 
-  // Required. The update mask applies to the resource.
-  // See
-  // [FieldMask](https://tinyurl.com/protobufs/google.protobuf#fieldmask).
+  // Required. The update mask applies to the resource. See [google.protobuf.FieldMask][google.protobuf.FieldMask].
   google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
 }
 

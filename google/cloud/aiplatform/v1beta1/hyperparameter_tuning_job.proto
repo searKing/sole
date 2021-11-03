@@ -26,10 +26,13 @@ import "google/protobuf/timestamp.proto";
 import "google/rpc/status.proto";
 import "google/api/annotations.proto";
 
+option csharp_namespace = "Google.Cloud.AIPlatform.V1Beta1";
 option go_package = "google.golang.org/genproto/googleapis/cloud/aiplatform/v1beta1;aiplatform";
 option java_multiple_files = true;
 option java_outer_classname = "HyperparameterTuningJobProto";
 option java_package = "com.google.cloud.aiplatform.v1beta1";
+option php_namespace = "Google\\Cloud\\AIPlatform\\V1beta1";
+option ruby_package = "Google::Cloud::AIPlatform::V1beta1";
 
 // Represents a HyperparameterTuningJob. A HyperparameterTuningJob
 // has a Study specification and multiple CustomJobs with identical
@@ -60,7 +63,7 @@ message HyperparameterTuningJob {
   // The number of failed Trials that need to be seen before failing
   // the HyperparameterTuningJob.
   //
-  // If set to 0, AI Platform decides how many Trials must fail
+  // If set to 0, Vertex AI decides how many Trials must fail
   // before the whole job fails.
   int32 max_failed_trial_count = 7;
 

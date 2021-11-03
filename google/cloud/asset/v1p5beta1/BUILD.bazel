@@ -192,10 +192,7 @@ php_grpc_library(
 
 php_gapic_library(
     name = "asset_php_gapic",
-    src = ":asset_proto_with_info",
-    gapic_yaml = "cloudasset_gapic.yaml",
-    package = "google.cloud.asset.v1p5beta1",
-    service_yaml = "cloudasset_v1p5beta1.yaml",
+    srcs = [":asset_proto_with_info"],
     deps = [
         ":asset_php_grpc",
         ":asset_php_proto",

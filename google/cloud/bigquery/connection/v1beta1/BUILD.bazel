@@ -189,11 +189,8 @@ php_grpc_library(
 
 php_gapic_library(
     name = "connection_php_gapic",
-    src = ":connection_proto_with_info",
-    gapic_yaml = "bigqueryconnection_gapic.yaml",
+    srcs = [":connection_proto_with_info"],
     grpc_service_config = "bigqueryconnection_grpc_service_config.json",
-    package = "google.cloud.bigquery.connection.v1beta1",
-    service_yaml = "bigqueryconnection_v1beta1.yaml",
     deps = [
         ":connection_php_grpc",
         ":connection_php_proto",

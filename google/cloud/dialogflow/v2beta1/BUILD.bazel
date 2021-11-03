@@ -31,6 +31,7 @@ proto_library(
         "document.proto",
         "entity_type.proto",
         "environment.proto",
+        "fulfillment.proto",
         "gcs.proto",
         "human_agent_assistant_event.proto",
         "intent.proto",
@@ -39,6 +40,7 @@ proto_library(
         "session.proto",
         "session_entity_type.proto",
         "validation_result.proto",
+        "version.proto",
         "webhook.proto",
     ],
     deps = [
@@ -92,18 +94,36 @@ java_grpc_library(
 java_gapic_library(
     name = "dialogflow_java_gapic",
     srcs = [":dialogflow_proto_with_info"],
+    gapic_yaml = None,
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    service_yaml = "dialogflow_v2beta1.yaml",
     test_deps = [
         ":dialogflow_java_grpc",
     ],
     deps = [
         ":dialogflow_java_proto",
+        "//google/api:api_java_proto",
     ],
 )
 
 java_gapic_test(
     name = "dialogflow_java_gapic_test_suite",
     test_classes = [
+        "com.google.cloud.dialogflow.v2beta1.AgentsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.AnswerRecordsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.ContextsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.ConversationProfilesClientTest",
+        "com.google.cloud.dialogflow.v2beta1.ConversationsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.DocumentsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.EntityTypesClientTest",
+        "com.google.cloud.dialogflow.v2beta1.EnvironmentsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.FulfillmentsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.IntentsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.KnowledgeBasesClientTest",
+        "com.google.cloud.dialogflow.v2beta1.ParticipantsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.SessionEntityTypesClientTest",
+        "com.google.cloud.dialogflow.v2beta1.SessionsClientTest",
+        "com.google.cloud.dialogflow.v2beta1.VersionsClientTest",
     ],
     runtime_deps = [":dialogflow_java_gapic_test"],
 )
@@ -226,10 +246,8 @@ php_grpc_library(
 
 php_gapic_library(
     name = "dialogflow_php_gapic",
-    src = ":dialogflow_proto_with_info",
-    gapic_yaml = "dialogflow_gapic.yaml",
+    srcs = [":dialogflow_proto_with_info"],
     grpc_service_config = "dialogflow_grpc_service_config.json",
-    package = "google.cloud.dialogflow.v2beta1",
     service_yaml = "dialogflow_v2beta1.yaml",
     deps = [
         ":dialogflow_php_grpc",
@@ -281,8 +299,8 @@ nodejs_gapic_assembly_pkg(
 ##############################################################################
 load(
     "@com_google_googleapis_imports//:imports.bzl",
-    "ruby_gapic_assembly_pkg",
     "ruby_cloud_gapic_library",
+    "ruby_gapic_assembly_pkg",
     "ruby_grpc_library",
     "ruby_proto_library",
 )
@@ -300,9 +318,17 @@ ruby_grpc_library(
 
 ruby_cloud_gapic_library(
     name = "dialogflow_ruby_gapic",
-    srcs = [":dialogflow_proto_with_info",],
-    extra_protoc_parameters = ["ruby-cloud-gem-name=google-cloud-dialogflow-v2beta1"],
+    srcs = [":dialogflow_proto_with_info"],
+    extra_protoc_parameters = [
+        "ruby-cloud-api-id=dialogflow.googleapis.com",
+        "ruby-cloud-api-shortname=dialogflow",
+        "ruby-cloud-env-prefix=DIALOGFLOW",
+        "ruby-cloud-gem-name=google-cloud-dialogflow-v2beta1",
+        "ruby-cloud-product-url=https://cloud.google.com/dialogflow",
+    ],
     grpc_service_config = "dialogflow_grpc_service_config.json",
+    ruby_cloud_description = "Dialogflow is an end-to-end, build-once deploy-everywhere development suite for creating conversational interfaces for websites, mobile applications, popular messaging platforms, and IoT devices. You can use it to build interfaces (such as chatbots and conversational IVR) that enable natural and rich interactions between your users and your business. This client is for Dialogflow ES, providing the standard agent type suitable for small and simple agents.",
+    ruby_cloud_title = "Dialogflow V2beta1",
     deps = [
         ":dialogflow_ruby_grpc",
         ":dialogflow_ruby_proto",
