@@ -14,23 +14,25 @@ import (
 	"sync"
 	"time"
 
+	errors_ "github.com/searKing/golang/go/errors"
 	filepath_ "github.com/searKing/golang/go/path/filepath"
+	"github.com/searKing/golang/go/sync/atomic"
 	time_ "github.com/searKing/golang/go/time"
 )
 
 type RotateMode int
 
 const (
-	// create new rotate file directly
+	// RotateModeNew create new rotate file directly
 	RotateModeNew RotateMode = iota
 
-	// Make a copy of the log file, but don't change the original at all. This option can be
+	// RotateModeCopyRename Make a copy of the log file, but don't change the original at all. This option can be
 	// used, for instance, to make a snapshot of the current log file, or when some other
 	// utility needs to truncate or parse the file. When this option is used, the create
 	// option will have no effect, as the old log file stays in place.
 	RotateModeCopyRename RotateMode = iota
 
-	// Truncate the original log file in place after creating a copy, instead of moving the
+	// RotateModeCopyTruncate Truncate the original log file in place after creating a copy, instead of moving the
 	// old log file and optionally creating a new one. It can be used when some program can‐
 	// not be told to close its rotatefile and thus might continue writing (appending) to the
 	// previous log file forever. Note that there is a very small time slice between copying
@@ -39,7 +41,7 @@ const (
 	RotateModeCopyTruncate RotateMode = iota
 )
 
-// logrotate reads everything about the log files it should be handling from the series of con‐
+// RotateFile logrotate reads everything about the log files it should be handling from the series of con‐
 // figuration files specified on the command line.  Each configuration file can set global
 // options (local definitions override global ones, and later definitions override earlier ones)
 // and specify rotatefiles to rotate. A simple configuration file looks like this:
@@ -82,6 +84,7 @@ type RotateFile struct {
 	// name means file path rotated
 	PostRotateHandler func(name string)
 
+	cleaning      atomic.Bool
 	mu            sync.Mutex
 	usingSeq      int // file rotated by size limit meet
 	usingFilePath string
@@ -89,11 +92,7 @@ type RotateFile struct {
 }
 
 func NewRotateFile(layout string) *RotateFile {
-	return &RotateFile{
-		FilePathRotateLayout: layout,
-		RotateFileGlob:       fileGlobFromStrftimeLayout(time_.LayoutTimeToSimilarStrftime(layout)),
-		RotateInterval:       24 * time.Hour,
-	}
+	return NewRotateFileWithStrftime(time_.LayoutTimeToSimilarStrftime(layout))
 }
 
 func NewRotateFileWithStrftime(strftimeLayout string) *RotateFile {
@@ -190,9 +189,8 @@ func (f *RotateFile) filePathByRotateSize() (name string, seq int) {
 }
 
 func (f *RotateFile) filePathByRotate(forceRotate bool) (name string, byTime, bySize bool) {
+	// name using the regular time layout, without seq
 	name = f.filePathByRotateTime()
-	fi, err := os.Stat(name)
-
 	// startup
 	if f.usingFilePath == "" {
 		if f.ForceNewFileOnStartup {
@@ -206,7 +204,9 @@ func (f *RotateFile) filePathByRotate(forceRotate bool) (name string, byTime, by
 	}
 
 	// rotate by time
+	// compare expect time with current using file
 	if name != trimSeqFromNextFileName(f.usingFilePath, f.usingSeq) {
+		_, err := os.Stat(name)
 		if os.IsNotExist(err) {
 			// rotate by time, reset part seq of rotate by size
 			name_, seq := maxSeqFileName(name)
@@ -218,8 +218,16 @@ func (f *RotateFile) filePathByRotate(forceRotate bool) (name string, byTime, by
 		name, f.usingSeq = nextSeqFileName(name, f.usingSeq+1)
 		return name, false, true
 	}
+
+	// using file not exist, recreate file as rotated by time
+	usingFileInfo, err := os.Stat(f.usingFilePath)
+	if os.IsNotExist(err) {
+		return f.usingFilePath, false, true
+	}
+
 	// rotate by size
-	if forceRotate || (err == nil && (f.RotateSize > 0 && fi.Size() > f.RotateSize)) {
+	// compare rotate size with current using file
+	if forceRotate || (err == nil && (f.RotateSize > 0 && usingFileInfo.Size() > f.RotateSize)) {
 		// instead of just using the regular time layout,
 		// we create a new file name using names such as "foo.1", "foo.2", "foo.3", etc
 		name, f.usingSeq = nextSeqFileName(name, f.usingSeq+1)
@@ -304,12 +312,26 @@ func (f *RotateFile) rotateLocked(newName string) (*os.File, error) {
 			return nil, err
 		}
 	}
+	// unlink files on a separate goroutine
+	go f.serializedClean()
+
+	return file, nil
+}
+
+// unlink files
+// expect run on a separate goroutine
+func (f *RotateFile) serializedClean() error {
+	// running already, ignore duplicate clean
+	if !f.cleaning.CAS(false, true) {
+		return nil
+	}
+	defer f.cleaning.Store(false)
 
 	now := time.Now()
 
 	// find old files
 	var filesNotExpired []string
-	filesExpired, err := filepath_.GlobFunc(f.RotateFileGlob, func(name string) bool {
+	filesExpired, err := filepath_.GlobFunc(f.FilePathPrefix+f.RotateFileGlob, func(name string) bool {
 		fi, err := os.Stat(name)
 		if err != nil {
 			return false
@@ -335,7 +357,7 @@ func (f *RotateFile) rotateLocked(newName string) (*os.File, error) {
 		return true
 	})
 	if err != nil {
-		return file, err
+		return err
 	}
 
 	var filesExceedMaxCount []string
@@ -347,18 +369,20 @@ func (f *RotateFile) rotateLocked(newName string) (*os.File, error) {
 		sort.Sort(rotateFileSlice(filesNotExpired))
 		filesExceedMaxCount = filesNotExpired[:removeCount]
 	}
-
-	go func() {
-		// unlink files on a separate goroutine
-		for _, path := range filesExpired {
-			os.Remove(path)
+	var errs []error
+	for _, path := range filesExpired {
+		err = os.Remove(path)
+		if err != nil {
+			errs = append(errs, err)
 		}
-		for _, path := range filesExceedMaxCount {
-			os.Remove(path)
+	}
+	for _, path := range filesExceedMaxCount {
+		err = os.Remove(path)
+		if err != nil {
+			errs = append(errs, err)
 		}
-	}()
-
-	return file, nil
+	}
+	return errors_.Multi(errs...)
 }
 
 // foo.txt, 0 -> foo.txt
@@ -388,7 +412,7 @@ func trimSeqFromNextFileName(name string, seq int) string {
 	return strings.TrimSuffix(name, fmt.Sprintf(".%d", seq))
 }
 
-// foo.txt.* -> foo.txt.[1,2,...], which is exist and seq is max
+// foo.txt.* -> foo.txt.[1,2,...], which exists and seq is max
 func maxSeqFileName(name string) (string, int) {
 	prefix, seq, suffix := MaxSeq(name + ".*")
 	if seq == 0 {

@@ -12,6 +12,8 @@ import (
 )
 
 // ToGolangMap converts v into a Golang map proto.
+// Deprecated: use proto.ToGolangMap
+// in github.com/searKing/golang/third_party/google.golang.org/protobuf/encoding/proto instead.
 func ToGolangMap(pb proto.Message) (map[string]interface{}, error) {
 	if pb == nil {
 		return nil, nil

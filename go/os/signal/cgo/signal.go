@@ -24,7 +24,7 @@ import (
 	_ "github.com/searKing/golang/go/os/signal/cgo/include"
 )
 
-// signalAction act as signal.Notify, which invokes the Go signal handler.
+// SetSig act as signal.Notify, which invokes the Go signal handler.
 // https://godoc.org/os/signal#hdr-Go_programs_that_use_cgo_or_SWIG
 func SetSig(sig int) {
 	C.CGO_SignalHandlerSetSig(C.int(sig))
@@ -52,7 +52,7 @@ func PreviousStacktrace() string {
 	return C.GoString(stacktraceChars)
 }
 
-// PreviousStacktrace sets a rule to raise signal to {to} and wait until {wait}, done with sleep {sleepInSeconds}s
+// SetSigInvokeChain sets a rule to raise signal to {to} and wait until {wait}, done with sleep {sleepInSeconds}s
 func SetSigInvokeChain(from, to, wait, sleepInSeconds int) {
 	C.CGO_SetSigInvokeChain(C.int(from), C.int(to), C.int(wait), C.int(sleepInSeconds))
 }

@@ -38,7 +38,9 @@ type Subject struct {
 }
 
 type subscriber struct {
-	msgC  chan interface{}
+	mu   sync.Mutex // guard close of channel msgC
+	msgC chan interface{}
+
 	once  sync.Once
 	doneC chan struct{} // closed when when subscriber is in shutdown, like removed.
 }
@@ -49,8 +51,39 @@ func (s *subscriber) Shutdown() {
 	}
 	s.once.Do(func() {
 		close(s.doneC)
+		s.mu.Lock()
+		defer s.mu.Unlock()
 		close(s.msgC)
 	})
+}
+
+// publish wakes a listener waiting on c to consume the event.
+// event will be dropped if ctx is Done before event is received.
+func (s *subscriber) publish(ctx context.Context, event interface{}) error {
+	// guard of msgC's close
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	select {
+	case <-ctx.Done():
+		// event dropped because of publisher
+		return ctx.Err()
+	case <-s.doneC:
+		// event dropped because of subscriber
+		return fmt.Errorf("event dropped because of subscriber unsubscribed")
+	default:
+	}
+
+	select {
+	case <-ctx.Done():
+		// event dropped because of publisher
+		return ctx.Err()
+	case <-s.doneC:
+		// event dropped because of subscriber
+		return fmt.Errorf("event dropped because of subscriber unsubscribed")
+	case s.msgC <- event:
+		// event consumed
+		return nil
+	}
 }
 
 // Subscribe returns a channel that's closed when awoken by PublishSignal or PublishBroadcast.
@@ -79,7 +112,7 @@ func (s *Subject) PublishSignal(ctx context.Context, event interface{}) error {
 		wg.Add(1)
 		go func(listener *subscriber) {
 			defer wg.Done()
-			err := s.publish(ctx, event, listener)
+			err := listener.publish(ctx, event)
 			if err != nil {
 				errs = append(errs, err)
 			}
@@ -94,56 +127,46 @@ func (s *Subject) PublishSignal(ctx context.Context, event interface{}) error {
 // PublishBroadcast blocks until event is received or dropped.
 // event will be dropped if ctx is Done before event is received.
 func (s *Subject) PublishBroadcast(ctx context.Context, event interface{}) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	var wg sync.WaitGroup
 	var errs []error
-	for listener := range s.subscribers {
-		wg.Add(1)
-		go func(listener *subscriber) {
-			defer wg.Done()
-			err := s.publish(ctx, event, listener)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}(listener)
-	}
+	func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		for listener := range s.subscribers {
+			wg.Add(1)
+			go func(listener *subscriber) {
+				defer wg.Done()
+				err := listener.publish(ctx, event)
+				if err != nil {
+					errs = append(errs, err)
+				}
+			}(listener)
+		}
+	}()
 	wg.Wait()
 	return errors.Multi(errs...)
 }
 
-// publish wakes a listener waiting on c to consume the event.
-// event will be dropped if ctx is Done before event is received.
-func (s *Subject) publish(ctx context.Context, event interface{}, listener *subscriber) error {
-	select {
-	case <-ctx.Done():
-		// event dropped because of publisher
-		return ctx.Err()
-	case <-listener.doneC:
-		// event dropped because of subscriber
-		return fmt.Errorf("event dropped because of subscriber unsubscribed")
-	case listener.msgC <- event:
-		// event consumed
-		return nil
-	}
-}
-
 func (s *Subject) trackChannel(c *subscriber, add bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.subscribers == nil {
-		s.subscribers = make(map[*subscriber]struct{})
-	}
-	_, has := s.subscribers[c]
-	if has {
-		if add {
+	func() {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		if s.subscribers == nil {
+			s.subscribers = make(map[*subscriber]struct{})
+		}
+		_, has := s.subscribers[c]
+		if has {
+			if add {
+				return
+			}
+			delete(s.subscribers, c)
 			return
 		}
-		delete(s.subscribers, c)
+		if add {
+			s.subscribers[c] = struct{}{}
+		}
+	}()
+	if !add {
 		c.Shutdown()
-		return
-	}
-	if add {
-		s.subscribers[c] = struct{}{}
 	}
 }

@@ -55,33 +55,34 @@ import (
 
 const (
 
-	// The default initial interval value (0.5 seconds).
+	// DefaultInitialInterval The default initial interval value (0.5 seconds).
 	DefaultInitialInterval = 500 * time.Millisecond
 
-	// The default randomization factor (0.5 which results in a random period ranging between 50%
+	// DefaultRandomizationFactor The default randomization factor (0.5 which results in a random period ranging between 50%
 	// below and 50% above the retry interval).
 	DefaultRandomizationFactor = 0.5
 
-	// The default multiplier value (1.5 which is 50% increase per back off).
+	// DefaultMultiplier The default multiplier value (1.5 which is 50% increase per back off).
 	DefaultMultiplier = 1.5
 
-	// The default maximum back off time (1 minute).
+	// DefaultMaxInterval The default maximum back off time (1 minute).
 	DefaultMaxInterval = time.Minute
 
-	// The default maximum elapsed time (15 minutes).
+	// DefaultMaxElapsedDuration The default maximum elapsed time (15 minutes).
 	DefaultMaxElapsedDuration = 15 * time.Minute
 
-	// The default maximum elapsed count (-1).
+	// DefaultMaxElapsedCount The default maximum elapsed count (-1).
 	DefaultMaxElapsedCount = -1
 )
 
+// BackOff
 // Code borrowed from https://github.com/googleapis/google-http-java-client/blob/master/google-http-client/
 // src/main/java/com/google/api/client/util/BackOff.java
 type BackOff interface {
 	// Reset to initial state.
 	Reset()
 
-	// Gets duration to wait before retrying the operation to
+	// NextBackOff Gets duration to wait before retrying the operation to
 	// indicate that no retries should be made.
 	// ok indicates that no more retries should be made, max duration is returned also.
 	// Example usage:
@@ -94,11 +95,11 @@ type BackOff interface {
 	NextBackOff() (backoff time.Duration, ok bool)
 }
 
-//  Fixed back-off policy whose back-off time is always zero, meaning that the operation is retried
+// ZeroBackOff Fixed back-off policy whose back-off time is always zero, meaning that the operation is retried
 //  immediately without waiting.
 const ZeroBackOff = NonSlidingBackOff(0)
 
-// Fixed back-off policy that always returns {@code #STOP} for {@link #NextBackOff()},
+// StopBackOff Fixed back-off policy that always returns {@code #STOP} for {@link #NextBackOff()},
 // meaning that the operation should not be retried.
 type StopBackOff struct{}
 
@@ -107,8 +108,8 @@ func (o *StopBackOff) NextBackOff() (backoff time.Duration, ok bool) {
 	return 0, false
 }
 
-//  Fixed back-off policy whose back-off time is always const, meaning that the operation is retried
-//  after waiting every duration.
+// NonSlidingBackOff Fixed back-off policy whose back-off time is always const, meaning that the operation is retried
+// after waiting every duration.
 type NonSlidingBackOff time.Duration
 
 func (o *NonSlidingBackOff) Reset() {}
@@ -137,7 +138,7 @@ func (o *jitterBackOff) NextBackOff() (backoff time.Duration, ok bool) {
 	return Jitter(o.duration, o.maxFactor), false
 }
 
-// Code borrowed from https://github.com/googleapis/google-http-java-client/blob/master/google-http-client/
+// ExponentialBackOff Code borrowed from https://github.com/googleapis/google-http-java-client/blob/master/google-http-client/
 // src/main/java/com/google/api/client/util/ExponentialBackOff.java
 //go:generate go-option -type "ExponentialBackOff"
 type ExponentialBackOff struct {
@@ -176,51 +177,58 @@ type ExponentialBackOff struct {
 	maxElapsedCount int
 }
 
+func (o *ExponentialBackOff) SetDefault() {
+	o.initialInterval = DefaultInitialInterval
+	o.randomizationFactor = DefaultRandomizationFactor
+	o.multiplier = DefaultMultiplier
+	o.maxInterval = DefaultMaxInterval
+	o.maxElapsedDuration = DefaultMaxElapsedDuration
+	o.maxElapsedCount = DefaultMaxElapsedCount
+}
+
 // NewExponentialBackOff returns a no limit backoff
 func NewExponentialBackOff(opts ...ExponentialBackOffOption) *ExponentialBackOff {
-	o := &ExponentialBackOff{
-		initialInterval:     DefaultInitialInterval,
-		randomizationFactor: DefaultRandomizationFactor,
-		multiplier:          DefaultMultiplier,
-		maxInterval:         -1,
-		maxElapsedDuration:  -1,
-		maxElapsedCount:     -1,
-	}
+	opts = append([]ExponentialBackOffOption{WithExponentialBackOffOptionNoLimit()}, opts...)
+	o := &ExponentialBackOff{}
+	o.SetDefault()
 	o.ApplyOptions(opts...)
 	o.Reset()
 	return o
 }
 
-// NewExponentialBackOff returns a backoff with default limit
+// NewDefaultExponentialBackOff returns a backoff with default limit
 func NewDefaultExponentialBackOff(opts ...ExponentialBackOffOption) *ExponentialBackOff {
-	o := &ExponentialBackOff{
-		initialInterval:     DefaultInitialInterval,
-		randomizationFactor: DefaultRandomizationFactor,
-		multiplier:          DefaultMultiplier,
-		maxInterval:         DefaultMaxInterval,
-		maxElapsedDuration:  DefaultMaxElapsedDuration,
-		maxElapsedCount:     DefaultMaxElapsedCount,
-	}
+	o := &ExponentialBackOff{}
+	o.SetDefault()
 	o.ApplyOptions(opts...)
 	o.Reset()
 	return o
 }
 
-// Sets the interval back to the initial retry interval and restarts the timer.
+// NewGrpcExponentialBackOff is a backoff from configuration with the default values specified
+// at https://github.com/grpc/grpc/blob/master/doc/connection-backoff.md.
+//
+// This should be useful for callers who want to configure backoff with
+// non-default values only for a subset of the options.
+func NewGrpcExponentialBackOff(opts ...ExponentialBackOffOption) *ExponentialBackOff {
+	opts = append([]ExponentialBackOffOption{WithExponentialBackOffOptionGRPC()}, opts...)
+	o := &ExponentialBackOff{}
+	o.SetDefault()
+	o.ApplyOptions(opts...)
+	o.Reset()
+	return o
+}
+
+// Reset Sets the interval back to the initial retry interval and restarts the timer.
 func (o *ExponentialBackOff) Reset() {
 	o.currentInterval = o.initialInterval
 	o.currentCount = 0
 	o.startTime = time.Now()
 }
 
-/**
- * {@inheritDoc}
- *
- * <p>This method calculates the next back off interval using the formula: randomized_interval =
- * retry_interval +/- (randomization_factor * retry_interval)
- *
- * <p>Subclasses may override if a different algorithm is required.
- */
+// NextBackOff This method calculates the next back off interval using the formula: randomized_interval =
+// retry_interval +/- (randomization_factor * retry_interval)
+// Subclasses may override if a different algorithm is required.
 func (o *ExponentialBackOff) NextBackOff() (backoff time.Duration, ok bool) {
 	// Make sure we have not gone over the maximum elapsed count.
 	if o.maxElapsedCount > 0 && o.GetElapsedCount() >= o.maxElapsedCount {
@@ -238,44 +246,42 @@ func (o *ExponentialBackOff) NextBackOff() (backoff time.Duration, ok bool) {
 	return randomizedInterval, true
 }
 
-/**
- * Returns a random value from the interval [randomizationFactor * currentInterval,
- * randomizationFactor * currentInterval].
- */
+// GetRandomValueFromInterval Returns a random value from the interval
+// [randomizationFactor * currentInterval, randomizationFactor * currentInterval].
 func (o *ExponentialBackOff) GetRandomValueFromInterval(
 	randomizationFactor float64, currentInterval time.Duration) time.Duration {
 	return Jitter(currentInterval, randomizationFactor)
 }
 
-// Returns the initial retry interval.
+// GetInitialInterval Returns the initial retry interval.
 func (o *ExponentialBackOff) GetInitialInterval() time.Duration {
 	return o.initialInterval
 }
 
-// Returns the randomization factor to use for creating a range around the retry interval.
+// GetRandomizationFactor Returns the randomization factor to use for creating a range around the retry interval.
 // A randomization factor of 0.5 results in a random period ranging between 50% below and 50%
 // above the retry interval.
 func (o *ExponentialBackOff) GetRandomizationFactor() float64 {
 	return o.randomizationFactor
 }
 
-// Returns the current retry interval.
+// GetCurrentInterval Returns the current retry interval.
 func (o *ExponentialBackOff) GetCurrentInterval() time.Duration {
 	return o.currentInterval
 }
 
-// Returns the value to multiply the current interval with for each retry attempt.
+// GetMultiplier Returns the value to multiply the current interval with for each retry attempt.
 func (o *ExponentialBackOff) GetMultiplier() float64 {
 	return o.multiplier
 }
 
-// Returns the maximum value of the back off period. Once the current interval
+// GetMaxInterval Returns the maximum value of the back off period. Once the current interval
 // reaches this value it stops increasing.
 func (o *ExponentialBackOff) GetMaxInterval() time.Duration {
 	return o.maxInterval
 }
 
-// Returns the maximum elapsed time.
+// GetMaxElapsedDuration Returns the maximum elapsed time.
 // If the time elapsed since an {@link ExponentialBackOff} instance is created goes past the
 // max_elapsed_time then the method {@link #NextBackOff()} starts returning STOP.
 // The elapsed time can be reset by calling
@@ -283,14 +289,14 @@ func (o *ExponentialBackOff) GetMaxElapsedDuration() time.Duration {
 	return o.maxElapsedDuration
 }
 
-// Returns the elapsed time since an {@link ExponentialBackOff} instance is
+// GetElapsedDuration Returns the elapsed time since an {@link ExponentialBackOff} instance is
 // created and is reset when {@link #reset()} is called.
 // The elapsed time is computed using {@link System#nanoTime()}.
 func (o *ExponentialBackOff) GetElapsedDuration() time.Duration {
 	return time.Now().Sub(o.startTime)
 }
 
-// Returns the elapsed count since an {@link ExponentialBackOff} instance is
+// GetElapsedCount Returns the elapsed count since an {@link ExponentialBackOff} instance is
 // created and is reset when {@link #reset()} is called.
 func (o *ExponentialBackOff) GetElapsedCount() int {
 	return o.currentCount

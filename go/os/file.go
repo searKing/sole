@@ -42,7 +42,7 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-// Chtimes changes the access and modification times of the named
+// ChtimesNow changes the access and modification times of the named
 // file with Now, similar to the Unix utime() or utimes() functions.
 //
 // The underlying filesystem may truncate or round the values to a
@@ -61,14 +61,14 @@ func MakeAll(name string) error {
 	return os.MkdirAll(name, DefaultPermissionDirectory)
 }
 
-// MakeAll creates a directory named path and returns nil,
+// Make creates a directory named path and returns nil,
 // or else returns an error.
 // If the dir does not exist, it is created with mode 0755 (before umask).
 func Make(name string) error {
 	return os.Mkdir(name, DefaultPermissionDirectory)
 }
 
-// Rename renames (moves) oldpath to newpath.
+// RenameAll renames (moves) oldpath to newpath.
 // If newpath already exists and is not a directory, Rename replaces it.
 // OS-specific restrictions may apply when oldpath and newpath are in different directories.
 // If there is an error, it will be of type *LinkError.
@@ -151,7 +151,7 @@ func LockAll(path string) (*os.File, error) {
 // or CreateAll instead. It opens the named file or directory with specified flag
 // (O_RDONLY etc.).
 // If the file does not exist, and the O_CREATE flag is passed, it is created with mode fileperm (before umask).
-// If the directory does not exist,, it is created with mode dirperm (before umask).
+// If the directory does not exist, it is created with mode dirperm (before umask).
 // If successful, methods on the returned File can be used for I/O.
 // If there is an error, it will be of type *PathError.
 func OpenFileAll(path string, flag int, dirperm, fileperm os.FileMode) (*os.File, error) {
