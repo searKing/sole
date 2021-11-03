@@ -5,17 +5,17 @@
 package viper
 
 import (
+	"bytes"
 	"reflect"
 
-	"github.com/searKing/golang/third_party/github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"github.com/mitchellh/mapstructure"
-	"github.com/spf13/viper"
-
 	json_ "github.com/searKing/golang/go/encoding/json"
+	"github.com/searKing/golang/third_party/google.golang.org/protobuf/encoding/protojson"
+	"github.com/spf13/viper"
+	"google.golang.org/protobuf/proto"
 )
 
-// Unmarshal returns the latest config viper proto
+// UnmarshalProtoMessageByJsonpb returns the latest config viper proto
 func UnmarshalProtoMessageByJsonpb(viper_ *viper.Viper, v proto.Message, opts ...viper.DecoderConfigOption) error {
 	if viper_ == nil { // nop for nil source
 		return nil
@@ -34,19 +34,56 @@ func UnmarshalProtoMessageByJsonpb(viper_ *viper.Viper, v proto.Message, opts ..
 // UnmarshalProtoMessageByJsonpbHookFunc returns a DecodeHookFunc that converts
 // root struct to config.ViperProto.
 // Trick of protobuf, which generates json tag only
-func UnmarshalProtoMessageByJsonpbHookFunc(v proto.Message) mapstructure.DecodeHookFunc {
+func UnmarshalProtoMessageByJsonpbHookFunc(def proto.Message) mapstructure.DecodeHookFunc {
 	return func(src reflect.Type, dst reflect.Type, data interface{}) (interface{}, error) {
-		// Convert it by parsing
+		protoBytes, err := protojson.Marshal(def,
+			protojson.WithMarshalUseProtoNames(true), // compatible with TextName
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// fix(json): error decoding '': json: unsupported type: map[interface {}]interface {}
 		dataBytes, err := json_.Marshal(data)
 		if err != nil {
 			return nil, err
 		}
 
-		// apply protobuf check
-		err = jsonpb.Unmarshal(dataBytes, v, jsonpb.WithUnmarshalAllowUnknownFields(true))
-		if err != nil {
-			return data, err
+		{ // trick: transfer data to the same format as def, that is proto.Message
+			dataProto := proto.Clone(def)
+			err = protojson.Unmarshal(dataBytes, dataProto)
+			if err != nil {
+				return nil, err
+			}
+			dataBytes, err = protojson.Marshal(dataProto,
+				protojson.WithMarshalUseProtoNames(true), // compatible with TextName
+			)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return v, nil
+
+		v := viper.New()
+		v.SetConfigType("json")
+		err = v.MergeConfig(bytes.NewReader(protoBytes))
+		if err != nil {
+			return nil, err
+		}
+		err = v.MergeConfig(bytes.NewReader(dataBytes))
+		if err != nil {
+			return nil, err
+		}
+
+		// fix(json): error decoding '': json: unsupported type: map[interface {}]interface {}
+		allBytes, err := json_.Marshal(v.AllSettings())
+		if err != nil {
+			return nil, err
+		}
+
+		err = protojson.Unmarshal(allBytes, def)
+		if err != nil {
+			return nil, err
+		}
+		return def, nil
 	}
 }

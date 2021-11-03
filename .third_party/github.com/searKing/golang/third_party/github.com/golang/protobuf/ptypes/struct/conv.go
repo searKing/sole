@@ -16,6 +16,7 @@ import (
 
 // ToProtoStruct converts v, which must marshal into a JSON object,
 // into a Google Struct proto.
+// Deprecated: use structpb.ToProtoStruct instead.
 func ToProtoStruct(v interface{}) (*structpb.Struct, error) {
 	if v == nil {
 		return &structpb.Struct{}, nil
