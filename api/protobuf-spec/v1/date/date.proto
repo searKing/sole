@@ -4,7 +4,7 @@ syntax = "proto3";
 package sole.api.v1.date;
 import "google/protobuf/descriptor.proto";
 import "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-openapiv2/options/annotations.proto";
-import "github.com/searKing/golang/tools/cmd/protoc-gen-go-tag/tag/tag.proto";
+import "github.com/searKing/golang/tools/protoc-gen-go-tag/tag/tag.proto";
 
 
 option go_package = "github.com/searKing/sole/protobuf-spec/api/v1/date;date";

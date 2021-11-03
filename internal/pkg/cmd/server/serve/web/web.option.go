@@ -8,6 +8,9 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
+	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/searKing/sole/pkg/consul"
 	"github.com/searKing/sole/pkg/viper"
@@ -50,6 +53,11 @@ func (s *ServerRunOptions) Validate(validate *validator.Validate) []error {
 // Complete set default ServerRunOptions.
 func (s *ServerRunOptions) Complete() (CompletedServerRunOptions, error) {
 	s.WebServerOptions.Proto.ForceDisableTls = provider.ForceDisableTls
+	s.WebServerOptions.GatewayOptions = append(s.WebServerOptions.GatewayOptions,
+		grpc_.WithGrpcUnaryServerChain(grpcopentracing.UnaryServerInterceptor()),
+		grpc_.WithGrpcStreamServerChain(grpcopentracing.StreamServerInterceptor()),
+		grpc_.WithGrpcUnaryServerChain(grpcprometheus.UnaryServerInterceptor),
+		grpc_.WithGrpcStreamServerChain(grpcprometheus.StreamServerInterceptor))
 	return CompletedServerRunOptions{&completedServerRunOptions{s}}, nil
 }
 

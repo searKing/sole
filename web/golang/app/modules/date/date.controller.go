@@ -17,7 +17,7 @@ type Controller struct {
 	date.UnimplementedDateServiceServer
 }
 
-// 日期查询
+// Now 日期查询
 func (c *Controller) Now(_ context.Context, req *date.DateRequest) (resp *date.DateResponse, err error) {
 	return &date.DateResponse{
 		RequestId: req.GetRequestId(),
