@@ -13,9 +13,11 @@ import (
 )
 
 type Config struct {
-	GetViper  func() *viper.Viper // If set, overrides params below
 	Proto     Secret
 	Validator *validator.Validate
+
+	viper     *viper.Viper
+	viperKeys []string
 }
 
 type completedConfig struct {
@@ -38,9 +40,10 @@ func NewConfig() *Config {
 // NewViperConfig returns a Config struct with the global viper instance
 // key representing a sub tree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(getViper func() *viper.Viper) *Config {
+func NewViperConfig(v *viper.Viper, keys ...string) *Config {
 	c := NewConfig()
-	c.GetViper = getViper
+	c.viper = v
+	c.viperKeys = keys
 	return c
 }
 
@@ -52,17 +55,17 @@ func (c *completedConfig) Validate() error {
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
-func (o *Config) Complete() CompletedConfig {
-	if err := o.loadViper(); err != nil {
-		return CompletedConfig{&completedConfig{
-			Config:        o,
-			completeError: err,
-		}}
+func (c *Config) Complete() CompletedConfig {
+	if c.viper != nil {
+		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		if err != nil {
+			return CompletedConfig{&completedConfig{completeError: err}}
+		}
 	}
-	if o.Validator == nil {
-		o.Validator = validator.New()
+	if c.Validator == nil {
+		c.Validator = validator.New()
 	}
-	return CompletedConfig{&completedConfig{Config: o}}
+	return CompletedConfig{&completedConfig{Config: c}}
 }
 
 // New creates a new server which logically combines the handling chain with the passed server.
@@ -79,19 +82,6 @@ func (c completedConfig) New() *Pasta {
 		return nil
 	}
 	return c.installKeyCipherOrDie()
-}
-
-func (c *Config) loadViper() error {
-	var v *viper.Viper
-	if c.GetViper != nil {
-		v = c.GetViper()
-	}
-
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
-		logrus.WithError(err).Errorf("load secret config from viper")
-		return err
-	}
-	return nil
 }
 
 // installSystemSecretOrDie allows you to check or generate system secret, but dies on failure.

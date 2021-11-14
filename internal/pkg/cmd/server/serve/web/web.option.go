@@ -11,20 +11,21 @@ import (
 	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/pkg/appinfo"
-	"github.com/searKing/sole/pkg/consul"
-	"github.com/searKing/sole/pkg/viper"
+	"github.com/searKing/sole/pkg/webserver"
 	"github.com/searKing/sole/web/golang"
 	"github.com/sirupsen/logrus"
-
-	"github.com/searKing/sole/internal/pkg/provider"
-	"github.com/searKing/sole/pkg/webserver"
 )
 
 // ServerRunOptions runs a kubernetes api server.
 type ServerRunOptions struct {
-	Provider         *provider.Provider
+	Provider *provider.Config
+
+	// GRPC+HTTP
 	WebServerOptions *webserver.Config
+
+	AppInfo *appinfo.Config
 }
 
 type completedServerRunOptions struct {
@@ -35,13 +36,6 @@ type completedServerRunOptions struct {
 type CompletedServerRunOptions struct {
 	// Embed a private pointer that cannot be instantiated outside of this package.
 	*completedServerRunOptions
-}
-
-func NewServerRunOptions() *ServerRunOptions {
-	return &ServerRunOptions{
-		Provider:         provider.GlobalProvider(),
-		WebServerOptions: webserver.NewViperConfig(viper.GetViper("web", appinfo.ServiceName)),
-	}
 }
 
 // Validate checks ServerRunOptions and return a slice of found errs.
@@ -67,68 +61,11 @@ func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
 	logrus.Infof("Version: %+v", appinfo.GetVersion())
 	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
 
-	server, err := s.WebServerOptions.Complete().New("sole")
+	server, err := NewWebServer(ctx, s.ServerRunOptions)
 	if err != nil {
 		return err
 	}
 	server.InstallWebHandlers(golang.NewHandler())
-	{
-		// register webserver as a service
-		if register := s.Provider.ServiceRegister; register != nil {
-			for _, domain := range s.WebServerOptions.Proto.GetAdvertiseAddr().GetDomains() {
-				if domain == "" {
-					continue
-				}
-				r := consul.ServiceRegistration{}
-				if err = r.SetDefault().SetAddr(s.WebServerOptions.Proto.GetBackendServeHostPort(true)); err != nil {
-					return err
-				}
-				r.Name = domain
-				r.HealthCheckUrl = "/healthz"
-				r.Complete()
-				if err := register.AddService(r); err != nil {
-					logrus.WithError(err).WithField("domain", domain).
-						Errorf("register web server as service in consul")
-					return err
-				}
-			}
-
-			server.AddPostStartHookOrDie("service-register-backend", func(ctx context.Context) error {
-				return register.Run(ctx)
-			})
-			server.AddPreShutdownHookOrDie("service-register-backend", func() error {
-				register.Shutdown()
-				return nil
-			})
-		}
-	}
-	{
-		// resolve webserver as a service
-		if resolver := s.Provider.ServiceResolver; resolver != nil {
-
-			for _, domain := range s.WebServerOptions.Proto.GetAdvertiseAddr().GetDomains() {
-				if domain == "" {
-					continue
-				}
-				r := consul.ServiceQuery{}
-				r.SetDefault()
-				r.Name = domain
-				r.Complete()
-				if err := resolver.AddService(r); err != nil {
-					logrus.WithError(err).Errorf("resolver web server as service in consul")
-					return err
-				}
-			}
-
-			server.AddPostStartHookOrDie("service-resolver-backend", func(ctx context.Context) error {
-				return resolver.Run(ctx)
-			})
-			server.AddPreShutdownHookOrDie("service-resolver-backend", func() error {
-				resolver.Shutdown()
-				return nil
-			})
-		}
-	}
 
 	prepared, err := server.PrepareRun()
 	if err != nil {

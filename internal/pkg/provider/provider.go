@@ -6,31 +6,20 @@ package provider
 
 import (
 	"context"
-	"sync"
-
-	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
-	"github.com/searKing/golang/third_party/github.com/syndtr/goleveldb/leveldb"
-	"github.com/searKing/sole/pkg/consul"
-	"github.com/searKing/sole/pkg/crypto/pasta"
 
 	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 )
 
-type Provider struct {
-	ConfigFile string
+var ForceDisableTls bool
 
+type Provider struct {
 	Proto *viper_.ViperProto
 
-	KeyCipher       *pasta.Pasta
-	SqlDB           *sqlx.DB
-	Redis           redis.UniversalClient
-	LevelDB         *leveldb.ConsistentDB
-	ServiceRegister *consul.ServiceRegister
-	ServiceResolver *consul.ServiceResolver
+	ctx context.Context
+}
 
-	ctx        context.Context
-	reloadOnce sync.Once
+func NewProvider(ctx context.Context, config *Config) (*Provider, error) {
+	return config.Complete().New(ctx)
 }
 
 func (p *Provider) Context() context.Context {
@@ -38,11 +27,4 @@ func (p *Provider) Context() context.Context {
 		return context.Background()
 	}
 	return p.ctx
-}
-
-func (p *Provider) SqlDBPing() error {
-	if p.SqlDB == nil {
-		return nil
-	}
-	return p.SqlDB.PingContext(p.Context())
 }

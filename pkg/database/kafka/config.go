@@ -17,9 +17,11 @@ import (
 )
 
 type Config struct {
-	GetViper  func() *viper.Viper // If set, overrides params below
 	Proto     Kafka
 	Validator *validator.Validate
+
+	viper     *viper.Viper
+	viperKeys []string
 }
 
 type completedConfig struct {
@@ -42,9 +44,10 @@ func NewConfig() *Config {
 // NewViperConfig returns a Config struct with the global viper instance
 // key representing a sub tree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(getViper func() *viper.Viper) *Config {
+func NewViperConfig(v *viper.Viper, keys ...string) *Config {
 	c := NewConfig()
-	c.GetViper = getViper
+	c.viper = v
+	c.viperKeys = keys
 	return c
 }
 
@@ -57,11 +60,11 @@ func (c *completedConfig) Validate() error {
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
 func (c *Config) Complete() CompletedConfig {
-	if err := c.loadViper(); err != nil {
-		return CompletedConfig{&completedConfig{
-			Config:        c,
-			completeError: err,
-		}}
+	if c.viper != nil {
+		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		if err != nil {
+			return CompletedConfig{&completedConfig{completeError: err}}
+		}
 	}
 	if c.Validator == nil {
 		c.Validator = validator.New()
@@ -112,17 +115,4 @@ func (c completedConfig) NewReaderConfig() (*kafka.Reader, error) {
 		MaxWait:     100 * time.Millisecond,
 		MinBytes:    1,
 	}), nil
-}
-
-func (c *Config) loadViper() error {
-	var v *viper.Viper
-	if c.GetViper != nil {
-		v = c.GetViper()
-	}
-
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
-		logrus.WithError(err).Errorf("load kafka config from viper")
-		return err
-	}
-	return nil
 }

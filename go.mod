@@ -9,6 +9,7 @@ require (
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
+	github.com/google/wire v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
@@ -26,7 +27,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.1.37
+	github.com/searKing/golang v1.1.47
 	github.com/segmentio/kafka-go v0.4.15
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.2.1
@@ -34,7 +35,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.9.0
 	github.com/syndtr/goleveldb v1.0.0
-	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	go.uber.org/automaxprocs v1.4.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3
@@ -46,4 +46,4 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
-//replace github.com/searKing/golang v1.1.37 => ../../../github.com/searKing/golang
+//replace github.com/searKing/golang v1.1.47 => ../../../github.com/searKing/golang

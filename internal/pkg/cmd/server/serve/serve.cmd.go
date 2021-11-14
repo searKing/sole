@@ -7,11 +7,10 @@ package serve
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	filepath_ "github.com/searKing/golang/go/path/filepath"
-	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/sole/pkg/appinfo"
-	viper_ "github.com/searKing/sole/pkg/viper"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/jwalterweatherman"
@@ -56,12 +55,21 @@ To learn more about each individual command, run:
 		// viper allows you to load config from default, config path、env and so on, but dies on failure.
 		jwalterweatherman.SetLogOutput(logrus.StandardLogger().Writer())
 		jwalterweatherman.SetLogThreshold(jwalterweatherman.LevelWarn)
-		if err := viperhelper.MergeAll(viper.GetViper(), cfgFile, appinfo.ServiceName); err != nil {
-			logrus.WithError(err).WithField("config_path", cfgFile).Fatalf("load config")
-		}
 
-		cfg := provider.NewViperConfig(viper_.GetViper("", appinfo.ServiceName))
-		return cfg.Complete().Apply(cmd.Context())
+		viper.AutomaticEnv()                    // read in environment variables that match
+		viper.SetEnvPrefix(appinfo.ServiceName) // will be uppercase automatically
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		viper.SetConfigFile(cfgFile)
+
+		logger := logrus.WithField("config_path", cfgFile).
+			WithField("env_prefix", strings.ToUpper(appinfo.ServiceName))
+		err := viper.ReadInConfig()
+		if err != nil {
+			logger.WithError(err).Errorf("load config file")
+			return err
+		}
+		logger.Infof("load config file")
+		return nil
 	}
 
 	// Cobra supports Persistent Flags which will work for this command

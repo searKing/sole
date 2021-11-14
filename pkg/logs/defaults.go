@@ -9,17 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/searKing/sole/pkg/runtime"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
-
-// RegisterDefaults adds defaulters functions to the given scheme.
-// Public to allow building arbitrary schemes.
-// All generated defaulters are covering - they call all nested defaulters.
-func RegisterDefaults(scheme *runtime.Scheme) error {
-	scheme.AddTypeDefaultingFunc(&Config{}, func(obj interface{}) { obj.(*Config).SetDefaultsConfig() })
-	return nil
-}
 
 // SetDefaultsConfig assigns default values for the Config
 func (c *Config) SetDefaultsConfig() *Config {

@@ -9,15 +9,18 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/sole/pkg/protobuf"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	GetViper  func() *viper.Viper // If set, overrides params below
 	Proto     Log
 	Validator *validator.Validate
+
+	viper     *viper.Viper
+	viperKeys []string
 }
 
 type completedConfig struct {
@@ -40,11 +43,12 @@ func NewConfig() *Config {
 }
 
 // NewViperConfig returns a Config struct with the global viper instance
-// key representing a sub tree of this instance.
+// key representing a subtree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(getViper func() *viper.Viper) *Config {
+func NewViperConfig(v *viper.Viper, keys ...string) *Config {
 	c := NewConfig()
-	c.GetViper = getViper
+	c.viper = v
+	c.viperKeys = keys
 	return c
 }
 
@@ -56,11 +60,11 @@ func (c *completedConfig) Validate() error {
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
-	if err := c.loadViper(); err != nil {
-		return CompletedConfig{&completedConfig{
-			Config:        c,
-			completeError: err,
-		}}
+	if c.viper != nil {
+		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		if err != nil {
+			return CompletedConfig{&completedConfig{completeError: err}}
+		}
 	}
 	if c.Validator == nil {
 		c.Validator = validator.New()
@@ -79,19 +83,6 @@ func (c completedConfig) Apply() error {
 		return err
 	}
 	return c.install()
-}
-
-func (c *Config) loadViper() error {
-	var v *viper.Viper
-	if c.GetViper != nil {
-		v = c.GetViper()
-	}
-	err := c.SetViperConfig(v)
-	if err != nil {
-		logrus.WithError(err).Errorf("load logs config from viper")
-		return err
-	}
-	return nil
 }
 
 func (c *completedConfig) install() error {

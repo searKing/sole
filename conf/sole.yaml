@@ -3,8 +3,17 @@ log:
   level: info
   path: ./log/sole
   report_caller: true
-  rotation_duration: 86400s
+  rotation_duration: 3600s
   rotation_max_age: 604800s
   mute_directly_output: true
+  mute_directly_output_level: error
+secret:
+  system_secret: ""
 web:
-  no_grpc_gateway_proxy: true
+  bind_addr:
+    port: 80
+  advertise_addr:
+    host: ""
+    port: 80 # Service对外提供服务
+  force_disable_tls: true
+  no_grpc_proxy: &no_grpc_proxy true

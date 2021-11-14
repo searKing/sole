@@ -62,6 +62,10 @@ type WebServer struct {
 	ShutdownDelayDuration time.Duration
 }
 
+func NewWebServer(ctx context.Context, config *Config) (*WebServer, error) {
+	return config.Complete().New()
+}
+
 // preparedWebServer is a private wrapper that enforces a call of PrepareRun() before Run can be invoked.
 type preparedWebServer struct {
 	*WebServer

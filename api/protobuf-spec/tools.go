@@ -18,4 +18,6 @@ import (
 //go:generate go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 //go:generate go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 //go:generate go install github.com/searKing/golang/tools/protoc-gen-go-tag@latest
+//go:generate go install github.com/searKing/golang/tools/go-option@latest
 //go:generate go install github.com/go-swagger/go-swagger/cmd/swagger@latest
+//go:generate go install github.com/google/wire/cmd/wire@latest

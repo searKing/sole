@@ -9,7 +9,6 @@ import (
 
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 
-	"github.com/searKing/sole/pkg/opentrace"
 	"github.com/searKing/sole/pkg/prometheus"
 	"github.com/searKing/sole/web/golang/app/configs/values"
 	"github.com/searKing/sole/web/golang/app/modules/date"
@@ -32,7 +31,6 @@ func (h *Handler) SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway) {
 	// bind grpcGateway as default
 
 	ginRouter.Use(prometheus.GinHttpMetric(values.HealthMetricsPrometheusPath))
-	ginRouter.Use(opentrace.GinHttpTrace(values.HealthMetricsPrometheusPath))
 
 	index.SetRouter(ginRouter)
 	debug.SetRouter(ginRouter, "")

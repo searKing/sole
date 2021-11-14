@@ -41,8 +41,9 @@ var defaultClientMaxReceiveMessageSize = math.MaxInt32 // 1024 * 1024 * 4
 var defaultClientMaxSendMessageSize = math.MaxInt32
 
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	Proto    Web
+	Proto     Web
+	viper     *viper.Viper
+	viperKeys []string
 
 	GatewayOptions []grpc_.GatewayOption
 	GinMiddlewares []gin.HandlerFunc
@@ -54,6 +55,8 @@ type Config struct {
 	ServiceRegistryBackend *consul.ServiceRegister
 	ServiceResolverBackend *consul.ServiceResolver
 
+	// Name is the human-readable server name, optional
+	Name string
 	// BindAddress is the host name to use for bind (local internet) facing URLs (e.g. Loopback)
 	// Will default to a value based on secure serving info and available ipv4 IPs.
 	BindAddress string
@@ -81,13 +84,19 @@ type CompletedConfig struct {
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
-	if err := c.loadViper(); err != nil {
-		return CompletedConfig{&completedConfig{
-			Config:        c,
-			completeError: err,
-		}}
+	if c.viper != nil {
+		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		if err != nil {
+			return CompletedConfig{&completedConfig{completeError: err}}
+		}
 	}
-	c.parseViper()
+	c.BindAddress = c.Proto.GetBackendBindHostPort()
+	c.ExternalAddress = c.Proto.GetBackendServeHostPort(true)
+
+	{
+		c.CORS = cors.NewViperConfig(c.viper, append(c.viperKeys, "cors")...)
+	}
+
 	// if there is no port, and we listen on one securely, use that one
 	if _, _, err := net.SplitHostPort(c.ExternalAddress); err != nil {
 		if c.BindAddress == "" {
@@ -106,7 +115,7 @@ func (c *Config) Complete() CompletedConfig {
 
 // New creates a new server which logically combines the handling chain with the passed server.
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
-func (c completedConfig) New(name string) (*WebServer, error) {
+func (c completedConfig) New() (*WebServer, error) {
 	if c.completeError != nil {
 		return nil, c.completeError
 	}
@@ -190,7 +199,7 @@ func (c completedConfig) New(name string) (*WebServer, error) {
 	defaultHealthChecks := []healthz.HealthCheck{healthz.PingHealthCheck, healthz.LogHealthCheck}
 
 	s := &WebServer{
-		Name:                  name,
+		Name:                  c.Name,
 		ShutdownDelayDuration: c.ShutdownDelayDuration,
 		grpcBackend:           grpcBackend,
 		ginBackend:            ginBackend,
@@ -220,42 +229,11 @@ func NewConfig() *Config {
 }
 
 // NewViperConfig returns a Config struct with the global viper instance
-// key representing a sub tree of this instance.
+// key representing a subtree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(getViper func() *viper.Viper) *Config {
+func NewViperConfig(v *viper.Viper, keys ...string) *Config {
 	c := NewConfig()
-	c.GetViper = getViper
+	c.viper = v
+	c.viperKeys = keys
 	return c
-}
-
-func (c *Config) loadViper() error {
-	var v *viper.Viper
-	if c.GetViper != nil {
-		v = c.GetViper()
-	}
-
-	if err := viper_.UnmarshalProtoMessageByJsonpb(v, &c.Proto); err != nil {
-		logrus.WithError(err).Errorf("load web_server config from viper")
-		return err
-	}
-	return nil
-}
-
-func (s *Config) parseViper() {
-	s.BindAddress = s.Proto.GetBackendBindHostPort()
-	s.ExternalAddress = s.Proto.GetBackendServeHostPort(true)
-
-	{
-		if s.GetViper == nil {
-			s.CORS = cors.NewViperConfig(nil)
-		} else {
-			s.CORS = cors.NewViperConfig(func() *viper.Viper {
-				v := s.GetViper()
-				if v == nil {
-					return nil
-				}
-				return v.Sub("core")
-			})
-		}
-	}
 }

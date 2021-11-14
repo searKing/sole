@@ -20,7 +20,10 @@ func isDSNAllowedOrDie(dsn string) {
 
 func CommandE(ctx context.Context) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		s := NewServerRunOptions()
+		s, err := NewServerRunOptions()
+		if err != nil {
+			return err
+		}
 
 		// set default options
 		completedOptions, err := s.Complete()

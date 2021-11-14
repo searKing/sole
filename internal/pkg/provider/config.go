@@ -7,38 +7,19 @@ package provider
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/searKing/sole/pkg/appinfo"
-	"github.com/searKing/sole/pkg/consul"
-	"github.com/searKing/sole/pkg/database/leveldb"
-	vipergetter "github.com/searKing/sole/pkg/viper"
-	"github.com/sirupsen/logrus"
+	"github.com/go-playground/validator/v10"
+	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
+	viperpb "github.com/searKing/sole/api/protobuf-spec/v1/viper"
 	"github.com/spf13/viper"
-
-	viperhelper "github.com/searKing/golang/third_party/github.com/spf13/viper"
-
-	viper_ "github.com/searKing/sole/api/protobuf-spec/v1/viper"
-	"github.com/searKing/sole/pkg/crypto/pasta"
-	redis_ "github.com/searKing/sole/pkg/database/redis"
-	"github.com/searKing/sole/pkg/database/sql"
-	"github.com/searKing/sole/pkg/logs"
-	"github.com/searKing/sole/pkg/opentrace"
 )
 
 //go:generate go-option -type=Config
 type Config struct {
-	GetViper func() *viper.Viper // If set, overrides params below
-	proto    *viper_.ViperProto
+	Proto     *viperpb.ViperProto
+	Validator *validator.Validate
 
-	AppInfo    *appinfo.Config
-	Logs       *logs.Config
-	OpenTracer *opentrace.Config
-
-	KeyCipher *pasta.Config
-	Sql       *sql.Config
-	Redis     *redis_.Config
-	LevelDB   *leveldb.Config
-	Consul    *consul.Config
+	viper     *viper.Viper
+	viperKeys []string
 }
 
 type completedConfig struct {
@@ -56,36 +37,34 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	return &Config{
-		proto:      NewDefaultViperProto(),
-		Logs:       logs.NewViperConfig(vipergetter.GetViper("log", appinfo.ServiceName)),
-		AppInfo:    appinfo.NewViperConfig(vipergetter.GetViper("app_info", appinfo.ServiceName)),
-		OpenTracer: opentrace.NewViperConfig(vipergetter.GetViper("tracing", appinfo.ServiceName)),
-		KeyCipher:  pasta.NewViperConfig(vipergetter.GetViper("secret", appinfo.ServiceName)),
-		Sql:        sql.NewViperConfig(vipergetter.GetViper("database", appinfo.ServiceName)),
-		Redis:      redis_.NewViperConfig(vipergetter.GetViper("redis", appinfo.ServiceName)),
-		LevelDB:    leveldb.NewViperConfig(vipergetter.GetViper("leveldb", appinfo.ServiceName)),
-		Consul:     consul.NewViperConfig(vipergetter.GetViper("consul", appinfo.ServiceName)),
+		Proto: &viperpb.ViperProto{},
 	}
 }
 
-// NewViperConfig returns a Config struct with the global viper instance
-// key representing a sub tree of this instance.
+// NewViperConfig returns a Config struct with the viper instance
+// key representing a subtree of this instance.
 // NewViperConfig is case-insensitive for a key.
-func NewViperConfig(getViper func() *viper.Viper) *Config {
+func NewViperConfig(v *viper.Viper, keys ...string) *Config {
 	c := NewConfig()
-	c.GetViper = getViper
+	c.viper = v
+	c.viperKeys = keys
 	return c
+}
+
+// Validate checks Config.
+func (c *completedConfig) Validate() error {
+	return c.Validator.Struct(c)
 }
 
 // Complete fills in any fields not set that are required to have valid data and can be derived
 // from other fields. If you're going to ApplyOptions, do that first. It's mutating the receiver.
 // ApplyOptions is called inside.
 func (c *Config) Complete() CompletedConfig {
-	if err := c.loadViper(); err != nil {
-		return CompletedConfig{&completedConfig{
-			Config:        c,
-			completeError: err,
-		}}
+	if c.viper != nil {
+		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		if err != nil {
+			return CompletedConfig{&completedConfig{completeError: err}}
+		}
 	}
 	return CompletedConfig{&completedConfig{Config: c}}
 }
@@ -94,98 +73,9 @@ func (c *Config) Complete() CompletedConfig {
 // name is used to differentiate for logging. The handler chain in particular can be difficult as it starts delgating.
 // New usually called after Complete
 func (c completedConfig) New(ctx context.Context) (*Provider, error) {
-	var sqlDB *sqlx.DB
-
-	if err := c.AppInfo.Complete().Apply(); err != nil {
-		return nil, err
-	}
-
-	if err := c.Logs.Complete().Apply(); err != nil {
-		return nil, err
-	}
-	if closer, err := c.OpenTracer.Complete().Apply(); err != nil {
-		go func() {
-			select {
-			case <-ctx.Done():
-				err := closer.Close()
-				if err != nil {
-					logrus.WithError(err).Error("openTracing closed")
-					return
-				}
-				logrus.Info("openTracing closed")
-			}
-		}()
-		return nil, err
-	}
-
-	if c.Sql != nil {
-		sqlDB = c.Sql.Complete().New(ctx)
-	}
-
 	p := &Provider{
-		Proto:     c.proto,
-		SqlDB:     sqlDB,
-		KeyCipher: c.KeyCipher.Complete().New(),
-		ctx:       ctx,
+		Proto: c.Proto,
+		ctx:   ctx,
 	}
-	if c.Redis != nil {
-		redis, err := c.Redis.Complete().New()
-		if err != nil {
-			return nil, err
-		}
-		p.Redis = redis
-	}
-
-	if c.LevelDB != nil {
-		lvl, err := c.LevelDB.Complete().New()
-		if err != nil {
-			return nil, err
-		}
-		p.LevelDB = lvl
-	}
-
-	if c.Consul != nil {
-		builder := c.Consul.Complete()
-		register, err := builder.NewServiceRegister()
-		if err != nil {
-			return nil, err
-		}
-		p.ServiceRegister = register
-		resolver, err := builder.NewServiceResolver()
-		if err != nil {
-			return nil, err
-		}
-		p.ServiceResolver = resolver
-	}
-
-	providerReloads.WithLabelValues(p.Proto.String()).Inc()
-	go p.ReloadForever()
 	return p, nil
-}
-
-// Apply set options and something else as global init, act likes New but without Config's instance
-// Apply usually called after Complete
-func (c completedConfig) Apply(ctx context.Context) error {
-	provider, err := c.New(ctx)
-	if err != nil {
-		return err
-	}
-	InitGlobalProvider(provider)
-	return nil
-}
-
-func (c *Config) loadViper() error {
-	var v *viper.Viper
-	if c.GetViper != nil {
-		v = c.GetViper()
-	}
-
-	if c.proto == nil {
-		c.proto = &viper_.ViperProto{}
-	}
-	if err := viperhelper.UnmarshalProtoMessageByJsonpb(v, c.proto); err != nil {
-		logrus.WithError(err).Errorf("load config from viper")
-		return err
-	}
-	return nil
 }
