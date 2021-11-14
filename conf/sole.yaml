@@ -7,8 +7,7 @@ log:
   rotation_max_age: 604800s
   mute_directly_output: true
   mute_directly_output_level: error
-secret:
-  system_secret: ""
+secret: "base64key://"
 web:
   bind_addr:
     port: 80

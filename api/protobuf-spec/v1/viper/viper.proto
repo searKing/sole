@@ -6,6 +6,6 @@ option go_package = "github.com/searKing/sole/api/v1/viper;viper";
 
 // ViperProto is immutable, so mutex free
 message ViperProto {
-  
+  string secret = 1;
 }
 

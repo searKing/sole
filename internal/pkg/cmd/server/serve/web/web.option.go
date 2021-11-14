@@ -14,7 +14,6 @@ import (
 	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/searKing/sole/pkg/webserver"
-	"github.com/searKing/sole/web/golang"
 	"github.com/sirupsen/logrus"
 )
 
@@ -61,11 +60,11 @@ func (s *CompletedServerRunOptions) Run(ctx context.Context) error {
 	logrus.Infof("Version: %+v", appinfo.GetVersion())
 	//isDSNAllowedOrDie(completeOptions.Provider.Proto.GetDatabase().GetDsn())
 
-	server, err := NewWebServer(ctx, s.ServerRunOptions)
+	server, cleanup, err := NewWebServer(ctx, s.ServerRunOptions)
 	if err != nil {
 		return err
 	}
-	server.InstallWebHandlers(golang.NewHandler())
+	defer cleanup()
 
 	prepared, err := server.PrepareRun()
 	if err != nil {

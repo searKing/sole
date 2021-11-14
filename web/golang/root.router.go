@@ -6,6 +6,7 @@ package golang
 
 import (
 	"github.com/gin-gonic/gin"
+	"gocloud.dev/secrets"
 
 	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 
@@ -20,10 +21,14 @@ import (
 	"github.com/searKing/sole/web/golang/app/modules/webapp"
 )
 
-type Handler struct{}
+type Handler struct {
+	keeper *secrets.Keeper
+}
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(keeper *secrets.Keeper) *Handler {
+	return &Handler{
+		keeper: keeper,
+	}
 }
 
 // SetRoutes registers this handler's routes.

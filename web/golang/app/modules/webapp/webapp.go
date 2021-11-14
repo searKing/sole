@@ -19,6 +19,7 @@ const (
 )
 
 var (
+	// ExcludedPathPrefixes
 	// nodes below are not part of the publicdocument tree of the application.
 	// No file contained in the WEB-INF|META-INF directory maybe served directly to a client by the container
 	// Also, any requests from the client to access the resources in WEB-INF/ or META-INF/ directory must be

@@ -13,7 +13,7 @@ type KeyProvider interface {
 	GetRotatedSystemSecrets() [][]byte // multi keys for multi encrypt|decrypt
 }
 
-// copy & paste-friendly golang crypto
+// Pasta copy & paste-friendly golang crypto
 type Pasta struct {
 	keyProvider KeyProvider
 }

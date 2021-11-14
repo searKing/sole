@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 // This file wires the generic interfaces up to Amazon Web Services (AWS). It
 // won't be directly included in the final binary, since it includes a Wire
 // injector template function (setupAWS), but the declarations will be copied
@@ -27,7 +26,7 @@ func NewProviderConfig(v *viper.Viper) *provider.Config {
 
 //go:generate wire
 // NewConfig is a Wire injector function that sets up the server using config file.
-func NewConfig(ctx context.Context, opt *ServerRunOptions) (ws *provider.Provider, err error) {
+func NewConfig(ctx context.Context, opt *ServerRunOptions) (config *provider.Provider, err error) {
 	// This will be filled in by Wire with providers from the provider sets in
 	// wire.Build.
 	wire.Build(
