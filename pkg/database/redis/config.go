@@ -58,7 +58,7 @@ func (c *completedConfig) Validate() error {
 // ApplyOptions is called inside.
 func (c *Config) Complete() CompletedConfig {
 	if c.viper != nil {
-		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		err := viper_.UnmarshalKeysViper(c.viper, c.viperKeys, &c.Proto)
 		if err != nil {
 			return CompletedConfig{&completedConfig{completeError: err}}
 		}

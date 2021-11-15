@@ -61,7 +61,7 @@ func (c *completedConfig) Validate() error {
 // from other fields. If you're going to `ApplyOptions`, do that first. It's mutating the receiver.
 func (c *Config) Complete() CompletedConfig {
 	if c.viper != nil {
-		err := viper_.UnmarshalKeys(c.viperKeys, &c.Proto)
+		err := viper_.UnmarshalKeysViper(c.viper, c.viperKeys, &c.Proto)
 		if err != nil {
 			return CompletedConfig{&completedConfig{completeError: err}}
 		}
