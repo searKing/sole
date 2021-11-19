@@ -13,6 +13,7 @@ import (
 	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
 	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/pkg/appinfo"
+	"github.com/searKing/sole/pkg/logs"
 	"github.com/searKing/sole/pkg/webserver"
 	"github.com/sirupsen/logrus"
 )
@@ -25,6 +26,7 @@ type ServerRunOptions struct {
 	WebServerOptions *webserver.Config
 
 	AppInfo *appinfo.Config
+	Logs *logs.Config
 }
 
 type completedServerRunOptions struct {

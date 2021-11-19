@@ -94,6 +94,10 @@ func (c *completedConfig) install() error {
 		logrus.SetFormatter(&logrus.TextFormatter{
 			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
 		})
+	} else if c.Proto.GetFormat() == Log_glog {
+		logrus.SetFormatter(logrus_.NewGlogFormatter())
+	} else if c.Proto.GetFormat() == Log_glog_human {
+		logrus.SetFormatter(logrus_.NewGlogEnhancedFormatter())
 	}
 
 	level, err := logrus.ParseLevel(c.Proto.GetLevel().String())

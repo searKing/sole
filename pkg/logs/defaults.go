@@ -16,7 +16,7 @@ import (
 func (c *Config) SetDefaultsConfig() *Config {
 	c.Proto = Log{
 		Level:                   Log_info,
-		Format:                  Log_text,
+		Format:                  Log_glog_human,
 		Path:                    "./log/" + filepath.Base(os.Args[0]),
 		RotationDuration:        durationpb.New(24 * time.Hour),
 		RotationMaxCount:        0,

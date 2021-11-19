@@ -22,6 +22,8 @@ message Log {
   enum Format {
     json = 0;
     text = 1;
+    glog = 2;
+    glog_human = 3;
   }
   Level level = 1 ; // 日志最低打印等级
   Format format = 2 ; // 日志格式

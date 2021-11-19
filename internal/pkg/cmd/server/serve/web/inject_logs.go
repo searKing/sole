@@ -8,7 +8,11 @@
 package web
 
 import (
+	"context"
+
 	"github.com/google/wire"
+	"github.com/searKing/sole/pkg/appinfo"
+	"github.com/searKing/sole/pkg/logs"
 	"github.com/spf13/viper"
 )
 
@@ -17,18 +21,17 @@ import (
 // injector template function (setupAWS), but the declarations will be copied
 // into wire_gen.go when Wire is run.
 
-//go:generate wire
-func NewServerRunOptions() (opt *ServerRunOptions, err error) {
-	// This will be filled in by Wire with providers from the provider sets in
-	// wire.Build.
-	wire.Build(NewServerRunOptionsSet)
-	return nil, nil
+func NewLogsConfig(v *viper.Viper) *logs.Config {
+	return logs.NewViperConfig(v, "log")
 }
 
-var NewServerRunOptionsSet = wire.NewSet(
-	wire.Struct(new(ServerRunOptions), "Provider", "WebServerOptions", "AppInfo", "Logs"),
-	viper.GetViper,
-	NewProviderConfig,
-	NewWebServerConfig,
-	NewAppInfoConfig,
-	NewLogsConfig)
+//go:generate wire
+// NewLogs is a Wire injector function that sets up the server using config file.
+func NewLogs(ctx context.Context, opt *ServerRunOptions) (err error) {
+	// This will be filled in by Wire with providers from the provider sets in
+	// wire.Build.
+	wire.Build(
+		wire.FieldsOf(new(*ServerRunOptions), "AppInfo"),
+		appinfo.NewAppInfo)
+	return nil
+}

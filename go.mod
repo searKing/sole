@@ -26,9 +26,9 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/rs/cors v1.7.0
-	github.com/searKing/golang v1.1.47
+	github.com/searKing/golang v1.1.49
 	github.com/segmentio/kafka-go v0.4.15
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
@@ -45,4 +45,4 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
-//replace github.com/searKing/golang v1.1.47 => ../../../github.com/searKing/golang
+//replace github.com/searKing/golang v1.1.49 => ../../../github.com/searKing/golang
