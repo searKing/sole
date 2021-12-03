@@ -37,8 +37,8 @@ import (
 
 // ClientMaxReceiveMessageSize use 4GB as the default message size limit.
 // grpc library default is 4MB
-var defaultClientMaxReceiveMessageSize = math.MaxInt32 // 1024 * 1024 * 4
-var defaultClientMaxSendMessageSize = math.MaxInt32
+var defaultMaxReceiveMessageSize = math.MaxInt32 // 1024 * 1024 * 4
+var defaultMaxSendMessageSize = math.MaxInt32
 
 type Config struct {
 	Proto     Web
@@ -131,15 +131,21 @@ func (c completedConfig) New() (*WebServer, error) {
 	{
 		// 设置GRPC最大消息大小
 		opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithNoProxy()))
+		// http -> grpc client -> grpc server
 		if c.Proto.GetMaxReceiveMessageSizeInBytes() > 0 {
-			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(int(c.Proto.GetMaxReceiveMessageSizeInBytes())))))
+			opts = append(opts, grpc_.WithGrpcServerOption(grpc.MaxRecvMsgSize(int(c.Proto.GetMaxReceiveMessageSizeInBytes()))))
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(int(c.Proto.GetMaxReceiveMessageSizeInBytes())))))
 		} else {
-			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultClientMaxReceiveMessageSize))))
+			opts = append(opts, grpc_.WithGrpcServerOption(grpc.MaxRecvMsgSize(defaultMaxReceiveMessageSize)))
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(defaultMaxReceiveMessageSize))))
 		}
+		// http <- grpc client <- grpc server
 		if c.Proto.GetMaxSendMessageSizeInBytes() > 0 {
-			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(int(c.Proto.GetMaxSendMessageSizeInBytes())))))
+			opts = append(opts, grpc_.WithGrpcServerOption(grpc.MaxSendMsgSize(int(c.Proto.GetMaxSendMessageSizeInBytes()))))
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(int(c.Proto.GetMaxSendMessageSizeInBytes())))))
 		} else {
-			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(defaultClientMaxSendMessageSize))))
+			opts = append(opts, grpc_.WithGrpcServerOption(grpc.MaxSendMsgSize(defaultMaxSendMessageSize)))
+			opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultMaxSendMessageSize))))
 		}
 	}
 	{
