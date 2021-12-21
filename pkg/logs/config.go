@@ -38,7 +38,7 @@ type CompletedConfig struct {
 // NewConfig returns a Config struct with the default values
 func NewConfig() *Config {
 	var c Config
-	c.SetDefaultsConfig()
+	c.SetDefaults()
 	return &c
 }
 

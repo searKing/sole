@@ -12,8 +12,8 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-// SetDefaultsConfig assigns default values for the Config
-func (c *Config) SetDefaultsConfig() *Config {
+// SetDefaults assigns default values for the Config
+func (c *Config) SetDefaults() {
 	c.Proto = Log{
 		Level:                   Log_info,
 		Format:                  Log_glog_human,
@@ -26,5 +26,4 @@ func (c *Config) SetDefaultsConfig() *Config {
 		MuteDirectlyOutput:      true,
 		MuteDirectlyOutputLevel: Log_warn,
 	}
-	return c
 }
