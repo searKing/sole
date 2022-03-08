@@ -1,13 +1,16 @@
-// Copyright 2021 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package logs
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	strings_ "github.com/searKing/golang/go/strings"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 	"github.com/searKing/sole/pkg/protobuf"
@@ -94,10 +97,51 @@ func (c *completedConfig) install() error {
 		logrus.SetFormatter(&logrus.TextFormatter{
 			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
 		})
-	} else if c.Proto.GetFormat() == Log_glog {
-		logrus.SetFormatter(logrus_.NewGlogFormatter())
-	} else if c.Proto.GetFormat() == Log_glog_human {
-		logrus.SetFormatter(logrus_.NewGlogEnhancedFormatter())
+	} else if c.Proto.GetFormat() == Log_glog || c.Proto.GetFormat() == Log_glog_human {
+		var formatter *logrus_.GlogFormatter
+		if c.Proto.GetFormat() == Log_glog {
+			formatter = logrus_.NewGlogFormatter()
+		} else {
+			formatter = logrus_.NewGlogEnhancedFormatter()
+		}
+
+		var truncate = func(s string, n int) string {
+			if len(s) <= n {
+				return s
+			}
+			var buf strings.Builder
+			buf.WriteString(fmt.Sprintf("size: %d, string: ", len(s)))
+			buf.WriteString(strings_.Truncate(s, n))
+			return buf.String()
+		}
+
+		if size := int(c.Proto.GetTruncateMessageSizeTo()); size > 0 {
+			formatter.MessageStringFunc = func(value interface{}) string {
+				stringVal, ok := value.(string)
+				if !ok {
+					stringVal = fmt.Sprint(value)
+				}
+				return truncate(stringVal, size)
+			}
+		}
+
+		if size := int(c.Proto.GetTruncateKeySizeTo()); size > 0 {
+			formatter.KeyStringFunc = func(key string) string {
+				return truncate(key, size)
+			}
+		}
+
+		if size := int(c.Proto.GetTruncateValueSizeTo()); size > 0 {
+			formatter.ValueStringFunc = func(value interface{}) string {
+				stringVal, ok := value.(string)
+				if !ok {
+					stringVal = fmt.Sprint(value)
+				}
+				return truncate(stringVal, size)
+			}
+		}
+
+		logrus.SetFormatter(formatter)
 	}
 
 	level, err := logrus.ParseLevel(c.Proto.GetLevel().String())

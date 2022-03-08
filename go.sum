@@ -884,8 +884,8 @@ github.com/samuel/go-zookeeper v0.0.0-20200724154423-2164a8ac840e/go.mod h1:gi+0
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 h1:nn5Wsu0esKSJiIVhscUtVbo7ada43DJhG55ua/hjS5I=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
-github.com/searKing/golang v1.1.58 h1:VjF4ahh1Qo3Yi/TSKJRtssQs17n0yXukkd6ZMl9B6cc=
-github.com/searKing/golang v1.1.58/go.mod h1:Q96XYsEdz2be41Tu5E9cFJWYFRYuVcrNBYuDKsPN5kQ=
+github.com/searKing/golang v1.1.61 h1:KixESpAMzHnefhM8x3zYyaHY/X7y9rLk5phLtFFoF0Y=
+github.com/searKing/golang v1.1.61/go.mod h1:Q96XYsEdz2be41Tu5E9cFJWYFRYuVcrNBYuDKsPN5kQ=
 github.com/segmentio/kafka-go v0.4.15 h1:cEcaQX2cTenDH3LIMFfIQNzGxYWGNMp0LdWmYv89h64=
 github.com/segmentio/kafka-go v0.4.15/go.mod h1:19+Eg7KwrNKy/PFhiIthEPkO8k+ac7/ZYXwYM9Df10w=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=

@@ -35,4 +35,8 @@ message Log {
   bool report_caller = 8;// 调用者堆栈
   bool mute_directly_output = 9;// warn及更高级别日志是否打印到标准输出
   Level mute_directly_output_level = 10; // 标准输出日志最低打印等级
+
+  int64  truncate_message_size_to = 11; // 日志 message 最大长度，超长则截断; 当前仅glog和glog_human模式生效
+  int64  truncate_key_size_to = 12; // 日志键值对的key最大长度，超长则截断; 当前仅glog和glog_human模式生效
+  int64  truncate_value_size_to = 13; // 日志键值对的value最大长度，超长则截断; 当前仅glog和glog_human模式生效
 }
