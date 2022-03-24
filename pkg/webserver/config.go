@@ -1,4 +1,4 @@
-// Copyright 2021 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	gin_ "github.com/searKing/golang/third_party/github.com/gin-gonic/gin"
-	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway-v2/grpc"
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 

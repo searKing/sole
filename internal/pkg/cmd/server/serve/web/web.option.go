@@ -1,4 +1,4 @@
-// Copyright 2021 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway/v2/grpc"
+	grpc_ "github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway-v2/grpc"
 	"github.com/searKing/sole/internal/pkg/provider"
 	"github.com/searKing/sole/pkg/appinfo"
 	"github.com/searKing/sole/pkg/logs"
@@ -26,7 +26,7 @@ type ServerRunOptions struct {
 	WebServerOptions *webserver.Config
 
 	AppInfo *appinfo.Config
-	Logs *logs.Config
+	Logs    *logs.Config
 }
 
 type completedServerRunOptions struct {
