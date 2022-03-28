@@ -96,6 +96,7 @@ func (c *completedConfig) install() error {
 	} else if c.Proto.GetFormat() == Log_text {
 		logrus.SetFormatter(&logrus.TextFormatter{
 			CallerPrettyfier: logrus_.ShortCallerPrettyfier,
+			DisableColors:    true,
 		})
 	} else if c.Proto.GetFormat() == Log_glog || c.Proto.GetFormat() == Log_glog_human {
 		var formatter *logrus_.GlogFormatter
@@ -104,6 +105,7 @@ func (c *completedConfig) install() error {
 		} else {
 			formatter = logrus_.NewGlogEnhancedFormatter()
 		}
+		formatter.DisableColors = true
 
 		var truncate = func(s string, n int) string {
 			if len(s) <= n {
