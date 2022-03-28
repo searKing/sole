@@ -29,8 +29,6 @@ import (
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	viper_ "github.com/searKing/golang/third_party/github.com/spf13/viper"
 
-	"github.com/searKing/sole/pkg/consul"
-
 	"github.com/searKing/sole/pkg/net/cors"
 	"github.com/searKing/sole/pkg/webserver/healthz"
 )
@@ -51,9 +49,6 @@ type Config struct {
 	CORS *cors.Config
 
 	TlsConfig *tls.Config
-
-	ServiceRegistryBackend *consul.ServiceRegister
-	ServiceResolverBackend *consul.ServiceResolver
 
 	// Name is the human-readable server name, optional
 	Name string
@@ -206,6 +201,8 @@ func (c completedConfig) New() (*WebServer, error) {
 
 	s := &WebServer{
 		Name:                  c.Name,
+		BindAddress:           c.BindAddress,
+		ExternalAddress:       c.ExternalAddress,
 		ShutdownDelayDuration: c.ShutdownDelayDuration,
 		grpcBackend:           grpcBackend,
 		ginBackend:            ginBackend,

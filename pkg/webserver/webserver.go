@@ -23,6 +23,12 @@ type WebHandler interface {
 
 type WebServer struct {
 	Name string
+	// BindAddress is the host name to use for bind (local internet) facing URLs (e.g. Loopback)
+	// Will default to a value based on secure serving info and available ipv4 IPs.
+	BindAddress string
+	// ExternalAddress is the host name to use for external (public internet) facing URLs (e.g. Swagger)
+	// Will default to a value based on secure serving info and available ipv4 IPs.
+	ExternalAddress string
 
 	ginBackend  *gin.Engine
 	grpcBackend *grpc.Gateway
