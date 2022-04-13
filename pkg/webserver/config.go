@@ -122,7 +122,6 @@ func (c completedConfig) New() (*WebServer, error) {
 	if c.Proto.GetNoGrpcProxy() {
 		opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithNoProxy()))
 	}
-	opts = append(opts, grpc_.WithLogrusLogger(logrus.StandardLogger()))
 	{
 		// 设置GRPC最大消息大小
 		opts = append(opts, grpc_.WithGrpcDialOption(grpc.WithNoProxy()))
@@ -188,11 +187,16 @@ func (c completedConfig) New() (*WebServer, error) {
 	}
 
 	opts = append(opts, c.GatewayOptions...)
+	if c.Proto.GetEnableLogrusMiddleware() {
+		opts = append(opts, grpc_.WithLogrusLogger(logrus.StandardLogger()))
+	}
 	grpcBackend := grpc_.NewGatewayTLS(c.BindAddress, c.TlsConfig, opts...)
 	grpcBackend.ApplyOptions()
 	grpcBackend.ErrorLog = logrus_.AsStdLogger(logrus.StandardLogger(), logrus.ErrorLevel, "", 0)
 	ginBackend := gin.New()
-	ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
+	if c.Proto.GetEnableLogrusMiddleware() {
+		ginBackend.Use(gin.LoggerWithWriter(logrus.StandardLogger().Writer()))
+	}
 	ginBackend.Use(gin_.RecoveryWithWriter(grpcBackend.ErrorLog.Writer()))
 	ginBackend.Use(gin_.UseHTTPPreflight())
 	ginBackend.Use(c.GinMiddlewares...)

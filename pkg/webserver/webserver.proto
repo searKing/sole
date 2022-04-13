@@ -26,6 +26,7 @@ message Web {
   LocalIpResolver local_ip_resolver = 14; // for resolve local ip to expose, used if advertise_addr is empty
 
   bool no_grpc_proxy = 15; // disable http proxy for grpc client to connect grpc server
+  bool enable_logrus_middleware = 16; // disable logrus middleware
 
   message Net {
     string host = 1;
