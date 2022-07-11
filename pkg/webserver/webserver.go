@@ -163,7 +163,6 @@ func (s preparedWebServer) NonBlockingRun(ctx context.Context) (context.Context,
 		})
 		if err != nil {
 			logrus.WithError(err).Errorf("Could not gracefully run servers")
-			panic(err)
 		}
 	}()
 
