@@ -45,7 +45,7 @@
 // where t is the lower-cased name of the first type listed. It can be overridden
 // with the -output flag.
 //
-package main // import "github.com/searKing/golang/tools/go-atomicvalue"
+package main
 
 import (
 	"bytes"

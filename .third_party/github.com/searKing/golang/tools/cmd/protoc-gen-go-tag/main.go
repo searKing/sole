@@ -25,7 +25,7 @@ import (
 	gengo "google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo"
 	"google.golang.org/protobuf/compiler/protogen"
 
-	"github.com/searKing/golang/tools/cmd/protoc-gen-go-tag/ast"
+	"github.com/searKing/golang/tools/protoc-gen-go-tag/ast"
 )
 
 func main() {

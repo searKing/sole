@@ -1,29 +1,29 @@
+// Copyright 2022 The searKing Author. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package sql
 
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
-	pgx "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/luna-duclos/instrumentedsql"
-	"github.com/luna-duclos/instrumentedsql/opentracing"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/searKing/golang/go/database/dsn"
-	strings_ "github.com/searKing/golang/go/strings"
 	time_ "github.com/searKing/golang/go/time"
 )
 
 var (
-	ErrRegister = errors.New("")
+	ErrRegister = errors.New("register db driver")
 )
 
 // DB represents a connection to a SQL database.
@@ -39,12 +39,16 @@ type DB struct {
 	// options
 	opts struct {
 		// UseTracedDriver will make it so that a wrapped driver is used that supports the opentracing API.
+		// Deprecated: remove trace options.
 		UseTracedDriver bool
 		// if TraceOrphans is set to true, then spans with no parent will be traced anyway, if false, they will not be.
+		// Deprecated: remove trace options.
 		TraceOrphans bool
 		// if OmitArgs is set to true, then query arguments are omitted from tracing spans.
+		// Deprecated: remove trace options.
 		OmitArgs bool
 		// ForcedDriverName is specifically for writing tests as you can't register a driver with the same name more than once.
+		// Deprecated: remove trace options.
 		ForcedDriverName string
 	}
 }
@@ -126,13 +130,13 @@ func (db *DB) GetDatabase() (*sqlx.DB, error) {
 	db_, err := sql.Open(driverName, dsn_)
 	if err != nil {
 		db.fieldLogger().WithError(err).WithField("dsn", classifiedDSN).Error("Unable to open SQL connection")
-		return nil, errors.Wrapf(err, "could not open SQL connection")
+		return nil, fmt.Errorf("could not open SQL connection: %w", err)
 	}
 
 	db.db = sqlx.NewDb(db_, driverPackage) // This must be clean.Scheme otherwise things like `Rebind()` won't work
 	if err := db.db.Ping(); err != nil {
 		db.fieldLogger().WithError(err).WithField("dsn", classifiedDSN).Error("Unable to ping SQL database backend")
-		return nil, errors.Wrapf(err, "could not ping SQL connection")
+		return nil, fmt.Errorf("could not ping SQL connection: %w", err)
 	}
 
 	db.fieldLogger().WithField("dsn", classifiedDSN).Info("Successfully connected to SQL database backend")
@@ -190,7 +194,8 @@ func dsnForSqlOpen(dsn_ string) (string, error) {
 	scheme, connect, query := dsn.Split(dsn_)
 
 	query = cleanURLQuery(query)
-	if scheme == "mysql" {
+	// special case, remove scheme for mysql*
+	if strings.HasPrefix(scheme, "mysql") {
 		query.Set("parseTime", "true")
 		scheme = ""
 	}
@@ -212,32 +217,7 @@ func (db *DB) registerDriver() (string, string, error) {
 	driverName := scheme
 	driverPackage := scheme
 
-	if db.opts.UseTracedDriver {
-		driverName = "instrumented-sql-driver"
-		if len(db.opts.ForcedDriverName) > 0 {
-			driverName = db.opts.ForcedDriverName
-		}
-
-		tracingOpts := []instrumentedsql.Opt{instrumentedsql.WithTracer(opentracing.NewTracer(db.opts.TraceOrphans))}
-		if db.opts.OmitArgs {
-			tracingOpts = append(tracingOpts, instrumentedsql.WithOmitArgs())
-		}
-
-		if !strings_.SliceContains(sql.Drivers(), driverName) {
-			switch scheme {
-			case "mysql":
-				sql.Register(driverName, instrumentedsql.WrapDriver(mysql.MySQLDriver{}, tracingOpts...))
-			case "cockroach":
-				sql.Register(driverName, instrumentedsql.WrapDriver(&pgx.Driver{}, tracingOpts...))
-			case "postgres":
-				// Why does this have to be a pointer? Because the Open method for postgres has a pointer receiver
-				// and does not satisfy the driver.Driver interface.
-				sql.Register(driverName, instrumentedsql.WrapDriver(&pgx.Driver{}, tracingOpts...))
-			default:
-				return "", "", fmt.Errorf("unsupported scheme (%s) in DSN : %w", scheme, ErrRegister)
-			}
-		}
-	} else if driverName == "cockroach" || driverName == "postgres" {
+	if driverName == "cockroach" || driverName == "postgres" {
 		// If we're not using the instrumented driver, we need to replace "cockroach" with "postgres"
 		driverName = "pgx"
 	}

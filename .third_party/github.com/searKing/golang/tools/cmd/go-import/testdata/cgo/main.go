@@ -4,7 +4,7 @@
 
 package main
 
-import "github.com/searKing/golang/tools/cmd/go-import/testdata/cgo/include/has_go"
+import "github.com/searKing/golang/tools/go-import/testdata/cgo/include/has_go"
 
 const Name = "string"
 

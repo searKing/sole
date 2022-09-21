@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -10,7 +10,7 @@ import (
 	"github.com/searKing/golang/go/net/http/internal"
 )
 
-// Workflow interface that allows for customized handler execution chains.
+// HandlerInterceptorChain interface that allows for customized handler execution chains.
 // Applications can register any number of existing or custom interceptors for certain groups of handlers,
 // to add common preprocessing behavior without needing to modify each handler implementation.
 // A HandlerInterceptor gets called before the appropriate HandlerAdapter triggers the execution of the handler itself.
@@ -69,8 +69,8 @@ func (chain HandlerInterceptorChain) InjectHttpHandler(next http.Handler) http.H
 			it = i
 		}
 
-		for _, filter := range chain.interceptors {
-			next = filter.WrapHandle(next)
+		for i := range chain.interceptors {
+			next = chain.interceptors[len(chain.interceptors)-1-i].WrapHandle(next)
 		}
 
 		next.ServeHTTP(w, r)

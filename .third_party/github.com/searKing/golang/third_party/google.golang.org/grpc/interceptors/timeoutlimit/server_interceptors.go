@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/searKing/golang/third_party/google.golang.org/grpc/interceptors"
 	"google.golang.org/grpc"
 )
 
@@ -32,7 +32,7 @@ func StreamServerInterceptor(timeout time.Duration) grpc.StreamServerInterceptor
 		if timeout > 0 {
 			ctx, cancel := context.WithTimeout(ss.Context(), timeout)
 			defer cancel()
-			wrapped := grpc_middleware.WrapServerStream(ss)
+			wrapped := interceptors.WrapServerStream(ss)
 			wrapped.WrappedContext = ctx
 			ss = wrapped
 		}

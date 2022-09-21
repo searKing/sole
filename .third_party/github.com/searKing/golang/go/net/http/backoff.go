@@ -1,4 +1,4 @@
-// Copyright 2021 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -100,7 +99,7 @@ func ReplaceHttpRequestBody(req *http.Request, body io.Reader) {
 	}
 	rc, ok := body.(io.ReadCloser)
 	if !ok && body != nil {
-		rc = ioutil.NopCloser(body)
+		rc = io.NopCloser(body)
 	}
 	req.Body = rc
 	req.ContentLength = 0
@@ -111,21 +110,21 @@ func ReplaceHttpRequestBody(req *http.Request, body io.Reader) {
 			buf := v.Bytes()
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := bytes.NewReader(buf)
-				return ioutil.NopCloser(r), nil
+				return io.NopCloser(r), nil
 			}
 		case *bytes.Reader:
 			req.ContentLength = int64(v.Len())
 			snapshot := *v
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := snapshot
-				return ioutil.NopCloser(&r), nil
+				return io.NopCloser(&r), nil
 			}
 		case *strings.Reader:
 			req.ContentLength = int64(v.Len())
 			snapshot := *v
 			req.GetBody = func() (io.ReadCloser, error) {
 				r := snapshot
-				return ioutil.NopCloser(&r), nil
+				return io.NopCloser(&r), nil
 			}
 		default:
 			// This is where we'd set it to -1 (at least
@@ -167,8 +166,12 @@ type RetryAfterHandler func(resp *http.Response, err error, defaultBackoff time.
 // client.
 type DoRetryHandler = ClientInvoker
 
-var DefaultDoRetryHandler = func(req *http.Request, retry int) (*http.Response, error) {
+var DefaultClientDoRetryHandler = func(req *http.Request, retry int) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
+}
+
+var DefaultTransportDoRetryHandler = func(req *http.Request, retry int) (*http.Response, error) {
+	return http.DefaultTransport.RoundTrip(req)
 }
 
 //go:generate go-option -type "doWithBackoff"
@@ -181,7 +184,7 @@ type doWithBackoff struct {
 }
 
 func (o *doWithBackoff) SetDefault() {
-	o.DoRetryHandler = DefaultDoRetryHandler
+	o.DoRetryHandler = DefaultClientDoRetryHandler
 	o.RetryAfter = RetryAfter
 }
 
@@ -197,7 +200,7 @@ func getClientInvoker(interceptors []ClientInterceptor, curr int, finalInvoker C
 
 func (o *doWithBackoff) Complete() {
 	if o.DoRetryHandler == nil {
-		o.DoRetryHandler = DefaultDoRetryHandler
+		o.DoRetryHandler = DefaultClientDoRetryHandler
 	}
 	interceptors := o.ChainClientInterceptors
 	o.ChainClientInterceptors = nil
@@ -314,17 +317,31 @@ func GetWithBackoff(ctx context.Context, url string, opts ...DoWithBackoffOption
 }
 
 func PostWithBackoff(ctx context.Context, url, contentType string, body io.Reader, opts ...DoWithBackoffOption) (resp *http.Response, err error) {
-	req, err := http.NewRequest("POST", url, body)
+	req, err := http.NewRequest(http.MethodPost, url, body)
 	req = req.WithContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", contentType)
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
 	return DoWithBackoff(req, opts...)
 }
 
 func PostFormWithBackoff(ctx context.Context, url string, data url.Values, opts ...DoWithBackoffOption) (resp *http.Response, err error) {
 	return PostWithBackoff(ctx, url, "application/x-www-form-urlencoded", strings.NewReader(data.Encode()), opts...)
+}
+
+func PutWithBackoff(ctx context.Context, url, contentType string, body io.Reader, opts ...DoWithBackoffOption) (resp *http.Response, err error) {
+	req, err := http.NewRequest(http.MethodPut, url, body)
+	req = req.WithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	return DoWithBackoff(req, opts...)
 }
 
 // DoJson the same as HttpDo, but bind with json
@@ -339,7 +356,7 @@ func DoJson(httpReq *http.Request, req, resp interface{}) error {
 		ReplaceHttpRequestBody(httpReq, reqBody)
 	}
 
-	httpResp, err := DefaultDoRetryHandler(httpReq, 0)
+	httpResp, err := DefaultClientDoRetryHandler(httpReq, 0)
 	if err != nil {
 		return err
 	}
@@ -348,7 +365,7 @@ func DoJson(httpReq *http.Request, req, resp interface{}) error {
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(httpResp.Body)
+	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return err
 	}
@@ -377,7 +394,7 @@ func DoJsonWithBackoff(httpReq *http.Request, req, resp interface{}, opts ...DoW
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(httpResp.Body)
+	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return err
 	}

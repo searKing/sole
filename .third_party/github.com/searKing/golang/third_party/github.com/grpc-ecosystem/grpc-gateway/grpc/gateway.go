@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2022 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -12,7 +12,7 @@ import (
 	"sync"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	http_ "github.com/searKing/golang/pkg/net/http"
+	grpc_ "github.com/searKing/golang/third_party/google.golang.org/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -136,7 +136,7 @@ func (gateway *Gateway) lazy_init(opts ...GatewayOption) {
 		}
 		gateway.grpcServer = grpc.NewServer(gateway.opt.ServerOptions()...)
 		gateway.httpMuxToGrpc = runtime.NewServeMux(gateway.opt.srvMuxOpts...)
-		gateway.Server.Handler = http_.GrpcOrDefaultHandler(gateway.grpcServer, &serverHandler{
+		gateway.Server.Handler = grpc_.GrpcOrDefaultHandler(gateway.grpcServer, &serverHandler{
 			gateway: gateway,
 		})
 	})

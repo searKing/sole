@@ -1,3 +1,7 @@
+// Copyright 2022 The searKing Author. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package http
 
 import (
@@ -16,7 +20,7 @@ import (
 var (
 	ErrBodyNotRewindable = errors.New("body not rewindable")
 )
-var nopCloserType = reflect.TypeOf(ioutil.NopCloser(nil))
+var nopCloserType = reflect.TypeOf(io.NopCloser(nil))
 
 func RequestRewindableWithFileName(name string) (body io.ReadCloser, getBody func() (io.ReadCloser, error), err error) {
 	return BodyRewindableWithFilePosition(name, 0, io.SeekCurrent)
@@ -59,7 +63,7 @@ func BodyRewindableWithFile(file *os.File) (body io.ReadCloser, getBody func() (
 }
 
 // RequestWithBodyRewindable returns a Request suitable for use with Redirect, like 307 redirect for PUT or POST.
-// Only a nil GetBody in Request may be replace with a rewindable GetBody, which is a Body replayer.
+// Only a nil GetBody in Request may be replaced with a rewindable GetBody, which is a Body replayer.
 // A body with a type not ioutil.NopCloser(nil) may return error as the Body in Request will be closed before redirect automatically.
 // So you can close body by yourself to ensure rewindable always:
 // Examples:
@@ -86,7 +90,7 @@ func RequestWithBodyRewindable(req *http.Request) error {
 	body, neverClose := isNeverCloseReader(req.Body)
 	if !neverClose {
 		// Body in Request will be closed before redirect automatically, so io.Seeker can not be used.
-		
+
 		// take care of *os.File, which can be reopen
 		switch body_ := body.(type) {
 		case *os.File:
@@ -110,7 +114,7 @@ func RequestWithBodyRewindable(req *http.Request) error {
 		buf := v.Bytes()
 		req.GetBody = func() (io.ReadCloser, error) {
 			r := bytes.NewReader(buf)
-			return ioutil.NopCloser(r), nil
+			return io.NopCloser(r), nil
 		}
 		return nil
 	case *bytes.Reader:
@@ -118,7 +122,7 @@ func RequestWithBodyRewindable(req *http.Request) error {
 		snapshot := *v
 		req.GetBody = func() (io.ReadCloser, error) {
 			r := snapshot
-			return ioutil.NopCloser(&r), nil
+			return io.NopCloser(&r), nil
 		}
 		return nil
 	case *strings.Reader:
@@ -126,7 +130,7 @@ func RequestWithBodyRewindable(req *http.Request) error {
 		snapshot := *v
 		req.GetBody = func() (io.ReadCloser, error) {
 			r := snapshot
-			return ioutil.NopCloser(&r), nil
+			return io.NopCloser(&r), nil
 		}
 		return nil
 	case *os.File:
