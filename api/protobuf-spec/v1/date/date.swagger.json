@@ -37,7 +37,7 @@
         },
         "parameters": [
           {
-            "name": "requestId",
+            "name": "RequestId",
             "in": "query",
             "required": false,
             "type": "string"
@@ -45,6 +45,146 @@
         ],
         "tags": [
           "日期查询"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/date/error": {
+      "get": {
+        "summary": "日期查询，只返回错误，测试使用",
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "operationId": "DateService_Error3",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "RequestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "post": {
+        "summary": "日期查询，只返回错误，测试使用",
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "operationId": "DateService_Error4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dateDateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/date/error/**": {
+      "get": {
+        "summary": "日期查询，只返回错误，测试使用",
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "operationId": "DateService_Error2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "RequestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      }
+    },
+    "/date/error/*path": {
+      "get": {
+        "summary": "日期查询，只返回错误，测试使用",
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "operationId": "DateService_Error",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "RequestId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询-错误"
         ],
         "produces": [
           "application/json"
@@ -72,10 +212,45 @@
         },
         "parameters": [
           {
-            "name": "requestId",
+            "name": "RequestId",
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "produces": [
+          "application/json"
+        ]
+      },
+      "post": {
+        "summary": "日期查询",
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "operationId": "DateService_Now4",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/dateDateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/dateDateRequest"
+            }
           }
         ],
         "tags": [
@@ -107,7 +282,7 @@
         },
         "parameters": [
           {
-            "name": "requestId",
+            "name": "RequestId",
             "in": "query",
             "required": false,
             "type": "string"
@@ -123,13 +298,21 @@
     }
   },
   "definitions": {
+    "dateDateRequest": {
+      "type": "object",
+      "properties": {
+        "RequestId": {
+          "type": "string"
+        }
+      }
+    },
     "dateDateResponse": {
       "type": "object",
       "properties": {
         "RequestId": {
           "type": "string"
         },
-        "date": {
+        "Date": {
           "type": "string"
         }
       }

@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type DateServiceClient interface {
 	// 日期查询
 	Now(ctx context.Context, in *DateRequest, opts ...grpc.CallOption) (*DateResponse, error)
+	// 日期查询，只返回错误，测试使用
+	Error(ctx context.Context, in *DateRequest, opts ...grpc.CallOption) (*DateResponse, error)
 }
 
 type dateServiceClient struct {
@@ -39,12 +41,23 @@ func (c *dateServiceClient) Now(ctx context.Context, in *DateRequest, opts ...gr
 	return out, nil
 }
 
+func (c *dateServiceClient) Error(ctx context.Context, in *DateRequest, opts ...grpc.CallOption) (*DateResponse, error) {
+	out := new(DateResponse)
+	err := c.cc.Invoke(ctx, "/sole.api.v1.date.DateService/Error", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DateServiceServer is the server API for DateService service.
 // All implementations must embed UnimplementedDateServiceServer
 // for forward compatibility
 type DateServiceServer interface {
 	// 日期查询
 	Now(context.Context, *DateRequest) (*DateResponse, error)
+	// 日期查询，只返回错误，测试使用
+	Error(context.Context, *DateRequest) (*DateResponse, error)
 	mustEmbedUnimplementedDateServiceServer()
 }
 
@@ -54,6 +67,9 @@ type UnimplementedDateServiceServer struct {
 
 func (UnimplementedDateServiceServer) Now(context.Context, *DateRequest) (*DateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Now not implemented")
+}
+func (UnimplementedDateServiceServer) Error(context.Context, *DateRequest) (*DateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Error not implemented")
 }
 func (UnimplementedDateServiceServer) mustEmbedUnimplementedDateServiceServer() {}
 
@@ -86,6 +102,24 @@ func _DateService_Now_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DateService_Error_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DateServiceServer).Error(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sole.api.v1.date.DateService/Error",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DateServiceServer).Error(ctx, req.(*DateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DateService_ServiceDesc is the grpc.ServiceDesc for DateService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +130,10 @@ var DateService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Now",
 			Handler:    _DateService_Now_Handler,
+		},
+		{
+			MethodName: "Error",
+			Handler:    _DateService_Error_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -4,10 +4,8 @@
 
 package values
 
-import "github.com/searKing/sole/api/protobuf-spec/v1/index"
-
 var (
-	Index       = index.Pattern_IndexService_HomePage_0.String() //"/index"
+	Index       = "/index"
 	IndexAsBase = "/"
-	IndexAsHtml = index.Pattern_IndexService_HomePage_1.String() // "/index.html"
+	IndexAsHtml = "/index.html"
 )

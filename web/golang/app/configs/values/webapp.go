@@ -4,9 +4,6 @@
 
 package values
 
-import "github.com/searKing/sole/api/protobuf-spec/v1/webapp"
-
 var (
-	WebApp = webapp.Pattern_WebAppService_File_0.String()  // "/webapp"
-	Proxy  = webapp.Pattern_WebAppService_Proxy_1.String() // "/proxy/*filepath"
+	WebApp = "/webapp"
 )

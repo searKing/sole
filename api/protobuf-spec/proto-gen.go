@@ -15,7 +15,7 @@ package protobuf_spec
 ////go:generate bash -c "curl -s -L -o ./scripts/swagger-deploy.sh https://raw.githubusercontent.com/searKing/sole/master/api/protobuf-spec/scripts/swagger-deploy.sh"
 ////go:generate bash -c "chmod a+x ./scripts/swagger-deploy.sh"
 
-//go:generate bash scripts/proto-gen.sh ./v1 --with_go_tag --with_go_grpc --with_go_grpc_gateway --with_go_grpc_openapiv2
+//go:generate bash scripts/proto-gen.sh ./v1 -I ../../ -I ../../.third_party/github.com/googleapis/googleapis/ --with_go_tag --with_go_grpc --with_go_grpc_gateway --with_go_grpc_openapiv2
 //go:generate bash scripts/swagger-mix.sh ./v1
 //go:generate bash scripts/swagger-deploy.sh ./v1 "../../web/webapp/static/swagger"
 //go:generate bash scripts/swagger-deploy.sh ./v1 "../../api/openapi-spec"

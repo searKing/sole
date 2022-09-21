@@ -5,56 +5,33 @@
 package golang
 
 import (
-	"github.com/gin-gonic/gin"
-	"gocloud.dev/secrets"
+	"context"
 
-	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway-v2/grpc"
-
-	"github.com/searKing/sole/pkg/prometheus"
-	"github.com/searKing/sole/web/golang/app/configs/values"
+	"github.com/google/wire"
+	"github.com/searKing/golang/pkg/webserver"
 	"github.com/searKing/sole/web/golang/app/modules/date"
 	"github.com/searKing/sole/web/golang/app/modules/debug"
 	"github.com/searKing/sole/web/golang/app/modules/doc/swagger"
-	"github.com/searKing/sole/web/golang/app/modules/health"
 	"github.com/searKing/sole/web/golang/app/modules/index"
-	"github.com/searKing/sole/web/golang/app/modules/proxy"
 	"github.com/searKing/sole/web/golang/app/modules/webapp"
 )
 
-type Handler struct {
-	keeper *secrets.Keeper
-}
+// WebHandler is a Wire provider set that includes all Services interface
+// implementations.
+var WebHandler = wire.NewSet(
+	NewWebHandlers,      // 接口层
+	debug.NewController, // 接口层-调试
+	date.NewController,  // 接口层-日期
+	index.NewController,
+	webapp.NewController,
+	swagger.NewController,
+)
 
-func NewHandler(keeper *secrets.Keeper) *Handler {
-	return &Handler{
-		keeper: keeper,
-	}
-}
-
-// SetRoutes registers this handler's routes.
-func (h *Handler) SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway) {
-	// bind grpcGateway as default
-
-	ginRouter.Use(prometheus.GinHttpMetric(values.HealthMetricsPrometheusPath))
-
-	index.SetRouter(ginRouter)
-	debug.SetRouter(ginRouter, "")
-	health.SetRouter(ginRouter)
-	// webapp static files
-	webapp.SetRouter(ginRouter)
-	// doc
-	swagger.SetRouter(ginRouter)
-	// API
-	apiRouter := ginRouter.Group(values.APIPathPrefix)
-	index.SetRouter(apiRouter)
-	debug.SetRouter(apiRouter, values.APIPathPrefix)
-	health.SetRouter(apiRouter)
-
-	date.SetRouter(grpcRouter)
-
-	proxy.SetRouter(ginRouter)
-
-	//// NOTE: It might be required to set SetRouter.HandleMethodNotAllowed to false to avoid problems.
-	//r.HandleMethodNotAllowed = false
-	//r.NotFound = Routes(h.c, values.PathPrefix)
+func NewWebHandlers(ws *webserver.WebServer, c1 *debug.Controller, c2 *date.Controller,
+	c3 *index.Controller, c4 *webapp.Controller, c5 *swagger.Controller) []webserver.WebHandler {
+	ws.AddPostStartHookOrDie("web_handler", func(ctx context.Context) error {
+		ws.InstallWebHandlers(c1, c2, c3, c4, c5)
+		return nil
+	})
+	return []webserver.WebHandler{c1, c2, c3, c4, c5}
 }

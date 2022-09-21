@@ -9,12 +9,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/searKing/golang/third_party/github.com/gin-gonic/gin/render"
+	"github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway-v2/grpc"
+	"github.com/searKing/sole/web/golang/app/configs/values"
+	"github.com/sirupsen/logrus"
 )
 
 type Controller struct{}
 
 func NewController() *Controller {
 	return &Controller{}
+}
+
+// SetRoutes registers this handler's routes.
+func (c *Controller) SetRoutes(ginRouter gin.IRouter, grpcRouter *grpc.Gateway) {
+	logrus.Info("installing router")
+
+	ginRouter.GET(values.SwaggerJson, c.Json())
+	ginRouter.GET(values.SwaggerYaml, c.Yaml())
+
+	for _, path := range values.SwaggerUis {
+		ginRouter.GET(path, c.UI())
+	}
 }
 
 func (c *Controller) Json() gin.HandlerFunc {

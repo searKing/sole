@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Name}} {{.Version}}</title>
     {{if .BaseUrl}}
-    <base id="webBase" href="{{.BaseUrl}}">
+        <base id="webBase" href="{{.BaseUrl}}">
     {{end}}
     <link href="/webapp/static/dist/bootstrap/4.3.1/css/bootstrap.css" rel="stylesheet">
     <link href="/webapp/assets/css/logo.css" rel="stylesheet">
@@ -51,8 +51,9 @@
                     <img data-src="holder.js/32x32?theme=thumb&bg=e83e8c&fg=e83e8c&size=1" alt="" class="mr-2 rounded">
                     <p class="media-body pb-3 mb-0 small lh-125 border-bottom border-gray">
                         <strong class="d-block text-dark">@服务节点状态</strong>
-                        <a href="/health/alive" target="_blank" class="nav-link">启动状态</a>
-                        <a href="/health/ready" target="_blank" class="nav-link">就绪状态</a>
+                        <a href="/healthz" target="_blank" class="nav-link">健康状态</a>
+                        <a href="/readyz" target="_blank" class="nav-link">就绪状态</a>
+                        <a href="/livez" target="_blank" class="nav-link">存活状态</a>
                         <a href="/debug/pprof" target="_blank" class="nav-link">服务性能监控</a>
                         <a href="/debug/vars" target="_blank" class="nav-link">服务变量监控</a>
                     </p>

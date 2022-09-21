@@ -5,7 +5,7 @@
 package swagger
 
 import (
-	"github.com/searKing/sole/pkg/appinfo"
+	"github.com/searKing/golang/go/version"
 	"github.com/searKing/sole/web/golang/app/configs/values"
 )
 
@@ -17,7 +17,7 @@ type IndexTemplateInfo struct {
 
 func GetIndexTemplateInfo(webPath string) IndexTemplateInfo {
 	return IndexTemplateInfo{
-		Name:           appinfo.ServiceName,
+		Name:           version.ServiceName,
 		BaseUrl:        webPath,
 		SwaggerJsonUrl: values.SwaggerJson,
 	}

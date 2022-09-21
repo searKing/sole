@@ -7,21 +7,21 @@ package index
 import (
 	"path"
 
-	"github.com/searKing/sole/pkg/appinfo"
+	"github.com/searKing/golang/go/version"
 )
 
-type IndexTemplateInfo struct {
+type TemplateInfo struct {
 	Name        string
 	Version     string
 	Description string
 	BaseUrl     string
 }
 
-func GetIndexTemplateInfo(prefix string, filename string) IndexTemplateInfo {
-	return IndexTemplateInfo{
-		Name:        appinfo.ServiceDisplayName,
-		Version:     appinfo.GetVersion().String(),
-		Description: appinfo.ServiceDescription,
+func GetTemplateInfo(prefix string, filename string) TemplateInfo {
+	return TemplateInfo{
+		Name:        version.ServiceDisplayName,
+		Version:     version.Get().String(),
+		Description: version.ServiceDescription,
 		BaseUrl:     path.Join(prefix, filename),
 	}
 }
