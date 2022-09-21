@@ -10,6 +10,12 @@ import (
 	"sync"
 )
 
+//go:generate go-option -type=threadDo
+type threadDo struct {
+	// call the function f in the same thread or escape thread
+	EscapeThread bool
+}
+
 // Thread should be used for such as calling OS services or
 // non-Go library functions that depend on per-thread state, as runtime.LockOSThread().
 type Thread struct {
@@ -41,9 +47,15 @@ func (th *Thread) initOnce() {
 	})
 }
 
-// Do will call the function f in the same thread
-// f is enqueued only if ctx is not canceled and Thread is not Shutdown
-func (th *Thread) Do(ctx context.Context, f func()) error {
+// Do will call the function f in the same thread or escape thread.
+// f is enqueued only if ctx is not canceled and Thread is not Shutdown and Not escape
+func (th *Thread) Do(ctx context.Context, f func(), opts ...ThreadDoOption) error {
+	var opt threadDo
+	opt.ApplyOptions(opts...)
+	return th.do(ctx, f, opt.EscapeThread)
+}
+
+func (th *Thread) do(ctx context.Context, f func(), escapeThread bool) error {
 	th.initOnce()
 	select {
 	case <-ctx.Done():
@@ -54,36 +66,41 @@ func (th *Thread) Do(ctx context.Context, f func()) error {
 		break
 	}
 
-	var wg sync.WaitGroup
-	defer wg.Wait()
-	wg.Add(1)
 	var r interface{}
 	defer func() {
 		if r != nil {
-			panic(r)
+			panic(r) // rethrow panic if panic in f
 		}
 	}()
-	monitor := func() {
-		defer wg.Done()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	neverPanic := func() {
+		defer wg.Done() // Mark f is called or panic
 		defer func() {
 			r = recover()
 		}()
 		f()
 	}
+	if escapeThread {
+		neverPanic()
+		return nil
+	}
+
 	select {
-	case th.fCh <- monitor:
+	case th.fCh <- neverPanic:
+		wg.Wait() // wait for f has been executed or panic
 		return nil
 	case <-ctx.Done():
-		wg.Done()
 		return ctx.Err()
 	case <-th.ctx.Done():
-		wg.Done()
 		return th.ctx.Err()
 	}
 }
 
 func (th *Thread) lockOSThreadForever() {
-	if th.GoRoutine {
+	defer th.cancel()
+	if !th.GoRoutine {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 	}

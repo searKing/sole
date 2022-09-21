@@ -14,17 +14,16 @@ import (
 
 //go:generate go-option -type "Number"
 type Number struct {
-	name string
+	arrayType     [5]int64
+	funcType      func()
+	interfaceType interface{}
+	mapType       map[string]int64
+	sliceType     []int64
+	name          string
 }
 
 func NewNumber(options ...NumberOption) *Number {
 	return (&Number{}).ApplyOptions()
-}
-
-func WithName(name string) NumberOption {
-	return NumberOptionFunc(func(num *Number) {
-		num.name = name
-	})
 }
 
 type Value string
@@ -33,7 +32,7 @@ func main() {
 	var num *Number
 	num = &Number{}
 	ck(num, "")
-	num = NewNumber(WithName("Name"))
+	num = NewNumber(WithNumberName("Name"))
 	ck(num, "")
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2020 The searKing Author. All rights reserved.
+// Copyright 2021 The searKing Author. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 )
+
+var _ error = multiError{} // verify that Error implements error
 
 // Multi returns an error with the supplied errors.
 // If no error contained, return nil.
@@ -61,7 +63,7 @@ func (e multiError) Format(s fmt.State, verb rune) {
 	}
 }
 
-// clean removes all none nil elem in all of the errors
+// clean removes all none nil elem in all the errors
 func (e multiError) clean() multiError {
 	var errs []error
 	for _, err := range e {
@@ -72,7 +74,7 @@ func (e multiError) clean() multiError {
 	return errs
 }
 
-// Is reports whether any error in multiError and it's chain chain matches target.
+// Is reports whether any error in multiError matches target.
 func (e multiError) Is(target error) bool {
 	if target == nil {
 		errs := e.clean()
@@ -86,6 +88,29 @@ func (e multiError) Is(target error) bool {
 			continue
 		}
 		if errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+// Unwrap returns the error in e, if there is exactly one. If there is more than one
+// error, Unwrap returns nil, since there is no way to determine which should be
+// returned.
+func (e multiError) Unwrap() error {
+	if len(e) == 1 {
+		return e[0]
+	}
+	// Return nil when e is nil, or has more than one error.
+	// When there are multiple errors, it doesn't make sense to return any of them.
+	return nil
+}
+
+// As finds the first error in err's chain that matches target, and if one is found, sets
+// target to that error value and returns true. Otherwise, it returns false.
+func (e multiError) As(target any) bool {
+	for _, err := range e {
+		if errors.As(err, target) {
 			return true
 		}
 	}

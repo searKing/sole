@@ -1,3 +1,7 @@
+// Copyright 2022 The searKing Author. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package sqlx
 
 import (
@@ -10,18 +14,18 @@ import (
 type InsertOption int
 
 const (
-	// INSERT inserts new rows into an existing table.
+	// InsertOptionInsert inserts new rows into an existing table.
 	InsertOptionInsert InsertOption = iota
-	// REPLACE works exactly like INSERT, except that if an old row in the table has the same value as a
+	// InsertOptionReplace works exactly like INSERT, except that if an old row in the table has the same value as a
 	// new row for a PRIMARY KEY or a UNIQUE index, the old row is deleted before the new row is inserted.
 	InsertOptionReplace InsertOption = iota
-	// If you specify an ON DUPLICATE KEY UPDATE clause and a row to be inserted would cause a duplicate
+	// InsertOptionUpdate If you specify an ON DUPLICATE KEY UPDATE clause and a row to be inserted would cause a duplicate
 	// value in a UNIQUE index or PRIMARY KEY, an UPDATE of the old row occurs.
 	InsertOptionUpdate InsertOption = iota
-	// If you use the IGNORE modifier, ignorable errors that occur while executing the INSERT statement
+	// InsertOptionIgnore If you use the IGNORE modifier, ignorable errors that occur while executing the INSERT statement
 	// are ignored.
 	InsertOptionIgnore InsertOption = iota
-	// deprecated in MySQL 5.6. In MySQL 8.0, DELAYED is not supported
+	// InsertOptionDelayed deprecated in MySQL 5.6. In MySQL 8.0, DELAYED is not supported
 	// Deprecated: Use InsertOptionInsert instead.
 	InsertOptionDelayed InsertOption = iota
 )

@@ -31,7 +31,7 @@
 //
 // The -tag flag accepts a build tag string.
 //
-package main // import "github.com/searKing/golang/tools/cmd/go-import"
+package main
 
 import (
 	"flag"
@@ -56,7 +56,7 @@ func Usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "\tgo-import [flags] [directory]\n")
 	_, _ = fmt.Fprintf(os.Stderr, "\tgo-import [flags] -tag T [directory]\n")
 	_, _ = fmt.Fprintf(os.Stderr, "For more information, see:\n")
-	_, _ = fmt.Fprintf(os.Stderr, "\thttps://godoc.org/github.com/searKing/golang/tools/cmd/go-import\n")
+	_, _ = fmt.Fprintf(os.Stderr, "\thttps://godoc.org/github.com/searKing/golang/tools/go-import\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
 }

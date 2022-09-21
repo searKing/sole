@@ -58,7 +58,7 @@
 // where t is the lower-cased name of the first type listed. It can be overridden
 // with the -output flag.
 //
-package main // import "github.com/searKing/golang/tools/cmd/go-syncmap"
+package main
 
 import (
 	"flag"
@@ -87,7 +87,7 @@ func Usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "\tgo-syncmap [flags] -type T,S [directory]\n")
 	_, _ = fmt.Fprintf(os.Stderr, "\tgo-syncmap [flags] -type T<K,V>,S<K,V> [directory]\n")
 	_, _ = fmt.Fprintf(os.Stderr, "For more information, see:\n")
-	_, _ = fmt.Fprintf(os.Stderr, "\thttps://godoc.org/github.com/searKing/golang/tools/cmd/go-syncmap\n")
+	_, _ = fmt.Fprintf(os.Stderr, "\thttps://godoc.org/github.com/searKing/golang/tools/go-syncmap\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
 }

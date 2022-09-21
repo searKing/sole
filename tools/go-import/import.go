@@ -31,7 +31,7 @@
 //
 // The -tag flag accepts a build tag string.
 //
-package main // import "github.com/searKing/golang/tools/go-import"
+package main
 
 import (
 	"flag"

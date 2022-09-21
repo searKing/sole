@@ -32,7 +32,7 @@
 // where t is the lower-cased trimmedStructName of the first type listed. It can be overridden
 // with the -flagOutput flag.
 //
-package main // import "github.com/searKing/golang/tools/go-validator"
+package main
 
 import (
 	"bytes"

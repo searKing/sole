@@ -3,3 +3,5 @@
 // license that can be found in the LICENSE file.
 
 package go_grpc_middleware
+
+// PlaceHolder file, so this can be seen as a module.

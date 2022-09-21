@@ -124,6 +124,9 @@ func (f *RotateFile) Write(b []byte) (n int, err error) {
 	if err != nil {
 		return 0, fmt.Errorf("acquite rotated file :%w", err)
 	}
+	if out == nil {
+		return 0, nil
+	}
 
 	return out.Write(b)
 }
@@ -157,6 +160,7 @@ func (f *RotateFile) Close() error {
 	if f.usingFile == nil {
 		return nil
 	}
+	defer f.serializedClean()
 
 	defer func() { f.usingFile = nil }()
 	return f.usingFile.Close()
@@ -188,57 +192,103 @@ func (f *RotateFile) filePathByRotateSize() (name string, seq int) {
 	return nextSeqFileName(f.filePathByRotateTime(), f.usingSeq)
 }
 
-func (f *RotateFile) filePathByRotate(forceRotate bool) (name string, byTime, bySize bool) {
+func (f *RotateFile) filePathByRotate(forceRotate bool) (name string, seq int, byTime, bySize bool) {
 	// name using the regular time layout, without seq
 	name = f.filePathByRotateTime()
 	// startup
 	if f.usingFilePath == "" {
 		if f.ForceNewFileOnStartup {
 			// instead of just using the regular time layout,
-			// we create a new file name using names such as "foo.1", "foo.2", "foo.3", etc
-			name, f.usingSeq = nextSeqFileName(name, f.usingSeq+1)
-			return name, false, true
+			// we create a new file name using names such as "foo", "foo.1", "foo.2", "foo.3", etc
+			name, seq = nextSeqFileName(name, f.usingSeq)
+			return name, seq, false, true
 		}
-		name, f.usingSeq = maxSeqFileName(name)
-		return name, true, false
+		name, seq = maxSeqFileName(name)
+		return name, seq, true, false
 	}
 
 	// rotate by time
 	// compare expect time with current using file
 	if name != trimSeqFromNextFileName(f.usingFilePath, f.usingSeq) {
-		_, err := os.Stat(name)
-		if os.IsNotExist(err) {
-			// rotate by time, reset part seq of rotate by size
-			name_, seq := maxSeqFileName(name)
-			f.usingSeq = seq
-			return name_, true, false
+		if forceRotate {
+			// instead of just using the regular time layout,
+			// we create a new file name using names such as "foo", "foo.1", "foo.2", "foo.3", etc
+			name, seq = nextSeqFileName(name, 0)
+			return name, seq, true, false
 		}
-		// instead of just using the regular time layout,
-		// we create a new file name using names such as "foo.1", "foo.2", "foo.3", etc
-		name, f.usingSeq = nextSeqFileName(name, f.usingSeq+1)
-		return name, false, true
+		name, seq = maxSeqFileName(name)
+		return name, seq, true, false
 	}
+
+	// determine if rotate by size
 
 	// using file not exist, recreate file as rotated by time
 	usingFileInfo, err := os.Stat(f.usingFilePath)
 	if os.IsNotExist(err) {
-		return f.usingFilePath, false, true
+		name = f.usingFilePath
+		seq = f.usingSeq
+		return name, seq, false, false
 	}
 
 	// rotate by size
 	// compare rotate size with current using file
 	if forceRotate || (err == nil && (f.RotateSize > 0 && usingFileInfo.Size() > f.RotateSize)) {
 		// instead of just using the regular time layout,
-		// we create a new file name using names such as "foo.1", "foo.2", "foo.3", etc
-		name, f.usingSeq = nextSeqFileName(name, f.usingSeq+1)
-		return name, false, true
+		// we create a new file name using names such as "foo", "foo.1", "foo.2", "foo.3", etc
+		name, seq = nextSeqFileName(name, f.usingSeq)
+		return name, seq, false, true
 	}
-	return name, false, false
+	name = f.usingFilePath
+	seq = f.usingSeq
+	return name, seq, false, false
 }
 
-func (f *RotateFile) getWriterLocked(bailOnRotateFail, forceRotate bool) (io.Writer, error) {
-	newName, byTime, bySize := f.filePathByRotate(forceRotate)
+func (f *RotateFile) makeUsingFileReadyLocked() error {
+	if f.usingFile != nil {
+		_, err := os.Stat(f.usingFile.Name())
+		if err != nil {
+			_ = f.usingFile.Close()
+			f.usingFile = nil
+		}
+	}
+
+	if f.usingFile == nil {
+		file, err := AppendAllIfNotExist(f.usingFilePath)
+		if err != nil {
+			return err
+		}
+
+		// link -> filename
+		if f.FileLinkPath != "" {
+			if err := ReSymlink(f.usingFilePath, f.FileLinkPath); err != nil {
+				return err
+			}
+		}
+		f.usingFile = file
+	}
+	return nil
+
+}
+func (f *RotateFile) getWriterLocked(bailOnRotateFail, forceRotate bool) (out io.Writer, err error) {
+	newName, newSeq, byTime, bySize := f.filePathByRotate(forceRotate)
 	if !byTime && !bySize {
+		err = f.makeUsingFileReadyLocked()
+		if err != nil {
+			if bailOnRotateFail {
+				// Failure to rotate is a problem, but it's really not a great
+				// idea to stop your application just because you couldn't rename
+				// your log.
+				//
+				// We only return this error when explicitly needed (as specified by bailOnRotateFail)
+				//
+				// However, we *NEED* to close `fh` here
+				if f.usingFile != nil {
+					_ = f.usingFile.Close()
+					f.usingFile = nil
+				}
+				return nil, err
+			}
+		}
 		return f.usingFile, nil
 	}
 	if f.PreRotateHandler != nil {
@@ -265,6 +315,10 @@ func (f *RotateFile) getWriterLocked(bailOnRotateFail, forceRotate bool) (io.Wri
 		}
 	}
 	if newFile == nil {
+		// no file can be written, it's an error explicitly
+		if f.usingFile == nil {
+			return nil, err
+		}
 		return f.usingFile, nil
 	}
 
@@ -274,6 +328,7 @@ func (f *RotateFile) getWriterLocked(bailOnRotateFail, forceRotate bool) (io.Wri
 	}
 	f.usingFile = newFile
 	f.usingFilePath = newName
+	f.usingSeq = newSeq
 
 	return f.usingFile, nil
 }

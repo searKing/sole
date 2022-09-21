@@ -38,7 +38,7 @@ cd "${THIS_BASH_FILE_ABS_DIR}" || exit
 [ -d "${tmpdir}"/ ] && rm -Rf "${tmpdir}"/ || exit
 git clone https://github.com/searKing/golang.git "${tmpdir}/golang" || exit
 pushd "${tmpdir}/golang" 1>/dev/null 2>&1 || exit
-git filter-branch --prune-empty --subdirectory-filter tools/cmd/go-syncpool/ master || exit
+git filter-branch --prune-empty --subdirectory-filter tools/go-syncpool/ master || exit
 # reset and clean .git
 git reset --hard
 git for-each-ref --format="%(refname)" refs/original | xargs -n 1 git update-ref -d || exit

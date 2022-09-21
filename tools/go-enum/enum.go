@@ -83,7 +83,7 @@
 // Pill prefix, one could write
 //   PillAspirin // Aspirin
 // to suppress it in the output.
-package main // import "github.com/searKing/golang/tools/go-enum"
+package main
 
 import (
 	"bytes"
