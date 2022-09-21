@@ -15,24 +15,18 @@ import (
 	time_ "github.com/searKing/golang/go/time"
 	configpb "github.com/searKing/sole/api/protobuf-spec/v1/config"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel"
 )
 
 type _fileCleaner struct {
 }
 
 func NewFileCleaner(ctx context.Context, config *configpb.Configuration) (_ *_fileCleaner, err error) {
-	spanName := "NewFileCleaner"
-	ctx, span := otel.Tracer("").Start(ctx, spanName)
-	defer span.End()
-	logger := logrus.WithField("trace_id", span.SpanContext().TraceID()).
-		WithField("span_id", span.SpanContext().SpanID())
 	defer func() {
 		if err != nil {
-			logger.WithError(err).Error("load plugin failed")
+			logrus.WithError(err).Error("load plugin failed")
 			return
 		}
-		logger.Info("load plugin successfully")
+		logrus.Info("load plugin successfully")
 	}()
 
 	cleaners := config.GetFileCleaners()

@@ -16,7 +16,6 @@ import (
 	logrus_ "github.com/searKing/golang/third_party/github.com/sirupsen/logrus"
 	configpb "github.com/searKing/sole/api/protobuf-spec/v1/config"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel"
 )
 
 func init() {
@@ -36,17 +35,12 @@ func init() {
 type _log struct{}
 
 func NewLog(ctx context.Context, cfg *configpb.Configuration) (_ *_log, err error) {
-	spanName := "NewLog"
-	ctx, span := otel.Tracer("").Start(ctx, spanName)
-	defer span.End()
-	logger := logrus.WithField("trace_id", span.SpanContext().TraceID()).
-		WithField("span_id", span.SpanContext().SpanID())
 	defer func() {
 		if err != nil {
-			logger.WithError(err).Error("load plugin failed")
+			logrus.WithError(err).Error("load plugin failed")
 			return
 		}
-		logger.Info("load plugin successfully")
+		logrus.Info("load plugin successfully")
 	}()
 
 	logs := cfg.GetLog()

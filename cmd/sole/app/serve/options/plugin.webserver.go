@@ -15,21 +15,15 @@ import (
 	configpb "github.com/searKing/sole/api/protobuf-spec/v1/config"
 	"github.com/searKing/sole/cmd/sole/app/serve/config"
 	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel"
 )
 
 func NewWebServer(ctx context.Context, cfg *configpb.Configuration) (ws *webserver.WebServer, err error) {
-	spanName := "NewWebServer"
-	ctx, span := otel.Tracer("").Start(ctx, spanName)
-	defer span.End()
-	logger := logrus.WithField("trace_id", span.SpanContext().TraceID()).
-		WithField("span_id", span.SpanContext().SpanID())
 	defer func() {
 		if err != nil {
-			logger.WithError(err).Error("load plugin failed")
+			logrus.WithError(err).Error("load plugin failed")
 			return
 		}
-		logger.Info("load plugin successfully")
+		logrus.Info("load plugin successfully")
 	}()
 	web := cfg.GetWeb()
 
