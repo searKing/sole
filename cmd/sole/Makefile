@@ -10,7 +10,8 @@ git_build_time=$(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 GO := go
 GO_DOWNLOAD_FLAGS :=
 GO_BUILD_FLAGS := -gcflags "-N -l" \
--ldflags "-X 'github.com/searKing/golang/go/version.GitTag=${git_tag}' \
+-ldflags "-compressdwarf=false \
+-X 'github.com/searKing/golang/go/version.GitTag=${git_tag}' \
 -X 'github.com/searKing/golang/go/version.BuildTime=${git_build_time}' \
 -X 'github.com/searKing/golang/go/version.GitHash=${git_commit}'"
 
