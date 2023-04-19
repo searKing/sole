@@ -23,7 +23,7 @@ import (
 
 func main() {
 	defer runtime_.LogPanic.Recover()
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os_.ShutdownSignals...)
 	defer cancel()

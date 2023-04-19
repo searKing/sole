@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	math_ "github.com/searKing/golang/go/exp/math"
@@ -30,7 +31,8 @@ func NewFileCleaner(ctx context.Context, config *configpb.Configuration) (_ *_fi
 	}()
 
 	cleaners := config.GetFileCleaners()
-	for _, cleaner := range cleaners {
+	for i := range cleaners {
+		cleaner := cleaners[i]
 		var interval = math_.Max(cleaner.GetCleanInterval().AsDuration(), time.Second)
 		logger := logrus.WithField("clean_interval", interval).
 			WithField("file_pattern", cleaner.GetFilePattern()).
@@ -47,7 +49,7 @@ func NewFileCleaner(ctx context.Context, config *configpb.Configuration) (_ *_fi
 		}
 		minAge := cleaner.GetMinAge().AsDuration()
 		go time_.Until(ctx, func(ctx context.Context) {
-			err := os_.UnlinkOldestFilesFunc(cleaner.GetFilePattern(), quota, func(name string) (clean bool) {
+			err := UnlinkOldestFilesFunc(cleaner.GetFilePattern(), quota, func(name string) (clean bool) {
 				total, free, avail, inodes, inodesFree, err := os_.DiskUsage(name)
 				if err != nil {
 					logger.WithError(err).WithField("file", name).Errorf("clean file")
@@ -88,4 +90,69 @@ func NewFileCleaner(ctx context.Context, config *configpb.Configuration) (_ *_fi
 	}
 
 	return &_fileCleaner{}, nil
+}
+
+func GlobFunc(pattern string, handler func(name string) bool) (matches []string, err error) {
+	matches, err = filepath.Glob(pattern)
+	if err != nil {
+		logrus.WithError(err).WithField("pattern", pattern).Errorf("filepath.Glob")
+		return nil, err
+	}
+
+	logrus.WithField("pattern", pattern).WithField("matches", len(matches)).Info("GlobFunc")
+	if handler == nil {
+		return matches, err
+	}
+
+	var a []string
+	for _, match := range matches {
+		if handler(match) {
+			a = append(a, match)
+		}
+	}
+	return a, nil
+}
+
+// UnlinkOldestFilesFunc unlink old files satisfying f(c) if need
+func UnlinkOldestFilesFunc(pattern string, quora os_.DiskQuota, f func(name string) bool) error {
+	if quora.NoLimit() {
+		return nil
+	}
+
+	now := time.Now()
+
+	// find old files
+	var filesNotExpired []string
+	_, err := GlobFunc(pattern, func(name string) bool {
+		fi, err := os.Stat(name)
+		if err != nil {
+			logrus.WithError(err).WithField("name", name).Errorf("os.Stat")
+			return false
+		}
+
+		fl, err := os.Lstat(name)
+		if err != nil {
+			logrus.WithError(err).WithField("name", name).Errorf("os.Lstat")
+			return false
+		}
+		logrus.WithError(err).WithField("name", name).Infof("os.File")
+		if quora.MaxAge <= 0 {
+			filesNotExpired = append(filesNotExpired, name)
+			return false
+		}
+
+		if now.Sub(fi.ModTime()) < quora.MaxAge {
+			filesNotExpired = append(filesNotExpired, name)
+			return false
+		}
+
+		if fl.Mode()&os.ModeSymlink == os.ModeSymlink {
+			return false
+		}
+		return true
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
