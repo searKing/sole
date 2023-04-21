@@ -16,5 +16,5 @@ import (
 func NewConfig(v *viper.Viper) (c *configpb.Configuration, err error) {
 	defer func() { err = errors.WithStack(err) }()
 	logrus.Infof("Installing Config")
-	return config.NewViperConfig(v, "").Complete().New()
+	return config.NewViperConfig(v).Complete().New()
 }

@@ -12,13 +12,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/profile v1.7.0
 	github.com/prometheus/client_golang v1.15.0
-	github.com/searKing/golang/go v1.2.66
-	github.com/searKing/golang/pkg/webserver v1.2.64
+	github.com/searKing/golang/go v1.2.67
+	github.com/searKing/golang/pkg/webserver v1.2.67
 	github.com/searKing/golang/third_party/github.com/gin-gonic/gin v1.2.43
 	github.com/searKing/golang/third_party/github.com/grpc-ecosystem/grpc-gateway-v2 v1.2.43
 	github.com/searKing/golang/third_party/github.com/sirupsen/logrus v1.2.42
 	github.com/searKing/golang/third_party/github.com/spf13/pflag v1.2.29
-	github.com/searKing/golang/third_party/github.com/spf13/viper v1.2.43
+	github.com/searKing/golang/third_party/github.com/spf13/viper v1.2.67
 	github.com/searKing/golang/tools/protoc-gen-go-tag v1.2.29
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
@@ -46,7 +46,7 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/rs/cors v1.8.3 // indirect
+	github.com/rs/cors v1.9.0 // indirect
 	github.com/searKing/golang/third_party/github.com/golang/protobuf v1.2.43 // indirect
 	github.com/searKing/golang/third_party/google.golang.org/grpc v1.2.43 // indirect
 	github.com/searKing/golang/third_party/google.golang.org/protobuf v1.2.38 // indirect
@@ -75,11 +75,11 @@ require (
 	github.com/ugorji/go/codec v1.2.10 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/exp v0.0.0-20230307190834-24139beb5833 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/exp v0.0.0-20230418202329-0354be287a23 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
