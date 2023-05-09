@@ -45,6 +45,7 @@ GIT_QUIET=
 debug=
 g_proto_headers=
 g_with_cpp=
+g_with_python=
 g_with_go=
 g_with_go_tag=
 g_with_govalidators=
@@ -73,6 +74,9 @@ while test $# -gt 0; do
     ;;
   --with_cpp)
     g_with_cpp=1
+    ;;
+  --with_python)
+    g_with_python=1
     ;;
   --with_go)
     g_with_go=1
@@ -190,8 +194,8 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
   proto_dir="$(dirname "${proto_file}")"
 
   cpp_option=""
+  python_option=""
   go_option=""
-  cpp_option=""
   go_grpc_option=""
   grpc_gateway_option=""
   openapiv2_option=""
@@ -200,6 +204,9 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   if [ -n "${g_with_cpp}" ]; then
     cpp_option="--cpp_out=."
+  fi
+  if [ -n "${g_with_python}" ]; then
+    python_option="--python_out=."
   fi
   #  go_option="--go_out=plugins=grpc,paths=source_relative:."
   if [ -n "${g_with_go}" ]; then
@@ -246,7 +253,7 @@ find "${g_protos_dir}" -name "*.proto" -print0 | while read -r -d $'\0' proto_fi
 
   printf "\r\033[K%s compiling " "${proto_file}"
   #  protoc -I . ${g_proto_headers} --go-grpc_out=paths=source_relative:. "${grpc_gateway_option}" "${openapiv2_option}" "${go_tag_option}" *.proto || exit
-  protoc -I . ${g_proto_headers} ${cpp_option} ${go_option} ${go_tag_option} ${go_validators_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_file}" || exit
+  protoc -I . ${g_proto_headers} ${cpp_option} ${python_option} ${go_option} ${go_tag_option} ${go_validators_option} ${go_grpc_option} ${grpc_gateway_option} ${openapiv2_option} "${proto_file}" || exit
   printf "\r\033[K%s compilied \n" "${proto_file}"
 done
 printf "\r\033[Kproto-gen done...\n"
