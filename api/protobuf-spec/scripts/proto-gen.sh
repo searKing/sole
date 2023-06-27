@@ -178,7 +178,7 @@ for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-govalidators proto
   # protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
   # protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
   q=$(command -v $tool) || die "didn't find $tool
-  protoc: brew install protobuf.
+  protoc: dnf install protobuf protobuf-compiler.
   protoc-gen-go: go get -u google.golang.org/protobuf/cmd/protoc-gen-go
   protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
   protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
