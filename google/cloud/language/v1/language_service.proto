@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC.
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/field_behavior.proto";
 
-option go_package = "google.golang.org/genproto/googleapis/cloud/language/v1;language";
+option go_package = "cloud.google.com/go/language/apiv1/languagepb;languagepb";
 option java_multiple_files = true;
 option java_outer_classname = "LanguageServiceProto";
 option java_package = "com.google.cloud.language.v1";
@@ -92,6 +92,15 @@ service LanguageService {
     option (google.api.method_signature) = "document";
   }
 
+  // Moderates a document for harmful and sensitive categories.
+  rpc ModerateText(ModerateTextRequest) returns (ModerateTextResponse) {
+    option (google.api.http) = {
+      post: "/v1/documents:moderateText"
+      body: "*"
+    };
+    option (google.api.method_signature) = "document";
+  }
+
   // A convenience method that provides all the features that analyzeSentiment,
   // analyzeEntities, and analyzeSyntax provide in one call.
   rpc AnnotateText(AnnotateTextRequest) returns (AnnotateTextResponse) {
@@ -104,8 +113,6 @@ service LanguageService {
   }
 }
 
-// ################################################################ #
-//
 // Represents the input to API methods.
 message Document {
   // The document types enum.
@@ -968,8 +975,7 @@ message TextSpan {
 
 // Represents a category returned from the text classifier.
 message ClassificationCategory {
-  // The name of the category representing the document, from the [predefined
-  // taxonomy](https://cloud.google.com/natural-language/docs/categories).
+  // The name of the category representing the document.
   string name = 1;
 
   // The classifier's confidence of the category. Number represents how certain
@@ -1120,6 +1126,18 @@ message ClassifyTextResponse {
   repeated ClassificationCategory categories = 1;
 }
 
+// The document moderation request message.
+message ModerateTextRequest {
+  // Required. Input document.
+  Document document = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// The document moderation response message.
+message ModerateTextResponse {
+  // Harmful and sensitive categories representing the input document.
+  repeated ClassificationCategory moderation_categories = 1;
+}
+
 // The request message for the text annotation API, which can perform multiple
 // analysis types (sentiment, entities, and syntax) in one call.
 message AnnotateTextRequest {
@@ -1140,6 +1158,9 @@ message AnnotateTextRequest {
 
     // Classify the full document into categories.
     bool classify_text = 6;
+
+    // Moderate the document for harmful and sensitive categories.
+    bool moderate_text = 11;
 
     // The model options to use for classification. Defaults to v1 options
     // if not specified. Only used if `classify_text` is set to true.
@@ -1184,4 +1205,7 @@ message AnnotateTextResponse {
 
   // Categories identified in the input document.
   repeated ClassificationCategory categories = 6;
+
+  // Harmful and sensitive categories identified in the input document.
+  repeated ClassificationCategory moderation_categories = 7;
 }
