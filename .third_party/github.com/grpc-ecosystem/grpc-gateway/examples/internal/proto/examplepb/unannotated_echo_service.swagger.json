@@ -11,13 +11,27 @@
     },
     "license": {
       "name": "BSD 3-Clause License",
-      "url": "https://github.com/grpc-ecosystem/grpc-gateway/blob/master/LICENSE.txt"
+      "url": "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE"
     },
     "x-something-something": "yadda"
   },
   "tags": [
     {
-      "name": "UnannotatedEchoService"
+      "name": "Echo",
+      "description": "Echo description"
+    },
+    {
+      "name": "Internal",
+      "description": "Internal description",
+      "x-traitTag": true
+    },
+    {
+      "name": "UnannotatedEchoService",
+      "description": "UnannotatedEchoService description -- which should not be used in place of the documentation comment!",
+      "externalDocs": {
+        "description": "Find out more about UnannotatedEchoService",
+        "url": "https://github.com/grpc-ecosystem/grpc-gateway"
+      }
     }
   ],
   "schemes": [
@@ -80,6 +94,85 @@
             "description": "Id represents the message identifier.",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "num",
+            "description": "Int value field",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "format": "int64",
+            "default": "42"
+          },
+          {
+            "name": "duration",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "lineNum",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.progress",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "status.note",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "en",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "no.progress",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "no.note",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.nId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.val",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -200,6 +293,24 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.nId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.val",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -243,6 +354,7 @@
         "parameters": [
           {
             "name": "body",
+            "description": "A simple message with many types",
             "in": "body",
             "required": true,
             "schema": {
@@ -352,6 +464,24 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.nId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nId.val",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -374,6 +504,17 @@
       },
       "description": "Embedded represents a message embedded in SimpleMessage."
     },
+    "examplepbUnannotatedNestedMessage": {
+      "type": "object",
+      "properties": {
+        "nId": {
+          "type": "string"
+        },
+        "val": {
+          "type": "string"
+        }
+      }
+    },
     "examplepbUnannotatedSimpleMessage": {
       "type": "object",
       "example": {
@@ -388,10 +529,7 @@
           "type": "string",
           "format": "int64",
           "default": "42",
-          "description": "Int value field",
-          "required": [
-            "num"
-          ]
+          "description": "Int value field"
         },
         "duration": {
           "type": "string"
@@ -412,6 +550,12 @@
         },
         "no": {
           "$ref": "#/definitions/examplepbUnannotatedEmbedded"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "nId": {
+          "$ref": "#/definitions/examplepbUnannotatedNestedMessage"
         }
       },
       "description": "A simple message with many types",
@@ -447,6 +591,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }

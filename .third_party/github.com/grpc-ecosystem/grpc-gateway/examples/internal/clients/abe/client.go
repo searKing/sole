@@ -46,11 +46,15 @@ type APIClient struct {
 
 	// API Services
 
+	ABitOfEverythingApi *ABitOfEverythingApiService
+
 	ABitOfEverythingServiceApi *ABitOfEverythingServiceApiService
 
 	CamelCaseServiceNameApi *CamelCaseServiceNameApiService
 
 	EchoRpcApi *EchoRpcApiService
+
+	SnakeEnumServiceApi *SnakeEnumServiceApiService
 }
 
 type service struct {
@@ -69,9 +73,11 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	c.common.client = c
 
 	// API Services
+	c.ABitOfEverythingApi = (*ABitOfEverythingApiService)(&c.common)
 	c.ABitOfEverythingServiceApi = (*ABitOfEverythingServiceApiService)(&c.common)
 	c.CamelCaseServiceNameApi = (*CamelCaseServiceNameApiService)(&c.common)
 	c.EchoRpcApi = (*EchoRpcApiService)(&c.common)
+	c.SnakeEnumServiceApi = (*SnakeEnumServiceApiService)(&c.common)
 
 	return c
 }

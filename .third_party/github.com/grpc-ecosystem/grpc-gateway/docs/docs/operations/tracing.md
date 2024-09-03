@@ -51,8 +51,7 @@ trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 4. Add `ocgrpc.ClientHandler` for tracing the gRPC client calls
 
 ```go
-// Example using DialContext
-conn, err := grpc.DialContext(
+conn, err := grpc.NewClient(
     // Other options goes here.
     // Add ocgrpc.ClientHandler for tracing the grpc client calls.
     grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
@@ -180,3 +179,7 @@ if err := pb.RegisterMyServiceHandlerFromEndpoint(ctx, mux, serviceEndpoint, opt
 	log.Fatalf("could not register HTTP service: %v", err)
 }
 ```
+
+## OpenTelemetry
+
+If your project uses [OpenTelemetry](https://opentelemetry.io/) and you would like spans to propagate through the gateway, you can refer to the [OpenTelemetry gRPC-Gateway Boilerplate](https://github.com/iamrajiv/opentelemetry-grpc-gateway-boilerplate) project. This repository provides a sample project that showcases the integration of OpenTelemetry with gRPC-Gateway to set up an OpenTelemetry-enabled gRPC-Gateway REST server. The project includes a simple `SayHello` method implemented on the gRPC server that returns a greeting message to the client.

@@ -2,7 +2,7 @@ package runtime_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	statuspb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestDefaultHTTPError(t *testing.T) {
@@ -24,15 +25,17 @@ func TestDefaultHTTPError(t *testing.T) {
 	)
 
 	for i, spec := range []struct {
-		err         error
-		status      int
-		msg         string
-		marshaler   runtime.Marshaler
-		contentType string
-		details     string
+		err                  error
+		status               int
+		msg                  string
+		marshaler            runtime.Marshaler
+		contentType          string
+		details              string
+		fordwardRespRewriter runtime.ForwardResponseRewriter
+		extractMessage       func(*testing.T)
 	}{
 		{
-			err:         fmt.Errorf("example error"),
+			err:         errors.New("example error"),
 			status:      http.StatusInternalServerError,
 			marshaler:   &runtime.JSONPb{},
 			contentType: "application/json",
@@ -54,7 +57,7 @@ func TestDefaultHTTPError(t *testing.T) {
 			details:     "type.googleapis.com/google.rpc.PreconditionFailure",
 		},
 		{
-			err:         fmt.Errorf("example error"),
+			err:         errors.New("example error"),
 			status:      http.StatusInternalServerError,
 			marshaler:   &CustomMarshaler{&runtime.JSONPb{}},
 			contentType: "Custom-Content-Type",
@@ -70,15 +73,37 @@ func TestDefaultHTTPError(t *testing.T) {
 			contentType: "application/json",
 			msg:         "Method Not Allowed",
 		},
+		{
+			err:         status.Error(codes.InvalidArgument, "example error"),
+			status:      http.StatusBadRequest,
+			marshaler:   &runtime.JSONPb{},
+			contentType: "application/json",
+			msg:         "bad request: example error",
+			fordwardRespRewriter: func(ctx context.Context, response proto.Message) (any, error) {
+				if s, ok := response.(*statuspb.Status); ok && strings.HasPrefix(s.Message, "example") {
+					return &statuspb.Status{
+						Code:    s.Code,
+						Message: "bad request: " + s.Message,
+						Details: s.Details,
+					}, nil
+				}
+				return response, nil
+			},
+		},
 	} {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("", "", nil) // Pass in an empty request to match the signature
-			mux := runtime.NewServeMux()
-			marshaler := &runtime.JSONPb{}
-			runtime.HTTPError(ctx, mux, marshaler, w, req, spec.err)
+			req, _ := http.NewRequestWithContext(ctx, "", "", nil) // Pass in an empty request to match the signature
 
-			if got, want := w.Header().Get("Content-Type"), "application/json"; got != want {
+			opts := []runtime.ServeMuxOption{}
+			if spec.fordwardRespRewriter != nil {
+				opts = append(opts, runtime.WithForwardResponseRewriter(spec.fordwardRespRewriter))
+			}
+			mux := runtime.NewServeMux(opts...)
+
+			runtime.HTTPError(ctx, mux, spec.marshaler, w, req, spec.err)
+
+			if got, want := w.Header().Get("Content-Type"), spec.contentType; got != want {
 				t.Errorf(`w.Header().Get("Content-Type") = %q; want %q; on spec.err=%v`, got, want, spec.err)
 			}
 			if got, want := w.Code, spec.status; got != want {
@@ -86,7 +111,7 @@ func TestDefaultHTTPError(t *testing.T) {
 			}
 
 			var st statuspb.Status
-			if err := marshaler.Unmarshal(w.Body.Bytes(), &st); err != nil {
+			if err := spec.marshaler.Unmarshal(w.Body.Bytes(), &st); err != nil {
 				t.Errorf("marshaler.Unmarshal(%q, &body) failed with %v; want success", w.Body.Bytes(), err)
 				return
 			}
