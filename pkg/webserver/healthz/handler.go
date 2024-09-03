@@ -7,11 +7,11 @@ package healthz
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 )
 
@@ -58,15 +58,14 @@ func InstallPathHandler(mux Muxer, path string, checks ...HealthChecker) {
 // when the handler succeeds for the first time.
 func InstallPathHandlerWithHealthyFunc(mux Muxer, path string, firstTimeHealthy func(), checks ...HealthChecker) {
 	if len(checks) == 0 {
-		logrus.Infof("No default health checks specified. Installing the ping handler.")
+		slog.Info("No default health checks specified. Installing the ping handler.")
 		checks = []HealthChecker{PingHealthzCheck}
 	}
 
-	logrus.Infof("Installing health checkers for (%v): %v", path, formatQuoted(checkerNames(checks...)...))
+	slog.Info(fmt.Sprintf("Installing health checkers for (%v): %v", path, formatQuoted(checkerNames(checks...)...)))
 
 	name := strings.Split(strings.TrimPrefix(path, "/"), "/")[0]
-	mux.Handle(path,
-		handleRootHealth(name, firstTimeHealthy, checks...))
+	mux.Handle(path, handleRootHealth(name, firstTimeHealthy, checks...))
 	for _, check := range checks {
 		mux.Handle(fmt.Sprintf("%s/%v", path, check.Name()), adaptCheckToHandler(check.Check))
 	}
@@ -78,6 +77,11 @@ type Muxer interface {
 }
 
 // handleRootHealth returns an http.HandlerFunc that serves the provided checks.
+//
+// URL query:
+//
+//	verbose responds with detailed check output.
+//	exclude=foo&exclude=bar&exclude=baz will bypass checking "foo", "bar" and "baz".
 func handleRootHealth(name string, firstTimeHealthy func(), checks ...HealthChecker) http.HandlerFunc {
 	var notifyOnce sync.Once
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -106,12 +110,12 @@ func handleRootHealth(name string, firstTimeHealthy func(), checks ...HealthChec
 		}
 		if len(excluded) > 0 {
 			_, _ = fmt.Fprintf(&individualCheckOutput, "warn: some health checks cannot be excluded: no matches for %s\n", formatQuoted(maps.Keys(excluded)...))
-			logrus.Warningf("cannot exclude some health checks, no health checks are installed matching %s",
-				formatQuoted(maps.Keys(excluded)...))
+			slog.Warn(fmt.Sprintf("cannot exclude some health checks, no health checks are installed matching %s",
+				formatQuoted(maps.Keys(excluded)...)))
 		}
 		// always be verbose on failure
 		if len(failedChecks) > 0 {
-			logrus.Errorf("%s check failed: %s\n%v", strings.Join(failedChecks, ","), name, failedVerboseLogOutput.String())
+			slog.Error(fmt.Sprintf("%s check failed: %s\n%v", strings.Join(failedChecks, ","), name, failedVerboseLogOutput.String()))
 			http.Error(w, fmt.Sprintf("%s%s check failed", individualCheckOutput.String(), name), http.StatusInternalServerError)
 			return
 		}

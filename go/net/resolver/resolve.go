@@ -12,7 +12,7 @@ import (
 )
 
 var resolverPool = sync_.LruPool{
-	New: func(ctx context.Context, req interface{}) (resp interface{}, err error) {
+	New: func(ctx context.Context, req any) (resp any, err error) {
 		target, ok := req.(string)
 		if !ok {
 			return nil, err
@@ -76,6 +76,24 @@ func ResolveNow(ctx context.Context, target string, opts ...ResolveNowOption) er
 	return fmt.Errorf("could not get resolver for target: %q", target)
 }
 
+func ResolveDone(ctx context.Context, target string, doneInfo DoneInfo, opts ...ResolveDoneOption) error {
+	_, err := GetBuilderOrDefault(target)
+	if err != nil {
+		return err
+	}
+
+	resolver, put, err := resolverPool.GetOrError(ctx, target)
+	if err != nil {
+		return err
+	}
+	defer put()
+	if resolver, ok := resolver.(ResolveDoneResolver); ok {
+		resolver.ResolveDone(ctx, doneInfo, opts...)
+		return nil
+	}
+	return fmt.Errorf("could not get resolver for target: %q", target)
+}
+
 func GetBuilderOrDefault(target string) (Builder, error) {
 	tgt := ParseTarget(target)
 	builder := Get(tgt.Scheme)
@@ -86,7 +104,7 @@ func GetBuilderOrDefault(target string) (Builder, error) {
 		tgt.Scheme = GetDefaultScheme()
 		builder = Get(tgt.Scheme)
 		if builder == nil {
-			return nil, fmt.Errorf("could not get resolver for default scheme: %q", tgt.Scheme)
+			return nil, fmt.Errorf("could not get resolver for default scheme: %q (forgotten import?)", tgt.Scheme)
 		}
 	}
 	return builder, nil
@@ -102,7 +120,7 @@ func NewResolver(ctx context.Context, target string, opts ...BuildOption) (Resol
 		tgt.Scheme = GetDefaultScheme()
 		builder = Get(tgt.Scheme)
 		if builder == nil {
-			return nil, fmt.Errorf("could not get resolver for default scheme: %q", tgt.Scheme)
+			return nil, fmt.Errorf("could not get resolver for default scheme: %q (forgotten import?)", tgt.Scheme)
 		}
 	}
 	return builder.Build(ctx, tgt, opts...)

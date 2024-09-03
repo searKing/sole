@@ -5,14 +5,15 @@
 package binding
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/golang/protobuf/jsonpb"
 	protov1 "github.com/golang/protobuf/proto"
-	"github.com/searKing/golang/third_party/github.com/golang/protobuf/jsonpb"
-	"github.com/searKing/golang/third_party/google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // JSONPB encode json to proto.Message
@@ -24,7 +25,7 @@ func (jsonpbBinding) Name() string {
 	return "jsonpb"
 }
 
-func (b jsonpbBinding) Bind(req *http.Request, obj interface{}) error {
+func (b jsonpbBinding) Bind(req *http.Request, obj any) error {
 	buf, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		return err
@@ -32,16 +33,22 @@ func (b jsonpbBinding) Bind(req *http.Request, obj interface{}) error {
 	return b.BindBody(buf, obj)
 }
 
-func (jsonpbBinding) BindBody(body []byte, obj interface{}) error {
-	if msg, ok := obj.(proto.Message); ok {
-		if err := protojson.Unmarshal(body, msg); err != nil {
+func (jsonpbBinding) BindBody(body []byte, obj any) error {
+	switch msg := obj.(type) {
+	case protov1.Message:
+		mm := jsonpb.Unmarshaler{AllowUnknownFields: true}
+		if err := mm.Unmarshal(bytes.NewBuffer(body), msg); err != nil {
 			return err
 		}
-	} else if msg, ok := obj.(protov1.Message); ok {
-		if err := jsonpb.Unmarshal(body, msg); err != nil {
+	case protov2.Message:
+		mm := protojson.UnmarshalOptions{
+			AllowPartial:   true,
+			DiscardUnknown: true,
+		}
+		if err := mm.Unmarshal(body, msg); err != nil {
 			return err
 		}
-	} else {
+	default:
 		if err := json.Unmarshal(body, obj); err != nil {
 			return err
 		}

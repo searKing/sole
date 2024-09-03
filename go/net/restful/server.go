@@ -6,13 +6,13 @@ package restful
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func HttpGetHandler(v interface{}, w http.ResponseWriter, r *http.Request) {
+func HttpGetHandler(v any, w http.ResponseWriter, r *http.Request) {
 	body, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		body = []byte("[]")
@@ -26,7 +26,7 @@ func HttpGetHandler(v interface{}, w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
-func HttpPostHandler(v interface{}, w http.ResponseWriter, r *http.Request) (finished bool) {
+func HttpPostHandler(v any, w http.ResponseWriter, r *http.Request) (finished bool) {
 	if r.Method == http.MethodPost {
 		r.ParseForm()
 		if r.ContentLength == -1 {
@@ -39,7 +39,7 @@ func HttpPostHandler(v interface{}, w http.ResponseWriter, r *http.Request) (fin
 				return true
 			}
 
-			body, err := ioutil.ReadAll(r.Body)
+			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return true

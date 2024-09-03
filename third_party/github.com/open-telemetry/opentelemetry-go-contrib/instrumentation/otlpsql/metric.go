@@ -9,10 +9,9 @@ import (
 	"time"
 
 	otelcontrib "go.opentelemetry.io/contrib"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/global"
-	"go.opentelemetry.io/otel/metric/unit"
 )
 
 // The following tags are applied to stats recorded by this package.
@@ -34,39 +33,45 @@ var (
 	// InstrumentationName is the name of this instrumentation package.
 	InstrumentationName = "go.sql"
 	// InstrumentationVersion is the version of this instrumentation package.
-	InstrumentationVersion = otelcontrib.SemVersion()
+	InstrumentationVersion = otelcontrib.Version()
+)
+
+const (
+	uDimensionless = "1"
+	uBytes         = "By"
+	uMilliseconds  = "ms"
 )
 
 func Meter() metric.Meter {
-	return global.Meter(InstrumentationName, metric.WithInstrumentationVersion(InstrumentationVersion))
+	return otel.GetMeterProvider().Meter(InstrumentationName, metric.WithInstrumentationVersion(InstrumentationVersion))
 }
 
 // The following measures are supported for use in custom views.
 var (
-	MeasureLatencyMs = metric.Must(Meter()).NewInt64Histogram("go_sql_client_latency_milliseconds",
+	MeasureLatencyMs, _ = Meter().Int64Histogram("go_sql_client_latency_milliseconds",
 		metric.WithDescription("The latency of calls in milliseconds."),
-		metric.WithUnit(unit.Milliseconds))
-	MeasureOpenConnections = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_open",
+		metric.WithUnit(uMilliseconds))
+	MeasureOpenConnections, _ = Meter().Int64Histogram("go_sql_connections_open",
 		metric.WithDescription("Count of open connections in the pool."),
-		metric.WithUnit(unit.Dimensionless))
-	MeasureIdleConnections = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_idle",
+		metric.WithUnit(uDimensionless))
+	MeasureIdleConnections, _ = Meter().Int64Histogram("go_sql_connections_idle",
 		metric.WithDescription("Count of idle connections in the pool."),
-		metric.WithUnit(unit.Dimensionless))
-	MeasureActiveConnections = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_active",
+		metric.WithUnit(uDimensionless))
+	MeasureActiveConnections, _ = Meter().Int64Histogram("go_sql_connections_active",
 		metric.WithDescription("Count of active connections in the pool."),
-		metric.WithUnit(unit.Dimensionless))
-	MeasureWaitCount = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_wait_count",
+		metric.WithUnit(uDimensionless))
+	MeasureWaitCount, _ = Meter().Int64Histogram("go_sql_connections_wait_count",
 		metric.WithDescription("The total number of connections waited for."),
-		metric.WithUnit(unit.Dimensionless))
-	MeasureWaitDuration = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_wait_duration_milliseconds",
+		metric.WithUnit(uDimensionless))
+	MeasureWaitDuration, _ = Meter().Int64Histogram("go_sql_connections_wait_duration_milliseconds",
 		metric.WithDescription("The total time blocked waiting for a new connection."),
-		metric.WithUnit(unit.Milliseconds))
-	MeasureIdleClosed = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_idle_closed",
+		metric.WithUnit(uMilliseconds))
+	MeasureIdleClosed, _ = Meter().Int64Histogram("go_sql_connections_idle_closed",
 		metric.WithDescription("The total number of connections closed due to SetMaxIdleConns."),
-		metric.WithUnit(unit.Dimensionless))
-	MeasureLifetimeClosed = metric.Must(Meter()).NewInt64Histogram("go_sql_connections_lifetime_closed",
+		metric.WithUnit(uDimensionless))
+	MeasureLifetimeClosed, _ = Meter().Int64Histogram("go_sql_connections_lifetime_closed",
 		metric.WithDescription("The total number of connections closed due to SetConnMaxLifetime."),
-		metric.WithUnit(unit.Dimensionless))
+		metric.WithUnit(uDimensionless))
 )
 
 func recordCallStats(method, instanceName string) func(ctx context.Context, err error, attrs ...attribute.KeyValue) {
@@ -89,7 +94,7 @@ func recordCallStats(method, instanceName string) func(ctx context.Context, err 
 			labels = append(labels, valueOK)
 		}
 
-		MeasureLatencyMs.Record(ctx, timeSpentMs, labels...)
+		MeasureLatencyMs.Record(ctx, timeSpentMs, metric.WithAttributes(labels...))
 	}
 }
 

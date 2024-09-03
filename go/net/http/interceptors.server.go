@@ -18,6 +18,7 @@ import (
 // handler behavior like locale or theme changes.
 // Its main purpose is to allow for factoring out repetitive handler code.
 // https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/HandlerInterceptor.html
+//
 //go:generate go-option -type "HandlerInterceptorChain"
 type HandlerInterceptorChain struct {
 	interceptors []internal.HandlerInterceptor
@@ -31,13 +32,12 @@ func NewHandlerInterceptorChain(opts ...HandlerInterceptorChainOption) *HandlerI
 
 // InjectHttpHandler returns a http handler injected by chain
 func (chain HandlerInterceptorChain) InjectHttpHandler(next http.Handler) http.Handler {
+	interceptors := chain.interceptors
+	// short circuit
+	if len(interceptors) == 0 {
+		return next
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// short circuit
-		if len(chain.interceptors) == 0 {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		// record where to reverse
 		var it = -1
 		defer func() {
@@ -48,18 +48,18 @@ func (chain HandlerInterceptorChain) InjectHttpHandler(next http.Handler) http.H
 					panic(err)
 				}
 				for i := it; i >= 0; i-- {
-					chain.interceptors[i].AfterCompletion(w, r, err)
+					interceptors[i].AfterCompletion(w, r, err)
 				}
 			}()
 			if err := recover(); err != nil {
 				panic(err)
 			}
 			for i := it; i >= 0; i-- {
-				chain.interceptors[i].PostHandle(w, r)
+				interceptors[i].PostHandle(w, r)
 			}
 		}()
 
-		for i, filter := range chain.interceptors {
+		for i, filter := range interceptors {
 			err := filter.PreHandle(w, r)
 			if err != nil {
 				// assumes that this interceptor has already dealt with the response itself
@@ -69,8 +69,8 @@ func (chain HandlerInterceptorChain) InjectHttpHandler(next http.Handler) http.H
 			it = i
 		}
 
-		for i := range chain.interceptors {
-			next = chain.interceptors[len(chain.interceptors)-1-i].WrapHandle(next)
+		for i := range interceptors {
+			next = interceptors[len(interceptors)-1-i].WrapHandle(next)
 		}
 
 		next.ServeHTTP(w, r)

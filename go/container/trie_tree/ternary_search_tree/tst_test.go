@@ -72,7 +72,7 @@ func TestTernarySearchTree(t *testing.T) {
 
 	found := false
 	tree.Traversal(traversal.Preorder, ternary_search_tree.HandlerFunc(
-		func(key []byte, val interface{}) bool {
+		func(key []byte, val any) bool {
 			if string(key) == "test" && val.(int) == 11 {
 				found = true
 				return false
@@ -132,8 +132,7 @@ func TestTernarySearchTree_String1(t *testing.T) {
 	s := tree.String()
 	expect := `abcd:0
 abcd1234:1
-abcd1234ABCD:2
-`
+abcd1234ABCD:2`
 	if s != expect {
 		t.Errorf("actual:\n%s\nexpect:\n%s", s, expect)
 	}
@@ -146,8 +145,7 @@ func TestTernarySearchTree_String2(t *testing.T) {
 	tree.Store("1234", 1)
 	s := tree.String()
 	expect := `1234:1
-abcd:0
-`
+abcd:0`
 	if s != expect {
 		t.Errorf("actual:\n%s\nexpect:\n%s", s, expect)
 	}

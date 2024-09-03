@@ -19,8 +19,8 @@ type Human struct {
 }
 
 type ToProtoStructTests struct {
-	input  Human
-	output string
+	input Human
+	want  string
 }
 
 var (
@@ -37,7 +37,7 @@ var (
 				}},
 			}},
 		},
-		output: `{
+		want: `{
  "Friends": [
   "Bob",
   "Carol",
@@ -71,21 +71,20 @@ var (
 )
 
 func TestToProtoStruct(t *testing.T) {
-	for m, test := range toProtoStructTests {
-		humanStructpb, err := structpb.ToProtoStruct(test.input)
+	for m, tt := range toProtoStructTests {
+		humanStructpb, err := structpb.ToProtoStruct(tt.input)
 		if err != nil {
-			t.Errorf("#%d: ToProtoStruct(%+v): got: _, %v exp: _, nil", m, test.input, err)
+			t.Errorf("#%d: ToProtoStruct(%+v): got: _, %v exp: _, nil", m, tt.input, err)
 		}
 
 		marshal := protojson.MarshalOptions{EmitUnpopulated: false, Indent: " ", UseProtoNames: true}
 		humanBytes, err := marshal.Marshal(humanStructpb)
 
 		if err != nil {
-			t.Errorf("#%d: json.Marshal(%+v): got: _, %v exp: _, nil", m, test.input, err)
+			t.Errorf("#%d: json.Marshal(%+v): got: _, %v exp: _, nil", m, tt.input, err)
 		}
-
-		if strings.Compare(string(humanBytes), test.output) != 0 {
-			t.Errorf("#%d: json.Marshal(%+v): got: %v exp: %v", m, test.input, string(humanBytes), test.output)
+		if strings.Compare(string(humanBytes), tt.want) != 0 {
+			t.Errorf("#%d: json.Marshal(%+v): got(%dB): %v want(%dB): %v", m, tt.input, len(humanBytes), string(humanBytes), len(tt.want), tt.want)
 		}
 	}
 }

@@ -6,6 +6,7 @@ package otlpsql
 
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -37,7 +38,7 @@ func namedParamsAttr(args []driver.NamedValue) []attribute.KeyValue {
 	return attrs
 }
 
-func argToAttr(key string, val interface{}) attribute.KeyValue {
+func argToAttr(key string, val any) attribute.KeyValue {
 	switch v := val.(type) {
 	case nil:
 		return attribute.String(key, "")
@@ -62,11 +63,11 @@ func argToAttr(key string, val interface{}) attribute.KeyValue {
 }
 
 func setSpanStatus(span trace.Span, opts wrapper, err error) {
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		span.SetStatus(codes.Ok, "")
 		return
-	case driver.ErrSkip:
+	case errors.Is(err, driver.ErrSkip):
 		span.SetStatus(codes.Unset, err.Error())
 		if opts.DisableErrSkip {
 			// Suppress driver.ErrSkip since at runtime some drivers might not have

@@ -5,7 +5,7 @@
 package otelgrpc
 
 import (
-	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric"
 )
 
 var (
@@ -20,27 +20,27 @@ var (
 
 // ResetClientCounter recreate recording of all counters of RPCs.
 // This function acts on the DefaultClientMetrics variable.
-func ResetClientCounter(opts ...instrument.Option) error {
+func ResetClientCounter(opts ...metric.InstrumentOption) error {
 	return DefaultClientMetrics.ResetCounter(opts...)
 }
 
 // EnableClientHandledTimeHistogram turns on recording of handling time of
 // RPCs. Histogram metrics can be very expensive for Prometheus to retain and
 // query. This function acts on the DefaultClientMetrics variable.
-func EnableClientHandledTimeHistogram(opts ...instrument.Option) {
+func EnableClientHandledTimeHistogram(opts ...metric.Float64HistogramOption) {
 	DefaultClientMetrics.EnableClientHandledTimeHistogram(opts...)
 }
 
 // EnableClientStreamReceiveSizeHistogram turns on recording of
 // single message receive size of streaming RPCs.
 // This function acts on the DefaultClientMetrics variable
-func EnableClientStreamReceiveSizeHistogram(opts ...instrument.Option) {
+func EnableClientStreamReceiveSizeHistogram(opts ...metric.Int64HistogramOption) {
 	DefaultClientMetrics.EnableClientStreamReceiveSizeHistogram(opts...)
 }
 
 // EnableClientStreamSendSizeHistogram turns on recording of
 // single message receive size of streaming RPCs.
 // This function acts on the DefaultClientMetrics variable
-func EnableClientStreamSendSizeHistogram(opts ...instrument.Option) {
+func EnableClientStreamSendSizeHistogram(opts ...metric.Int64HistogramOption) {
 	DefaultClientMetrics.EnableClientStreamSendSizeHistogram(opts...)
 }

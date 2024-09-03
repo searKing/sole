@@ -66,6 +66,8 @@ func ParseStructTag(tag string) (*StructTag, error) {
 
 	// Code borrowed from golang.org/x/tools/go/analysis/passes/structtag/structtag.go
 	// Code borrowed from reflect/type.go
+
+	// This code is based on the StructTag.Get code in package reflect.
 	n := 0
 	for ; tag != ""; n++ {
 		if n > 0 && tag != "" && tag[0] != ' ' {
@@ -335,12 +337,12 @@ func (t StructTag) Tags() []SubStructTag {
 	return t.SelectedTags(t.Keys()...)
 }
 
-// OrderedTags returns a slice of subTags sorted by keys in increasing order.
+// SortedTags returns a slice of subTags sorted by keys in increasing order.
 func (t StructTag) SortedTags() []SubStructTag {
 	return t.SelectedTags(t.SortedKeys()...)
 }
 
-// Tags returns a slice of subTags with original order.
+// OrderedTags returns a slice of subTags with original order.
 func (t StructTag) OrderedTags() []SubStructTag {
 	return t.SelectedTags(t.OrderKeys()...)
 }

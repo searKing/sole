@@ -4,9 +4,11 @@
 
 package runtime
 
-import "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+import (
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+)
 
-// WithMarshaler Whether to render enum values as integers, as opposed to string values.
+// WithMarshaler set a marshaler as the default Marshaler.
 func WithMarshaler(marshaler runtime.Marshaler) HTTPBodyPbOption {
 	return HTTPBodyPbOptionFunc(func(pb *HTTPBodyPb) {
 		pb.Marshaler = marshaler
@@ -16,26 +18,17 @@ func WithMarshaler(marshaler runtime.Marshaler) HTTPBodyPbOption {
 func NewHTTPBodyJsonMarshaler(options ...JSONPbOption) runtime.Marshaler {
 	// github.com/grpc-ecosystem/grpc-gateway/runtime/Handler.go
 	// fulfill if httpBodyMarshaler, ok := marshaler.(*HTTPBodyMarshaler); ok
-	var o = []JSONPbOption{
-		WithUseProtoNames(true),
-		WithEmitUnpopulated(true),
-		WithIndent("\t"),
-		WithDiscardUnknown(true)}
-	o = append(o, options...)
-	return (*runtime.HTTPBodyMarshaler)((&HTTPBodyPb{}).ApplyOptions(
-		WithMarshaler((&JSONPb{}).ApplyOptions(o...))))
+	return &runtime.HTTPBodyMarshaler{Marshaler: (&JSONPb{}).ApplyOptions(options...)}
 }
 
 func NewHTTPBodyProtoMarshaler() runtime.Marshaler {
 	// github.com/grpc-ecosystem/grpc-gateway/runtime/Handler.go
 	// fulfill if httpBodyMarshaler, ok := marshaler.(*HTTPBodyMarshaler); ok
-	return (*runtime.HTTPBodyMarshaler)((&HTTPBodyPb{}).ApplyOptions(
-		WithMarshaler(&ProtoMarshaller{})))
+	return &runtime.HTTPBodyMarshaler{Marshaler: &runtime.ProtoMarshaller{}}
 }
 
 func NewHTTPBodyYamlMarshaler() runtime.Marshaler {
 	// github.com/grpc-ecosystem/grpc-gateway/runtime/Handler.go
 	// fulfill if httpBodyMarshaler, ok := marshaler.(*HTTPBodyMarshaler); ok
-	return (*runtime.HTTPBodyMarshaler)((&HTTPBodyPb{}).ApplyOptions(
-		WithMarshaler(&YamlMarshaller{})))
+	return &runtime.HTTPBodyMarshaler{Marshaler: &YamlMarshaller{}}
 }

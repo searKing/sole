@@ -5,18 +5,19 @@
 package render
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 
+	"github.com/golang/protobuf/jsonpb"
 	protov1 "github.com/golang/protobuf/proto"
-	"github.com/searKing/golang/third_party/github.com/golang/protobuf/jsonpb"
-	"github.com/searKing/golang/third_party/google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 // JSONPB contains the given interface object.
 type JSONPB struct {
-	Data interface{}
+	Data any
 }
 
 var jsonpbContentType = []string{"application/json; charset=utf-8"}
@@ -35,17 +36,35 @@ func (r JSONPB) WriteContentType(w http.ResponseWriter) {
 }
 
 // WriteJSONPB marshals the given interface object and writes it with custom ContentType.
-func WriteJSONPB(w http.ResponseWriter, obj interface{}) error {
+func WriteJSONPB(w http.ResponseWriter, obj any) error {
 	writeContentType(w, jsonpbContentType)
 	var jsonBytes []byte
 	var err error
-	if msg, ok := obj.(proto.Message); ok {
-		jsonBytes, err = protojson.Marshal(msg)
-	} else if msg, ok := obj.(protov1.Message); ok {
-		jsonBytes, err = jsonpb.Marshal(msg)
-	} else {
-		jsonBytes, err = json.Marshal(obj)
+	switch ee := obj.(type) {
+	case protov1.Message:
+		mm := jsonpb.Marshaler{}
+		var buf bytes.Buffer
+		err := mm.Marshal(&buf, ee)
+		if err != nil {
+			// This may fail for proto.Anys, e.g. for xDS v2, LDS, the v2
+			// messages are not imported, and this will fail because the message
+			// is not found.
+			return err
+		}
+		jsonBytes = buf.Bytes()
+	case protov2.Message:
+		mm := protojson.MarshalOptions{AllowPartial: true}
+		jsonBytes, err = mm.Marshal(ee)
+		if err != nil {
+			// This may fail for proto.Anys, e.g. for xDS v2, LDS, the v2
+			// messages are not imported, and this will fail because the message
+			// is not found.
+			return err
+		}
+	default:
+		jsonBytes, err = json.Marshal(ee)
 	}
+
 	if err != nil {
 		return err
 	}

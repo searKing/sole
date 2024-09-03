@@ -10,34 +10,47 @@ package main
 import (
 	"fmt"
 	"strings"
+	time_ "time"
 )
 
 //go:generate go-option -type "Number"
-type Number struct {
-	arrayType     [5]int64
+//go:generate go-option -type "Number" -config=true
+type Number[T comparable] struct {
+	// This is Name doc comment
+	Name      string // This is Name line comment
+	Age       string `option:",short"`
+	Address   string `option:"-"`
+	NameAlias string `option:"Title,"`
+
+	genericType   GenericType[T]
+	pointerType   *[5]T
+	structType    time_.Time
+	arrayType     [5]T
 	funcType      func()
-	interfaceType interface{}
+	interfaceType any
 	mapType       map[string]int64
 	sliceType     []int64
-	name          string
+	stringType    string
 }
 
-func NewNumber(options ...NumberOption) *Number {
-	return (&Number{}).ApplyOptions()
+type GenericType[T any] struct{}
+
+func NewNumber[T comparable](opts ...NumberOption[T]) *Number[T] {
+	return (&Number[T]{}).ApplyOptions(opts...)
 }
 
 type Value string
 
 func main() {
-	var num *Number
-	num = &Number{}
+	var num *Number[int]
+	num = &Number[int]{}
 	ck(num, "")
-	num = NewNumber(WithNumberName("Name"))
-	ck(num, "")
+	num = NewNumber(WithNumberName[int]("Name"))
+	ck(num, "Name")
 }
 
-func ck(num *Number, str string) {
-	name := num.name
+func ck[T comparable](num *Number[T], str string) {
+	name := num.Name
 	if strings.Compare(name, str) != 0 {
 		panic(fmt.Sprintf("Numbers.go: %s", str))
 	}
