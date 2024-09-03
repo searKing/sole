@@ -11,13 +11,16 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
+
+	"github.com/searKing/golang/go/net/http/httphost"
+	"github.com/searKing/golang/go/net/http/httpproxy"
 )
 
 type Client struct {
 	http.Client
-	target               string // resolver.Target, will replace Host in url.Url
-	replaceHostInRequest bool   // resolve target to proxy and replace host if target resolved
+
+	Proxy *httpproxy.Proxy
+	Host  *httphost.Host
 }
 
 // Use adds middleware handlers to the transport.
@@ -36,28 +39,16 @@ func (c *Client) Use(d ...RoundTripDecorator) *Client {
 // in places where url is shadowed for godoc. See https://golang.org/cl/49930.
 var parseURL = url.Parse
 
-// NewClient returns a http client wrapper behaves like http.Client
-// u is the original url to send HTTP request
+// NewClient returns a http client wrapper behaves like http.Client,
+// sends HTTP Request to target by proxy url with Host replaced by proxyTarget
+//
+// u is the original url to send HTTP request, empty usually.
 // target is the resolver to resolve Host to send HTTP request,
-// that is replacing host in url(NOT HOST in http header) by address resolved by target
-// proxyUrl is proxy's url, like sock5://127.0.0.1:8080
-// proxyTarget is proxy's addr, replace the HOST in proxyUrl if not empty
-func NewClient(u, target string, proxyUrl string, proxyTarget string) (*Client, error) {
-	tr := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-	if proxyUrl != "" && proxyTarget != "" {
-		tr.Proxy = ProxyFuncWithTargetOrDefault(proxyUrl, proxyTarget, tr.Proxy)
-	}
+// that is replacing host in url(NOT HOST in http header) by address resolved by Host
+// fixedProxyUrl is proxy's url, like socks5://127.0.0.1:8080
+// fixedProxyTarget is as like gRPC Naming for proxy service discovery, with Host in TargetUrl replaced if not empty.
+func NewClient(u, hostTarget string, proxyUrl string, proxyTarget string) (*Client, error) {
+	tr := DefaultTransportWithDynamicHostAndProxy
 	if len(u) > 0 {
 		urlParsed, err := parseURL(u)
 		if err != nil {
@@ -74,24 +65,35 @@ func NewClient(u, target string, proxyUrl string, proxyTarget string) (*Client, 
 		}
 	}
 	client := http.Client{Transport: tr}
-	return &Client{
-		Client:               client,
-		target:               target,
-		replaceHostInRequest: false,
-	}, nil
+	c := &Client{
+		Client: client,
+	}
+	if hostTarget != "" {
+		c.Host = &httphost.Host{
+			HostTarget:           hostTarget,
+			ReplaceHostInRequest: false,
+		}
+	}
+	if proxyUrl != "" {
+		c.Proxy = &httpproxy.Proxy{
+			ProxyUrl:    proxyUrl,
+			ProxyTarget: proxyTarget,
+		}
+	}
+	return c, nil
 }
 
-// NewClientWithTarget returns a Client with http.Client and host replaced by resolver.Target
+// NewClientWithTarget returns a Client with http.Client and host replaced by resolver.Host
 // target is the resolver to resolve Host to send HTTP request,
-// that is replacing host in url(NOT HOST in http header) by address resolved by target
+// that is replacing host in url(NOT HOST in http header) by address resolved by Host
 func NewClientWithTarget(target string) *Client {
 	cli, _ := NewClient("", target, "", "")
 	return cli
 }
 
-// NewClientWithProxy returns a Client with http.Client with proxy set by resolver.Target
-// proxyUrl is proxy's url, like sock5://127.0.0.1:8080
-// proxyTarget is proxy's addr, replace the HOST in proxyUrl if not empty
+// NewClientWithProxy returns a Client with http.Client with proxy set by resolver.Host
+// TargetUrl is proxy's url, like socks5://127.0.0.1:8080
+// Host is proxy's addr, replace the HOST in TargetUrl if not empty
 func NewClientWithProxy(proxyUrl string, proxyTarget string) *Client {
 	cli, _ := NewClient("", "", proxyUrl, proxyTarget)
 	return cli
@@ -101,12 +103,8 @@ func NewClientWithUnixDisableCompression(u string) (*Client, error) {
 	return NewClient(u, "", "", "")
 }
 
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	err := RequestWithTarget(req, c.target, c.replaceHostInRequest)
-	if err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
+func (c *Client) Do(req *http.Request) (_ *http.Response, err error) {
+	return c.Client.Do(RequestWithHostTarget(RequestWithProxyTarget(req, c.Proxy), c.Host))
 }
 
 func (c *Client) Head(url string) (resp *http.Response, err error) {

@@ -66,6 +66,7 @@ func TestClamp(t *testing.T) {
 		{-1, 0, 1, 0},
 		{-1, 1, 1, 1},
 		{-1, -1, 1, -1},
+		{1, 0, -1, 0},
 		{1, 1, -1, 1},
 		{1, -1, -1, -1},
 	}
@@ -75,6 +76,40 @@ func TestClamp(t *testing.T) {
 				got := math_.Clamp(tt.v, tt.lo, tt.hi)
 				if got != tt.want {
 					t.Errorf("math_.Clamp(%v, %v, %v) = %v, want %v", tt.v, tt.lo, tt.hi, got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestRem(t *testing.T) {
+	tests := []struct {
+		x, y int
+		want int
+	}{
+		//{0, 0, 0}, // panics for y == 0 (division by zero).
+		{-3, 3, 0},
+		{-2, 3, 1},
+		{-1, 3, 2},
+		{0, 3, 0},
+		{1, 3, 1},
+		{2, 3, 2},
+		{3, 3, 0},
+
+		{-3, -3, 0},
+		{-2, -3, -2},
+		{-1, -3, -1},
+		{0, -3, 0},
+		{1, -3, -2},
+		{2, -3, -1},
+		{3, -3, 0},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("math_.RingRem(%v, %v)", tt.x, tt.y), func(t *testing.T) {
+			{
+				got := math_.RingRem(tt.x, tt.y)
+				if got != tt.want {
+					t.Errorf("math_.RingRem(%v, %v) = %v, want %v", tt.x, tt.y, got, tt.want)
 				}
 			}
 		})

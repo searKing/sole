@@ -5,12 +5,14 @@
 package slices_test
 
 import (
+	"cmp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 
+	math_ "github.com/searKing/golang/go/exp/math"
 	slices_ "github.com/searKing/golang/go/exp/slices"
-	"golang.org/x/exp/slices"
 )
 
 func TestLinearSearch(t *testing.T) {
@@ -131,16 +133,112 @@ func TestLinearSearchInts(t *testing.T) {
 			}
 
 			{
-				cmp := func(a, b int) int {
-					return a - b
-				}
-				pos, found := slices_.LinearSearchFunc(tt.data, tt.target, cmp)
+				compare := cmp.Compare[int]
+				pos, found := slices_.LinearSearchFunc(tt.data, tt.target, compare)
 				if pos != tt.wantPos || found != tt.wantFound {
 					t.Errorf("LinearSearchFunc got (%v, %v), want (%v, %v)", pos, found, tt.wantPos, tt.wantFound)
 				}
-				wantPos, wantFound := slices.BinarySearchFunc(tt.data, tt.target, cmp)
+				wantPos, wantFound := slices.BinarySearchFunc(tt.data, tt.target, compare)
 				if pos != wantPos || found != wantFound {
 					t.Errorf("LinearSearch got (%v, %v), BinarySearchFunc want (%v, %v)", pos, found, wantPos, wantFound)
+				}
+			}
+		})
+	}
+}
+
+func TestPartialSortInts(t *testing.T) {
+	tests := []struct {
+		data []int
+		k    int
+	}{
+		{nil, 3},
+		{[]int{}, 3},
+		{[]int{20, 20, 30, 30}, 3},
+		{[]int{20, 30}, 3},
+		{[]int{20, 30, 40, 50, 60, 70, 80, 90}, 3},
+		{[]int{90, 80, 70, 60, 50, 40, 30, 20}, 3},
+		{[]int{90, 30, 70, 40, 50, 60, 80, 20}, 3},
+	}
+	for i, tt := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			{
+				data1 := slices.Clone(tt.data)
+				slices_.PartialSort(data1, tt.k)
+				if !slices_.IsPartialSorted(data1, tt.k) {
+					t.Errorf("partial sort didn't sort")
+				}
+			}
+
+			{
+				data2 := slices.Clone(tt.data)
+				slices_.PartialSortFunc(data2, tt.k, cmp.Compare[int])
+				if !slices_.IsPartialSorted(data2, tt.k) {
+					t.Errorf("partial sort func didn't sort")
+				}
+			}
+		})
+	}
+}
+
+func TestSearchMin(t *testing.T) {
+	tests := []struct {
+		data []int
+		want int
+	}{
+		{nil, 0},
+		{[]int{}, 0},
+		{[]int{20, 20, 30, 30}, 0},
+		{[]int{20, 30}, 0},
+		{[]int{20, 30, 40, 50, 60, 70, 80, 90}, 0},
+		{[]int{90, 80, 70, 60, 50, 40, 30, 20}, 7},
+		{[]int{90, 30, 70, 40, 50, 60, 80, 20}, 7},
+		{[]int{90, 30, 70, 40, 50, 60, 80, 20, 100, 30}, 7},
+	}
+	for i, tt := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			{
+				got := slices_.SearchMin(tt.data)
+				if got != tt.want {
+					t.Errorf("SearchMin(%v) got (%v), want (%v)", tt.data, got, tt.want)
+				}
+			}
+			{
+				got := slices_.SearchMinFunc(tt.data, cmp.Compare[int])
+				if got != tt.want {
+					t.Errorf("SearchMinFunc(%v, math_.Compare[int]) got (%v), want (%v)", tt.data, got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestSearchMax(t *testing.T) {
+	tests := []struct {
+		data []int
+		want int
+	}{
+		{nil, 0},
+		{[]int{}, 0},
+		{[]int{20, 20, 30, 30}, 2},
+		{[]int{20, 30}, 1},
+		{[]int{20, 30, 40, 50, 60, 70, 80, 90}, 7},
+		{[]int{90, 80, 70, 60, 50, 40, 30, 20}, 0},
+		{[]int{90, 30, 70, 40, 50, 60, 80, 20}, 0},
+		{[]int{90, 30, 70, 40, 50, 60, 80, 20, 100, 30}, 8},
+	}
+	for i, tt := range tests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			{
+				got := slices_.SearchMax(tt.data)
+				if got != tt.want {
+					t.Errorf("SearchMax(%v) got (%v), want (%v)", tt.data, got, tt.want)
+				}
+			}
+			{
+				got := slices_.SearchMinFunc(tt.data, math_.Reverse(cmp.Compare[int]))
+				if got != tt.want {
+					t.Errorf("SearchMinFunc(%v, math_.Reverse(math_.Compare[int])) got (%v), want (%v)", tt.data, got, tt.want)
 				}
 			}
 		})

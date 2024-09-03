@@ -9,8 +9,6 @@ import (
 	"io"
 	"net"
 	"sync"
-
-	"github.com/searKing/golang/go/util/object"
 )
 
 type ServeMux struct {
@@ -32,11 +30,11 @@ func (mux *ServeMux) OnOpen(conn net.Conn) error {
 	return mux.h.OnOpen(conn)
 }
 
-func (mux *ServeMux) OnMsgRead(r io.Reader) (req interface{}, err error) {
+func (mux *ServeMux) OnMsgRead(r io.Reader) (req any, err error) {
 	return mux.h.OnMsgRead(r)
 }
 
-func (mux *ServeMux) OnMsgHandle(w io.Writer, msg interface{}) error {
+func (mux *ServeMux) OnMsgHandle(w io.Writer, msg any) error {
 	return mux.h.OnMsgHandle(w, msg)
 }
 func (mux *ServeMux) OnClose(w io.Writer, r io.Reader) error {
@@ -48,7 +46,9 @@ func (mux *ServeMux) OnError(w io.Writer, r io.Reader, err error) error {
 func (mux *ServeMux) Handle(handler Handler) {
 	mux.mu.Lock()
 	defer mux.mu.Unlock()
-	object.RequireNonNil(handler, "tcp: nil handler")
+	if handler == nil {
+		panic("tcp: nil handler")
+	}
 	mux.h = handler
 }
 func (mux *ServeMux) handle() Handler {
@@ -61,16 +61,15 @@ func (mux *ServeMux) handle() Handler {
 }
 func NotFoundHandler() Handler { return &NotFound{} }
 
-// NotFoundHandler returns a simple request handler
-// that replies to each request with a ``404 page not found'' reply.
+var _ Handler = (*NotFound)(nil)
+
 type NotFound struct {
-	Handler
 	NopServer
 }
 
-func (notfound *NotFound) ReadMsg(b *bufio.Reader) (msg interface{}, err error) {
+func (notfound *NotFound) ReadMsg(b *bufio.Reader) (msg any, err error) {
 	return nil, ErrNotFound
 }
-func (notfound *NotFound) HandleMsg(b *bufio.Writer, msg interface{}) error {
+func (notfound *NotFound) HandleMsg(b *bufio.Writer, msg any) error {
 	return ErrServerClosed
 }

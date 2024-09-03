@@ -8,14 +8,21 @@ import (
 	"bytes"
 	"reflect"
 	"strings"
+	_ "unsafe" // for go:linkname
 
 	"github.com/mitchellh/mapstructure"
-	strings_ "github.com/searKing/golang/go/strings"
+	maps_ "github.com/searKing/golang/go/exp/maps"
 	json_ "github.com/searKing/golang/third_party/github.com/spf13/viper/json"
 	"github.com/searKing/golang/third_party/google.golang.org/protobuf/encoding/protojson"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/proto"
 )
+
+//go:linkname decode github.com/spf13/viper.decode
+func decode(input any, config *mapstructure.DecoderConfig) error
+
+//go:linkname defaultDecoderConfig github.com/spf13/viper.defaultDecoderConfig
+func defaultDecoderConfig(output any, opts ...viper.DecoderConfigOption) *mapstructure.DecoderConfig
 
 // DecodeProtoJsonHook if set, will be called before any decoding and any
 // type conversion (if WeaklyTypedInput is on). This lets you modify
@@ -40,75 +47,78 @@ func DecodeProtoJsonHook(v proto.Message) viper.DecoderConfigOption {
 
 // UnmarshalKey takes a single key and unmarshalls it into a Struct.
 // use protojson to decode if rawVal is proto.Message
-func UnmarshalKey(key string, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	if key == "" {
-		return Unmarshal(rawVal, opts...)
-	}
+func UnmarshalKey(key string, rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeyViper(viper.GetViper(), key, rawVal, opts...)
+}
+
+func UnmarshalKeyViper(v *viper.Viper, key string, rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeysViper(v, strings.Split(key, "."), rawVal, opts...)
+}
+
+func UnmarshalKeys(keys []string, rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeysViper(viper.GetViper(), keys, rawVal)
+}
+
+func UnmarshalKeysViper(v *viper.Viper, keys []string, rawVal any, opts ...viper.DecoderConfigOption) error {
 	if val, ok := rawVal.(proto.Message); ok {
 		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
 	}
-	return viper.UnmarshalKey(key, rawVal, opts...)
-}
 
-func UnmarshalKeyViper(v *viper.Viper, key string, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
 	if v == nil {
-		return UnmarshalKey(key, rawVal, opts...)
+		v = viper.GetViper()
 	}
-	if key == "" {
-		return UnmarshalViper(v, rawVal, opts...)
+	if len(keys) == 0 {
+		return v.Unmarshal(rawVal, opts...)
 	}
-	if val, ok := rawVal.(proto.Message); ok {
-		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
+	c := maps_.NestedMap[string](v.AllSettings())
+	val, has := c.Load(keys)
+	if !has {
+		return nil
 	}
-	return v.UnmarshalKey(key, rawVal, opts...)
-}
-
-func UnmarshalKeys(keys []string, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	return UnmarshalKey(strings.Join(strings_.SliceTrimEmpty(keys...), "."), rawVal, opts...)
-}
-
-func UnmarshalKeysViper(v *viper.Viper, keys []string, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	return UnmarshalKeyViper(v, strings.Join(strings_.SliceTrimEmpty(keys...), "."), rawVal, opts...)
+	return decode(val, defaultDecoderConfig(rawVal, opts...))
 }
 
 // Unmarshal unmarshalls the config into a Struct. Make sure that the tags
 // on the fields of the structure are properly set.
 // use protojson to decode if rawVal is proto.Message
-func Unmarshal(rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	if val, ok := rawVal.(proto.Message); ok {
-		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
-	}
-	return viper.Unmarshal(rawVal, opts...)
+func Unmarshal(rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeys(nil, rawVal, opts...)
 }
 
-func UnmarshalViper(v *viper.Viper, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	if v == nil {
-		return Unmarshal(rawVal, opts...)
-	}
-	if val, ok := rawVal.(proto.Message); ok {
-		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
-	}
-	return v.Unmarshal(rawVal, opts...)
+func UnmarshalViper(v *viper.Viper, rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeysViper(v, nil, rawVal, opts...)
 }
 
 // UnmarshalExact unmarshals the config into a Struct, erroring if a field is nonexistent
 // in the destination struct.
 // use protojson to decode if rawVal is proto.Message
-func UnmarshalExact(rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	if val, ok := rawVal.(proto.Message); ok {
-		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
-	}
-	return viper.UnmarshalExact(rawVal, opts...)
+func UnmarshalExact(rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalExactViper(viper.GetViper(), rawVal, opts...)
 }
 
-func UnmarshalExactViper(v *viper.Viper, rawVal interface{}, opts ...viper.DecoderConfigOption) error {
-	if v == nil {
-		return UnmarshalExact(rawVal, opts...)
-	}
+func UnmarshalKeysExactViper(v *viper.Viper, keys []string, rawVal any, opts ...viper.DecoderConfigOption) error {
 	if val, ok := rawVal.(proto.Message); ok {
 		opts = append([]viper.DecoderConfigOption{DecodeProtoJsonHook(val)}, opts...)
 	}
-	return v.UnmarshalExact(rawVal, opts...)
+
+	if v == nil {
+		v = viper.GetViper()
+	}
+	if len(keys) == 0 {
+		return v.UnmarshalExact(rawVal, opts...)
+	}
+	c := maps_.NestedMap[string](v.AllSettings())
+	val, has := c.Load(keys)
+	if !has {
+		return nil
+	}
+	config := defaultDecoderConfig(rawVal, opts...)
+	config.ErrorUnused = true
+	return decode(val, config)
+}
+
+func UnmarshalExactViper(v *viper.Viper, rawVal any, opts ...viper.DecoderConfigOption) error {
+	return UnmarshalKeysExactViper(v, nil, rawVal, opts...)
 }
 
 // UnmarshalProtoMessageHookFunc returns a DecodeHookFunc that converts
@@ -116,7 +126,7 @@ func UnmarshalExactViper(v *viper.Viper, rawVal interface{}, opts ...viper.Decod
 // Trick of protobuf, which generates json tag only
 // def is the default value of dst
 func UnmarshalProtoMessageHookFunc(def proto.Message) mapstructure.DecodeHookFunc {
-	return func(src reflect.Type, dst reflect.Type, data interface{}) (interface{}, error) {
+	return func(src reflect.Type, dst reflect.Type, data any) (any, error) {
 		dataProto, ok := reflect.New(dst).Interface().(proto.Message)
 		if !ok {
 			return data, nil

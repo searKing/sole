@@ -7,6 +7,7 @@ package rate
 import (
 	"context"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -24,28 +25,27 @@ type allow struct {
 	ok bool
 }
 
-func run(t *testing.T, lim *BurstLimiter, allows []allow) {
+func runAllow(t *testing.T, lim *BurstLimiter, allows []allow) {
 	for i, allow := range allows {
 		ok := lim.AllowN(allow.n)
 		if ok {
 			lim.PutTokenN(allow.n)
 		}
 		if ok != allow.ok {
-			t.Errorf("step %d: lim.AllowN(%v) = %v want %v",
-				i, allow.n, ok, allow.ok)
+			t.Errorf("step %d: lim.AllowN(%v) = %v want %v", i, allow.n, ok, allow.ok)
 		}
 	}
 }
 
 func TestLimiterBurst1(t *testing.T) {
-	run(t, NewFullBurstLimiter(1), []allow{
+	runAllow(t, NewFullBurstLimiter(1), []allow{
 		{1, true},
 		{2, false}, // burst size is 1, so n=2 always fails
 	})
 }
 
 func TestLimiterBurst3(t *testing.T) {
-	run(t, NewFullBurstLimiter(3), []allow{
+	runAllow(t, NewFullBurstLimiter(3), []allow{
 		{1, true},
 		{2, true},
 		{3, true},
@@ -134,25 +134,21 @@ func TestLongRunningQPS(t *testing.T) {
 	}
 }
 
-type request struct {
-	n  int
-	ok bool
+type reserve struct {
+	n     int
+	ready bool
 }
 
-func runReserve(t *testing.T, lim *BurstLimiter, req request) *Reservation {
+func runReserve(t *testing.T, lim *BurstLimiter, req reserve) *Reservation {
 	return runReserveMax(t, lim, req, time_.InfDuration)
 }
 
-func runReserveMax(t *testing.T, lim *BurstLimiter, req request, maxReserve time.Duration) *Reservation {
+func runReserveMax(t *testing.T, lim *BurstLimiter, req reserve, maxReserve time.Duration) *Reservation {
 	ctx, cancel := context.WithTimeout(context.Background(), maxReserve)
 	defer cancel()
-	r := lim.reserveN(ctx, req.n, false)
-	if r.ok {
-		lim.PutTokenN(req.n)
-	}
-	if r.ok != req.ok {
-		t.Errorf("lim.reserveN(%v, %v) = (%v) want (%v)",
-			req.n, maxReserve, r.ok, req.ok)
+	r := lim.reserveN(ctx, req.n, false, false)
+	if r.Ready() != req.ready {
+		t.Errorf("lim.reserveN(%v, %v) = (%v) want (%v)", req.n, maxReserve, r.Ready(), req.ready)
 	}
 	return r
 }
@@ -160,104 +156,131 @@ func runReserveMax(t *testing.T, lim *BurstLimiter, req request, maxReserve time
 func TestSimpleReserve(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	runReserve(t, lim, request{2, true})
-	runReserve(t, lim, request{2, true})
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	runReserve(t, lim, reserve{2, true}).PutToken()
+}
+
+func TestSimpleReserveGC(t *testing.T) {
+	// disable GC so we can control when it happens.
+	defer debug.SetGCPercent(debug.SetGCPercent(-1))
+	var rc bool
+	{
+		lim := NewEmptyBurstLimiter(1)
+		r := lim.Reserve(context.Background())
+		r.canceled = func() {
+			rc = true
+		}
+		// After one GC, the BurstLimiter should keep the reservation alive.
+		runtime.GC()
+		if rc {
+			t.Errorf("reservation should be alive after gc")
+		}
+		runtime.KeepAlive(r)
+
+		// A second GC should drop the reservation.
+		runtime.GC()
+		if !rc {
+			t.Errorf("reservation should be dropped after gc")
+		}
+	}
 }
 
 func TestMix(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{3, false}) // should return false because n > Burst
-	runReserve(t, lim, request{2, true})
-	run(t, lim, []allow{{3, false}}) // not enough tokens - don't allow
-	runReserve(t, lim, request{2, true})
-	run(t, lim, []allow{{1, true}})
+	runReserve(t, lim, reserve{3, false}).PutToken() // should return false because n > Burst
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	runAllow(t, lim, []allow{{3, false}}) // not enough tokens - don't allow
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	runAllow(t, lim, []allow{{1, true}})
 }
 
 func TestCancelInvalid(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	r := runReserve(t, lim, request{3, false})
-	r.Cancel()                           // should have no effect
-	runReserve(t, lim, request{2, true}) // did not get extra tokens
+	r := runReserve(t, lim, reserve{2, true})
+	defer r.PutToken()
+	runReserve(t, lim, reserve{3, false}) // should have no effect
+	runReserve(t, lim, reserve{2, false}) // did not get extra tokens
 }
 
 func TestCancelLast(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	r := runReserve(t, lim, request{2, true})
-	r.Cancel() // got 2 tokens back
-	runReserve(t, lim, request{2, true})
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	r := runReserve(t, lim, reserve{2, true})
+	r.PutToken() // got 2 tokens back
+	runReserve(t, lim, reserve{2, true}).PutToken()
 }
 
 func TestCancelTooLate(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	r := runReserve(t, lim, request{2, true})
-	r.Cancel() // too late to cancel - should have no effect
-	runReserve(t, lim, request{2, true})
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	r := runReserve(t, lim, reserve{2, true})
+	runReserve(t, lim, reserve{2, false})
+	r.PutToken() // too late to cancel - should have no effect
 }
 
-func TestCancel0Tokens(t *testing.T) {
+func TestCancel1Tokens(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	r := runReserve(t, lim, request{1, true})
-	runReserve(t, lim, request{1, true})
-	r.Cancel() // got 0 tokens back
-	runReserve(t, lim, request{1, true})
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	r := runReserve(t, lim, reserve{1, true})
+	runReserve(t, lim, reserve{1, true})
+	runReserve(t, lim, reserve{1, false})
+	r.PutToken() // got 1 tokens back
+	runReserve(t, lim, reserve{1, true})
 }
 
-func TestCancel1Token(t *testing.T) {
+func TestCancel2Token(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true})
-	r := runReserve(t, lim, request{2, true})
-	runReserve(t, lim, request{1, true})
-	r.Cancel() // got 1 token back
-	runReserve(t, lim, request{2, true})
+	runReserve(t, lim, reserve{2, true}).PutToken()
+	r := runReserve(t, lim, reserve{2, true})
+	runReserve(t, lim, reserve{1, false})
+	r.PutToken() // got 2 token back
+	runReserve(t, lim, reserve{2, true})
 }
 
 func TestCancelMulti(t *testing.T) {
 	lim := NewFullBurstLimiter(4)
 
-	runReserve(t, lim, request{4, true})
-	rA := runReserve(t, lim, request{3, true})
-	runReserve(t, lim, request{1, true})
-	rC := runReserve(t, lim, request{1, true})
-	rC.Cancel() // get 1 token back
-	rA.Cancel() // get 2 tokens back, as if C was never reserved
-	runReserve(t, lim, request{3, true})
+	runReserve(t, lim, reserve{4, true}).PutToken()
+	rA := runReserve(t, lim, reserve{3, true})
+	runReserve(t, lim, reserve{1, true}).PutToken()
+	rC := runReserve(t, lim, reserve{1, true})
+	rC.PutToken() // get 1 token back
+	rA.PutToken() // get 3+1 tokens back, as if C was never reserved
+	runReserve(t, lim, reserve{4, true})
 }
 
 func TestReserveJumpBack(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true}) // start at t1
-	runReserve(t, lim, request{1, true}) // should violate Limit,Burst
-	runReserve(t, lim, request{2, true})
+	runReserve(t, lim, reserve{2, true}).PutToken() // start at t1
+	runReserve(t, lim, reserve{1, true}).PutToken() // should violate Limit,Burst
+	runReserve(t, lim, reserve{2, true}).PutToken()
 }
 
 func TestReserveJumpBackCancel(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 
-	runReserve(t, lim, request{2, true}) // start at t1
-	r := runReserve(t, lim, request{2, true})
-	runReserve(t, lim, request{1, true})
-	r.Cancel()                           // cancel at get 1 token back
-	runReserve(t, lim, request{2, true}) // should violate Limit,Burst
+	runReserve(t, lim, reserve{2, true}).PutToken() // start at t1
+	r := runReserve(t, lim, reserve{2, true})
+	runReserve(t, lim, reserve{0, true})
+	runReserve(t, lim, reserve{1, false})
+	r.PutToken()                         // cancel at get 1 token back
+	runReserve(t, lim, reserve{2, true}) // should violate Limit,Burst
 }
 
 func TestReserveMax(t *testing.T) {
 	lim := NewFullBurstLimiter(2)
 	maxT := d
 
-	runReserveMax(t, lim, request{2, true}, maxT)
-	runReserveMax(t, lim, request{1, true}, maxT) // reserve for close future
+	runReserveMax(t, lim, reserve{2, true}, maxT).PutToken()
+	runReserveMax(t, lim, reserve{1, true}, maxT).PutToken() // reserve for close future
 }
 
 type wait struct {
@@ -301,6 +324,25 @@ func TestWaitTimeout(t *testing.T) {
 	defer cancel()
 	runWait(t, lim, wait{"act-now", ctx, 2, true})
 	runWait(t, lim, wait{"w-timeout-err", ctx, 3, false})
+}
+
+func TestWaitBlock(t *testing.T) {
+	lim := NewFullBurstLimiter(1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	runWait(t, lim, wait{"act-now", context.Background(), 1, true})
+	runtime.GC()
+	runWait(t, lim, wait{"w-timeout-err", ctx, 1, false})
+	// timeout
+	lim.PutToken()
+	{
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		runWait(t, lim, wait{"act-later", ctx, 1, true})
+		runtime.GC()
+		runWait(t, lim, wait{"w-timeout-err", ctx, 1, false})
+	}
+
 }
 
 func BenchmarkAllowN(b *testing.B) {
@@ -353,7 +395,7 @@ func TestSimultaneousLongRequests(t *testing.T) {
 			defer cancel()
 		}
 		if err := lim.Wait(limiterCtx); err != nil {
-			t.Logf("#%d wait expect ok, got err %s", i, err)
+			t.Logf("#%d wait expect ready, got err %s", i, err)
 		} else {
 			atomic.AddUint32(&numOK, 1)
 			defer lim.PutToken()

@@ -4,10 +4,8 @@
 
 package signal
 
-import "C"
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -18,12 +16,12 @@ import (
 // enhance signal.Notify with stacktrace of cgo.
 // redirects signal log to stdout
 func init() {
-	DumpSignalTo(syscall.Stdout)
+	DumpSignalTo(int(syscall.Stdout))
 	// FIXME https://github.com/golang/go/issues/35814
 	//RegisterOnSignal(OnSignalHandlerFunc(func(signum os.Signal) {}))
 
 	var dumpfile string
-	if f, err := ioutil.TempFile("", "*.stacktrace.dump"); err == nil {
+	if f, err := os.CreateTemp("", "*.stacktrace.dump"); err == nil {
 		dumpfile = f.Name()
 	} else {
 		dumpfile = filepath.Join(os.TempDir(), fmt.Sprintf("stacktrace.%d.dump", time.Now().UnixNano()))

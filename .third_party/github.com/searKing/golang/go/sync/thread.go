@@ -6,9 +6,17 @@ package sync
 
 import (
 	"context"
+	"errors"
+	"expvar"
 	"runtime"
 	"sync"
+
+	expvar_ "github.com/searKing/golang/go/expvar"
 )
+
+var threadStatsOnce sync.Once
+var threadStats *expvar.Map
+var osThreadLeak, goroutineLeak, handlerLeak expvar_.Leak
 
 //go:generate go-option -type=threadDo
 type threadDo struct {
@@ -21,6 +29,11 @@ type threadDo struct {
 type Thread struct {
 	GoRoutine bool // Use thread as goroutine, that is without runtime.LockOSThread()
 
+	// The Leak is published as a variable directly.
+	GoroutineLeak *expvar_.Leak // represents whether goroutine is leaked, take effects if not nil
+	OSThreadLeak  *expvar_.Leak // represents whether runtime.LockOSThread is leaked, take effects  if not nil
+	HandlerLeak   *expvar_.Leak // represents whether handler in Do is blocked is leaked, take effects  if not nil
+
 	once sync.Once
 	// fCh optionally specifies a function to generate
 	// a value when Get would otherwise return nil.
@@ -29,44 +42,65 @@ type Thread struct {
 
 	mu     sync.Mutex
 	ctx    context.Context
-	cancel func()
+	cancel context.CancelCauseFunc
 }
 
-func (th *Thread) Shutdown() {
-	th.initOnce()
-	th.cancel()
+// WatchStats bind Leak var to "sync.Thread"
+func (t *Thread) WatchStats() {
+	threadStatsOnce.Do(func() {
+		threadStats = expvar.NewMap("sync.Thread")
+		threadStats.Set("goroutine_leak", &goroutineLeak)
+		threadStats.Set("os_thread_leak", &osThreadLeak)
+		threadStats.Set("handler_leak", &handlerLeak)
+	})
+	t.GoroutineLeak = &goroutineLeak
+	t.OSThreadLeak = &osThreadLeak
+	t.HandlerLeak = &handlerLeak
 }
 
-func (th *Thread) initOnce() {
-	th.once.Do(func() {
-		th.mu.Lock()
-		defer th.mu.Unlock()
-		th.ctx, th.cancel = context.WithCancel(context.Background())
-		th.fCh = make(chan func())
-		go th.lockOSThreadForever()
+// ErrThreadClosed is returned by the Thread's Do methods after a call to `Shutdown`.
+var ErrThreadClosed = errors.New("sync: Thread closed")
+
+func (t *Thread) Shutdown() {
+	t.initOnce()
+	t.cancel(ErrThreadClosed)
+}
+
+func (t *Thread) initOnce() {
+	t.once.Do(func() {
+		t.mu.Lock()
+		defer t.mu.Unlock()
+
+		t.ctx, t.cancel = context.WithCancelCause(context.Background())
+		t.fCh = make(chan func())
+		go t.lockOSThreadForever()
 	})
 }
 
 // Do will call the function f in the same thread or escape thread.
 // f is enqueued only if ctx is not canceled and Thread is not Shutdown and Not escape
-func (th *Thread) Do(ctx context.Context, f func(), opts ...ThreadDoOption) error {
+func (t *Thread) Do(ctx context.Context, f func(), opts ...ThreadDoOption) error {
 	var opt threadDo
 	opt.ApplyOptions(opts...)
-	return th.do(ctx, f, opt.EscapeThread)
+	return t.do(ctx, f, opt.EscapeThread)
 }
 
-func (th *Thread) do(ctx context.Context, f func(), escapeThread bool) error {
-	th.initOnce()
+func (t *Thread) do(ctx context.Context, f func(), escapeThread bool) error {
+	t.initOnce()
+	if t.HandlerLeak != nil {
+		t.HandlerLeak.Add(1)
+		defer t.HandlerLeak.Done()
+	}
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case <-th.ctx.Done():
-		return th.ctx.Err()
+		return context.Cause(ctx)
+	case <-t.ctx.Done():
+		return context.Cause(t.ctx)
 	default:
 		break
 	}
 
-	var r interface{}
+	var r any
 	defer func() {
 		if r != nil {
 			panic(r) // rethrow panic if panic in f
@@ -82,31 +116,40 @@ func (th *Thread) do(ctx context.Context, f func(), escapeThread bool) error {
 		}()
 		f()
 	}
+
 	if escapeThread {
 		neverPanic()
 		return nil
 	}
 
 	select {
-	case th.fCh <- neverPanic:
+	case t.fCh <- neverPanic:
 		wg.Wait() // wait for f has been executed or panic
 		return nil
 	case <-ctx.Done():
-		return ctx.Err()
-	case <-th.ctx.Done():
-		return th.ctx.Err()
+		return context.Cause(ctx)
+	case <-t.ctx.Done():
+		return context.Cause(t.ctx)
 	}
 }
 
-func (th *Thread) lockOSThreadForever() {
-	defer th.cancel()
-	if !th.GoRoutine {
+func (t *Thread) lockOSThreadForever() {
+	defer t.cancel(ErrThreadClosed)
+	if t.GoroutineLeak != nil {
+		t.GoroutineLeak.Add(1)
+		defer t.GoroutineLeak.Done()
+	}
+	if !t.GoRoutine {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
+		if t.OSThreadLeak != nil {
+			t.OSThreadLeak.Add(1)
+			defer t.OSThreadLeak.Done()
+		}
 	}
 	for {
 		select {
-		case handler, ok := <-th.fCh:
+		case handler, ok := <-t.fCh:
 			if !ok {
 				return
 			}
@@ -114,7 +157,7 @@ func (th *Thread) lockOSThreadForever() {
 				continue
 			}
 			handler()
-		case <-th.ctx.Done():
+		case <-t.ctx.Done():
 			return
 		}
 	}

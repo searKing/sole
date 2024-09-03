@@ -1,8 +1,9 @@
 package os_test
 
 import (
-	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	os_ "github.com/searKing/golang/go/os"
@@ -10,7 +11,7 @@ import (
 
 // tmpDir creates a temporary directory and returns its name.
 func tmpFile(t *testing.T) string {
-	tmp, err := ioutil.TempFile("", "")
+	tmp, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatalf("temp file creation failed: %v", err)
 	}
@@ -25,7 +26,10 @@ func TestCreateAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("temp file CreateAll failed: %v", err)
 	}
-	defer f.Close()
+	err = f.Close()
+	if err != nil {
+		t.Fatalf("temp file Close failed: %v", err)
+	}
 	if err := os.Remove(tmp); err != nil {
 		t.Fatalf("temp file Remove failed: %v", err)
 	}
@@ -37,7 +41,10 @@ func TestTouchAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("temp file TouchAll failed: %v", err)
 	}
-	defer f.Close()
+	err = f.Close()
+	if err != nil {
+		t.Fatalf("temp file Close failed: %v", err)
+	}
 	if err := os.Remove(tmp); err != nil {
 		t.Fatalf("temp file Remove failed: %v", err)
 	}
@@ -49,7 +56,10 @@ func TestCreateAllIfNotExist(t *testing.T) {
 	if err != nil {
 		t.Fatalf("temp file CreateAllIfNotExist failed: %v", err)
 	}
-	defer f.Close()
+	err = f.Close()
+	if err != nil {
+		t.Fatalf("temp file Close failed: %v", err)
+	}
 	if err := os.Remove(tmp); err != nil {
 		t.Fatalf("temp file CreateAllIfNotExist failed: %v", err)
 	}
@@ -96,5 +106,37 @@ func TestReSymlink(t *testing.T) {
 	}
 	if err := os.Remove(tmpNew); err != nil {
 		t.Fatalf("temp file[%s] Remove failed: %v", tmpNew, err)
+	}
+}
+
+func TestNextFile(t *testing.T) {
+	t.Parallel()
+
+	dir, err := os.MkdirTemp("", "TestNextFileBadDir")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	tests := []struct{ pattern, prefix, suffix string }{
+		{filepath.Join(dir, "tempfile_test"), "tempfile_test", ""},
+		{filepath.Join(dir, "tempfile_test*"), "tempfile_test", ""},
+		{filepath.Join(dir, "tempfile_test*xyz"), "tempfile_test", "xyz"},
+	}
+
+	for _, test := range tests {
+		f, seq, err := os_.NextFile(test.pattern, 0)
+		if err != nil {
+			t.Errorf("CreateTemp(..., %q) error: %v", test.pattern, err)
+			continue
+		}
+		defer os.Remove(f.Name())
+		base := filepath.Base(f.Name())
+		f.Close()
+		_ = seq
+		if !(strings.HasPrefix(base, test.prefix) && strings.HasSuffix(base, test.suffix)) {
+			t.Errorf("NextFile pattern %q created bad name %q; want prefix %q suffix %q",
+				test.pattern, base, test.prefix, test.suffix)
+		}
 	}
 }

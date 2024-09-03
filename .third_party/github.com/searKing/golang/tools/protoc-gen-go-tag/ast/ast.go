@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"unicode"
 
 	"google.golang.org/protobuf/types/pluginpb"
 
@@ -17,13 +16,6 @@ import (
 
 	"github.com/searKing/golang/tools/protoc-gen-go-tag/tag"
 )
-
-func isPublicName(name string) bool {
-	for _, c := range name {
-		return unicode.IsUpper(c)
-	}
-	return false
-}
 
 // GoFile holds a single parsed astFile and associated data.
 type GoFile struct {
@@ -93,7 +85,7 @@ func (g *GoFile) genDecl(node ast.Node) bool {
 			fieldName := ""
 			if len(field.Names) != 0 { // pick first exported Name
 				for _, field := range field.Names {
-					if isPublicName(field.Name) {
+					if ast.IsExported(field.Name) {
 						fieldName = field.Name
 						break
 					}
@@ -145,7 +137,7 @@ func (g *GoFile) genDecl(node ast.Node) bool {
 					_ = goTags.Set(goTag)
 				}
 
-				// struct tags: protobuf, json, other tags ordered by ascii
+				// the order rule of struct tags is: protobuf, json, other tags in the same order written in *.proto.
 				var keys = []string{"protobuf", "json"}
 				keys = append(keys, strings_.SliceTrim(goTags.OrderKeys(), "protobuf", "json")...)
 				newGoTag := goTags.SelectAstString(keys...)

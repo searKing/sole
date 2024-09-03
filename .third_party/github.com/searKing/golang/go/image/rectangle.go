@@ -198,7 +198,13 @@ func (r Rectangle2f) UnionPoints(pts ...Point2f) Rectangle2f {
 	if len(pts) == 0 {
 		return r
 	}
-	for _, p := range pts[1:] {
+	var pos int
+	if r.Empty() { // an empty rectangle is a empty set, Not a point
+		r.Min = pts[0]
+		r.Max = pts[0]
+		pos = 1
+	}
+	for _, p := range pts[pos:] {
 		if p.X < r.Min.X {
 			r.Min.X = p.X
 		}
@@ -217,6 +223,9 @@ func (r Rectangle2f) UnionPoints(pts ...Point2f) Rectangle2f {
 
 // ScaleByFactor scale rect to factor*size
 func (r Rectangle2f) ScaleByFactor(factor Point2f) Rectangle2f {
+	if r.Empty() {
+		return r
+	}
 	factor = factor.Sub(Pt2f(1, 1))
 	minOffset := Point2f{
 		X: r.Dx() * factor.X / 2,

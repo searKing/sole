@@ -13,12 +13,20 @@ import (
 var pairTests = []string{
 	"",
 	"{abc}",
-	"{abc}sss",
+	"{abc}{def}",
+	"{abc{def}hij}",
+	"sss{abc}",
+	"{abc}eee",
+	"sss{abc}eee",
 	"{a[b]c}",
 	"}{abc}",
 }
-var espectedpairTests = []string{
+var expectedPairTests = []string{
 	"",
+	"{abc}",
+	"{abc}",
+	"{abc{def}hij}",
+	"{abc}",
 	"{abc}",
 	"{abc}",
 	"{a[b]c}",
@@ -26,18 +34,16 @@ var espectedpairTests = []string{
 }
 
 func TestPairScanner(t *testing.T) {
-
-	for n, test := range pairTests {
-		buf := strings.NewReader(test)
-		s := NewPairScanner(buf).SetDiscardLeading(true)
+	for i, test := range pairTests {
+		s := NewPairScanner(strings.NewReader(test)).SetDiscardLeading(true)
 		p, err := s.ScanDelimiters("{}")
-		if err != nil && n != 0 {
-			t.Errorf("#%d: Scan error:%v\n", n, err)
+		if err != nil && i != 0 {
+			t.Errorf("#%d: Scan error:%v\n", i, err)
 			continue
 		}
 
-		if !bytes.Equal(p, []byte(espectedpairTests[n])) {
-			t.Errorf("#%d: expected %q got %q", n, test, string(p))
+		if !bytes.Equal(p, []byte(expectedPairTests[i])) {
+			t.Errorf("#%d: expected %q got %q", i, test, string(p))
 		}
 	}
 }

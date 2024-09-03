@@ -32,16 +32,19 @@ func TestTimeout(t *testing.T) {
 	defer leakcheck.Check(t)
 	loopbackLis := testListener(t)
 	defer loopbackLis.Close()
-	result := make(chan int, 5)
+	http1Result := make(chan int, 5)
+	anyResult := make(chan int, 5)
 	testDuration := time.Millisecond * 500
-	srv := mux.NewServer()
-
-	mux.DefaultServeMux.SetReadTimeout(testDuration)
-
-	http1Listener := mux.HandleListener(mux.HTTP1Fast())
+	muxer := mux.NewServeMux()
+	muxer.SetReadTimeout(testDuration)
+	http1Listener := muxer.HandleListener(mux.HTTP1Fast())
 	defer http1Listener.Close()
-	anyListener := mux.HandleListener(mux.Any())
+	anyListener := muxer.HandleListener(mux.Any())
 	defer anyListener.Close()
+
+	srv := mux.NewServer()
+	defer srv.Close()
+	srv.Handler = muxer
 
 	ctx, cancelFn := context.WithCancel(context.TODO())
 	defer cancelFn()
@@ -55,17 +58,17 @@ func TestTimeout(t *testing.T) {
 				return
 			default:
 			}
-			con, err := http1Listener.Accept()
+			conn, err := http1Listener.Accept()
 			if err != nil {
-				result <- handleHTTP1Close
+				http1Result <- handleHTTP1Close
 			} else {
-				_, _ = con.Write([]byte("http1Listener"))
-				result <- handleHTTP1Request
+				_, _ = conn.Write([]byte("http1Listener"))
+				http1Result <- handleHTTP1Request
 				select {
 				case <-ctx.Done():
 					break
 				}
-				_ = con.Close()
+				_ = conn.Close()
 			}
 			select {
 			case <-ctx.Done():
@@ -80,17 +83,17 @@ func TestTimeout(t *testing.T) {
 				return
 			default:
 			}
-			con, err := anyListener.Accept()
+			conn, err := anyListener.Accept()
 			if err != nil {
-				result <- handleAnyClose
+				anyResult <- handleAnyClose
 			} else {
-				_, err = con.Write([]byte("any"))
-				result <- handleAnyRequest
+				_, err = conn.Write([]byte("any"))
+				anyResult <- handleAnyRequest
 				select {
 				case <-ctx.Done():
 					break
 				}
-				_ = con.Close()
+				_ = conn.Close()
 			}
 		}
 	}()
@@ -101,9 +104,9 @@ func TestTimeout(t *testing.T) {
 	}
 	defer client.Close()
 	time.Sleep(testDuration / 2)
-	if len(result) != 0 {
+	if len(anyResult) != 0 {
 		log.Print("tcp ")
-		t.Fatal("testTimeout failed: accepted to fast: ", len(result))
+		t.Fatal("testTimeout failed: accepted to fast: ", len(anyResult))
 	}
 	//_ = client.SetReadDeadline(time.Now().Add(testDuration * 3))
 	buffer := make([]byte, 10)
@@ -119,14 +122,17 @@ func TestTimeout(t *testing.T) {
 		log.Print("testTimeout failed: response from wrong service ")
 	}
 	time.Sleep(testDuration * 2)
-	if len(result) != 2 {
-		t.Fatal("testTimeout failed: accepted to less: ", len(result))
+	if len(http1Result) != 1 {
+		t.Fatal("testTimeout failed: http1 accepted to less: ", len(http1Result))
 	}
-	if a := <-result; a != handleAnyRequest {
-		t.Fatal("testTimeout failed: anyListener rule did not match")
+	if len(anyResult) != 1 {
+		t.Fatal("testTimeout failed: any accepted to less: ", len(anyResult))
 	}
-	if a := <-result; a != handleHTTP1Close {
+	if a := <-http1Result; a != handleHTTP1Close {
 		t.Fatal("testTimeout failed: no close an http rule")
+	}
+	if a := <-anyResult; a != handleAnyRequest {
+		t.Fatal("testTimeout failed: anyListener rule did not match")
 	}
 }
 
@@ -153,21 +159,23 @@ func TestRead(t *testing.T) {
 		}
 	}()
 
+	muxer := mux.NewServeMux()
+	// Register a bogus matcher to force buffering exactly the right amount.
+	// Before this fix, this would trigger a bug where `Read` would incorrectly
+	// report `io.EOF` when only the buffer had been consumed.
+	_ = muxer.HandleListener(mux.MatcherFunc(func(w io.Writer, r io.Reader) bool {
+		var b [len(payload)]byte
+		_, _ = r.Read(b[:])
+		return false
+	}))
+	anyl := muxer.HandleListener(mux.Any())
+
 	l := newChanListener()
 	l.Notify(reader)
 	defer l.Close()
 	srv := mux.NewServer()
 	defer srv.Close()
-
-	// Register a bogus matcher to force buffering exactly the right amount.
-	// Before this fix, this would trigger a bug where `Read` would incorrectly
-	// report `io.EOF` when only the buffer had been consumed.
-	_ = mux.HandleListener(mux.MatcherFunc(func(w io.Writer, r io.Reader) bool {
-		var b [len(payload)]byte
-		_, _ = r.Read(b[:])
-		return false
-	}))
-	anyl := mux.HandleListener(mux.Any())
+	srv.Handler = muxer
 	go safeServe(errCh, srv, l)
 	muxedConn, err := anyl.Accept()
 	if err != nil {
@@ -213,10 +221,13 @@ func TestAny(t *testing.T) {
 
 	var wg sync.WaitGroup
 	func() {
+		muxer := mux.NewServeMux()
+		httpl := muxer.HandleListener(mux.Any())
+
 		srv := mux.NewServer()
 		defer srv.Close()
+		srv.Handler = muxer
 
-		httpl := mux.HandleListener(mux.Any())
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -253,12 +264,14 @@ func TestTLS(t *testing.T) {
 	}()
 	l := testListener(t)
 	defer l.Close()
+	muxer := mux.NewServeMux()
+
+	tlsl := muxer.HandleListener(mux.TLS())
+	httpl := muxer.HandleListener(mux.Any())
 
 	srv := mux.NewServer()
 	defer srv.Close()
-
-	tlsl := mux.HandleListener(mux.TLS())
-	httpl := mux.HandleListener(mux.Any())
+	srv.Handler = muxer
 
 	go runTestTLSServer(errCh, tlsl)
 	go runTestHTTPServer(errCh, httpl)
@@ -294,19 +307,21 @@ func TestHTTP2(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
+	muxer := mux.NewServeMux()
+
+	// Register a bogus matcher that only reads one byte.
+	muxer.HandleListener(mux.MatcherFunc(func(w io.Writer, r io.Reader) bool {
+		var b [1]byte
+		_, _ = r.Read(b[:])
+		return false
+	}))
+	h2l := muxer.HandleListener(mux.HTTP2())
 
 	l := newChanListener()
 	l.Notify(reader)
 	srv := mux.NewServer()
 	defer srv.Close()
-
-	// Register a bogus matcher that only reads one byte.
-	mux.HandleListener(mux.MatcherFunc(func(w io.Writer, r io.Reader) bool {
-		var b [1]byte
-		_, _ = r.Read(b[:])
-		return false
-	}))
-	h2l := mux.HandleListener(mux.HTTP2())
+	srv.Handler = muxer
 	go safeServe(errCh, srv, l)
 	muxedConn, err := h2l.Accept()
 	_ = l.Close()
@@ -356,12 +371,15 @@ func TestHTTPGoRPC(t *testing.T) {
 	l := testListener(t)
 	defer l.Close()
 
+	muxer := mux.NewServeMux()
+
+	httpl := muxer.HandleListener(mux.MatcherAny(mux.HTTP2(), mux.HTTP1Fast()))
+
+	rpcl := muxer.HandleListener(mux.Any())
+
 	srv := mux.NewServer()
 	defer srv.Close()
-
-	httpl := mux.HandleListener(mux.MatcherAny(mux.HTTP2(), mux.HTTP1Fast()))
-
-	rpcl := mux.HandleListener(mux.Any())
+	srv.Handler = muxer
 
 	go runTestHTTPServer(errCh, httpl)
 	go runTestRPCServer(errCh, rpcl)
@@ -389,11 +407,14 @@ func TestErrorHandler(t *testing.T) {
 		}
 	}()
 	l := testListener(t)
+	muxer := mux.NewServeMux()
 
 	srv := mux.NewServer()
 	defer srv.Close()
+	srv.Handler = muxer
+	srv.Handler = muxer
 
-	httpl := mux.HandleListener(mux.MatcherAny(mux.HTTP2(), mux.HTTP1Fast()))
+	httpl := muxer.HandleListener(mux.MatcherAny(mux.HTTP2(), mux.HTTP1Fast()))
 
 	go runTestHTTPServer(errCh, httpl)
 	go safeServe(errCh, srv, l)
@@ -401,7 +422,7 @@ func TestErrorHandler(t *testing.T) {
 	var errCount uint32
 	srv.HandleError(mux.ErrorHandlerFunc(func(err error) bool {
 		if atomic.AddUint32(&errCount, 1) == 1 {
-			t.Logf("expected error: %v", err)
+			t.Logf("got an expected error: %v", err)
 		}
 		return true
 	}))
@@ -448,10 +469,12 @@ func TestMultipleMatchers(t *testing.T) {
 		return false
 	}
 
+	muxer := mux.NewServeMux()
 	srv := mux.NewServer()
 	defer srv.Close()
+	srv.Handler = muxer
 
-	lis := mux.HandleListener(mux.MatcherAny(mux.MatcherFunc(unmatcher), mux.MatcherFunc(matcher), mux.MatcherFunc(unmatcher)))
+	lis := muxer.HandleListener(mux.MatcherAny(mux.MatcherFunc(unmatcher), mux.MatcherFunc(matcher), mux.MatcherFunc(unmatcher)))
 
 	go runTestHTTPServer(errCh, lis)
 	go safeServe(errCh, srv, l)
@@ -479,11 +502,13 @@ func TestClose(t *testing.T) {
 	l := newChanListener()
 
 	c1, c2 := net.Pipe()
+	muxer := mux.NewServeMux()
 
 	srv := mux.NewServer()
 	defer srv.Close()
+	srv.Handler = muxer
 
-	anyl := mux.HandleListener(mux.Any())
+	anyl := muxer.HandleListener(mux.Any())
 
 	go safeServe(errCh, srv, l)
 

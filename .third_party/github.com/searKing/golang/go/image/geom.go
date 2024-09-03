@@ -10,6 +10,7 @@ import (
 )
 
 // UnionPoints returns the smallest rectangle that contains all points.
+// an empty rectangle is a empty set, Not a point
 func UnionPoints(pts ...image.Point) image.Rectangle {
 	if len(pts) == 0 {
 		return image.Rectangle{}
@@ -36,7 +37,7 @@ func UnionPoints(pts ...image.Point) image.Rectangle {
 	return r
 }
 
-// UnionRectangles returns the smallest rectangle that contains all rectangles.
+// UnionRectangles returns the smallest rectangle that contains all rectangles, empty rectangles excluded.
 func UnionRectangles(rs ...image.Rectangle) image.Rectangle {
 	var ur image.Rectangle
 	for _, r := range rs {
@@ -45,15 +46,12 @@ func UnionRectangles(rs ...image.Rectangle) image.Rectangle {
 	return ur
 }
 
-func scale(segment image.Point, length int, limit image.Point) image.Point {
+// ScaleLineSegment segment's size to length flexible in limit
+func ScaleLineSegment(segment image.Point, length int, limit image.Point) image.Point {
 	var swapped = segment.X > segment.Y
 	if swapped { // swap (X,Y) -> (Y,X)
-		segment.X = segment.X ^ segment.Y
-		segment.Y = segment.X ^ segment.Y
-		segment.X = segment.X ^ segment.Y
-		limit.X = limit.X ^ limit.Y
-		limit.Y = limit.X ^ limit.Y
-		limit.X = limit.X ^ limit.Y
+		segment.X, segment.Y = segment.Y, segment.X
+		limit.X, limit.Y = limit.Y, limit.X
 	}
 
 	dx := length - (segment.Y - segment.X)
@@ -71,9 +69,7 @@ func scale(segment image.Point, length int, limit image.Point) image.Point {
 	}
 
 	if swapped {
-		segment.X = segment.X ^ segment.Y
-		segment.Y = segment.X ^ segment.Y
-		segment.X = segment.X ^ segment.Y
+		segment.X, segment.Y = segment.Y, segment.X
 	}
 	return segment
 }
@@ -81,9 +77,9 @@ func scale(segment image.Point, length int, limit image.Point) image.Point {
 // ScaleRectangleBySize scale rect to size flexible in limit
 func ScaleRectangleBySize(rect image.Rectangle, size image.Point, limit image.Rectangle) image.Rectangle {
 	// padding in x direction
-	x := scale(image.Pt(rect.Min.X, rect.Max.X), size.X, image.Pt(limit.Min.X, limit.Max.X))
-	// padding in x direction
-	y := scale(image.Pt(rect.Min.Y, rect.Max.Y), size.X, image.Pt(limit.Min.Y, limit.Max.Y))
+	x := ScaleLineSegment(image.Pt(rect.Min.X, rect.Max.X), size.X, image.Pt(limit.Min.X, limit.Max.X))
+	// padding in y direction
+	y := ScaleLineSegment(image.Pt(rect.Min.Y, rect.Max.Y), size.Y, image.Pt(limit.Min.Y, limit.Max.Y))
 
 	return limit.Intersect(image.Rect(x.X, y.X, x.Y, y.Y))
 }
