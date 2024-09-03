@@ -94,9 +94,9 @@ NONGIT_OK=Yes
 
 PATH=$PATH:$(git --exec-path)
 ## shellcheck disable=SC1090
-. git-sh-setup
+. "$(git --exec-path)/git-sh-setup"
 ## shellcheck disable=SC1090
-. git-parse-remote
+#. "$(git --exec-path)/git-parse-remote"
 require_work_tree
 wt_prefix=$(git rev-parse --show-prefix)
 cd_to_toplevel
