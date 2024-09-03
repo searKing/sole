@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,13 +23,14 @@ import "google/api/resource.proto";
 import "google/cloud/retail/v2/common.proto";
 import "google/cloud/retail/v2/import_config.proto";
 import "google/cloud/retail/v2/product.proto";
+import "google/cloud/retail/v2/purge_config.proto";
 import "google/longrunning/operations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "Google.Cloud.Retail.V2";
-option go_package = "google.golang.org/genproto/googleapis/cloud/retail/v2;retail";
+option go_package = "cloud.google.com/go/retail/apiv2/retailpb;retailpb";
 option java_multiple_files = true;
 option java_outer_classname = "ProductServiceProto";
 option java_package = "com.google.cloud.retail.v2";
@@ -86,6 +87,35 @@ service ProductService {
     option (google.api.method_signature) = "name";
   }
 
+  // Permanently deletes all selected [Product][google.cloud.retail.v2.Product]s
+  // under a branch.
+  //
+  // This process is asynchronous. If the request is valid, the removal will be
+  // enqueued and processed offline. Depending on the number of
+  // [Product][google.cloud.retail.v2.Product]s, this operation could take hours
+  // to complete. Before the operation completes, some
+  // [Product][google.cloud.retail.v2.Product]s may still be returned by
+  // [ProductService.GetProduct][google.cloud.retail.v2.ProductService.GetProduct]
+  // or
+  // [ProductService.ListProducts][google.cloud.retail.v2.ProductService.ListProducts].
+  //
+  // Depending on the number of [Product][google.cloud.retail.v2.Product]s, this
+  // operation could take hours to complete. To get a sample of
+  // [Product][google.cloud.retail.v2.Product]s that would be deleted, set
+  // [PurgeProductsRequest.force][google.cloud.retail.v2.PurgeProductsRequest.force]
+  // to false.
+  rpc PurgeProducts(PurgeProductsRequest)
+      returns (google.longrunning.Operation) {
+    option (google.api.http) = {
+      post: "/v2/{parent=projects/*/locations/*/catalogs/*/branches/*}/products:purge"
+      body: "*"
+    };
+    option (google.longrunning.operation_info) = {
+      response_type: "google.cloud.retail.v2.PurgeProductsResponse"
+      metadata_type: "google.cloud.retail.v2.PurgeProductsMetadata"
+    };
+  }
+
   // Bulk import of multiple [Product][google.cloud.retail.v2.Product]s.
   //
   // Request processing may be synchronous.
@@ -111,9 +141,9 @@ service ProductService {
   //
   // This process is asynchronous and does not require the
   // [Product][google.cloud.retail.v2.Product] to exist before updating
-  // fulfillment information. If the request is valid, the update will be
-  // enqueued and processed downstream. As a consequence, when a response is
-  // returned, updates are not immediately manifested in the
+  // fulfillment information. If the request is valid, the update is enqueued
+  // and processed downstream. As a consequence, when a response is returned,
+  // updates are not immediately manifested in the
   // [Product][google.cloud.retail.v2.Product] queried by
   // [ProductService.GetProduct][google.cloud.retail.v2.ProductService.GetProduct]
   // or
@@ -123,10 +153,10 @@ service ProductService {
   // [ProductService.CreateProduct][google.cloud.retail.v2.ProductService.CreateProduct]
   // and
   // [ProductService.UpdateProduct][google.cloud.retail.v2.ProductService.UpdateProduct],
-  // the specified inventory field value(s) will overwrite any existing value(s)
+  // the specified inventory field value(s) overwrite any existing value(s)
   // while ignoring the last update time for this field. Furthermore, the last
-  // update time for the specified inventory fields will be overwritten to the
-  // time of the
+  // update times for the specified inventory fields are overwritten by the
+  // times of the
   // [ProductService.CreateProduct][google.cloud.retail.v2.ProductService.CreateProduct]
   // or
   // [ProductService.UpdateProduct][google.cloud.retail.v2.ProductService.UpdateProduct]
@@ -134,11 +164,11 @@ service ProductService {
   //
   // If no inventory fields are set in
   // [CreateProductRequest.product][google.cloud.retail.v2.CreateProductRequest.product],
-  // then any pre-existing inventory information for this product will be used.
+  // then any pre-existing inventory information for this product is used.
   //
   // If no inventory fields are set in
   // [SetInventoryRequest.set_mask][google.cloud.retail.v2.SetInventoryRequest.set_mask],
-  // then any existing inventory information will be preserved.
+  // then any existing inventory information is preserved.
   //
   // Pre-existing inventory information can only be updated with
   // [ProductService.SetInventory][google.cloud.retail.v2.ProductService.SetInventory],
@@ -146,15 +176,14 @@ service ProductService {
   // and
   // [ProductService.RemoveFulfillmentPlaces][google.cloud.retail.v2.ProductService.RemoveFulfillmentPlaces].
   //
-  // The returned [Operation][]s will be obsolete after 1 day, and
-  // [GetOperation][] API will return NOT_FOUND afterwards.
+  // The returned [Operation][google.longrunning.Operation]s is obsolete after
+  // one day, and the [GetOperation][google.longrunning.Operations.GetOperation]
+  // API returns `NOT_FOUND` afterwards.
   //
-  // If conflicting updates are issued, the [Operation][]s associated with the
-  // stale updates will not be marked as [done][Operation.done] until being
-  // obsolete.
-  //
-  // This feature is only available for users who have Retail Search enabled.
-  // Please enable Retail Search on Cloud Console before using this feature.
+  // If conflicting updates are issued, the
+  // [Operation][google.longrunning.Operation]s associated with the stale
+  // updates are not marked as [done][google.longrunning.Operation.done] until
+  // they are obsolete.
   rpc SetInventory(SetInventoryRequest) returns (google.longrunning.Operation) {
     option (google.api.http) = {
       post: "/v2/{inventory.name=projects/*/locations/*/catalogs/*/branches/*/products/**}:setInventory"
@@ -167,6 +196,15 @@ service ProductService {
     };
   }
 
+  // We recommend that you use the
+  // [ProductService.AddLocalInventories][google.cloud.retail.v2.ProductService.AddLocalInventories]
+  // method instead of the
+  // [ProductService.AddFulfillmentPlaces][google.cloud.retail.v2.ProductService.AddFulfillmentPlaces]
+  // method.
+  // [ProductService.AddLocalInventories][google.cloud.retail.v2.ProductService.AddLocalInventories]
+  // achieves the same results but provides more fine-grained control over
+  // ingesting local inventory data.
+  //
   // Incrementally adds place IDs to
   // [Product.fulfillment_info.place_ids][google.cloud.retail.v2.FulfillmentInfo.place_ids].
   //
@@ -180,15 +218,14 @@ service ProductService {
   // or
   // [ProductService.ListProducts][google.cloud.retail.v2.ProductService.ListProducts].
   //
-  // The returned [Operation][]s will be obsolete after 1 day, and
-  // [GetOperation][] API will return NOT_FOUND afterwards.
+  // The returned [Operation][google.longrunning.Operation]s will be obsolete
+  // after 1 day, and [GetOperation][google.longrunning.Operations.GetOperation]
+  // API will return NOT_FOUND afterwards.
   //
-  // If conflicting updates are issued, the [Operation][]s associated with the
-  // stale updates will not be marked as [done][Operation.done] until being
-  // obsolete.
-  //
-  // This feature is only available for users who have Retail Search enabled.
-  // Please enable Retail Search on Cloud Console before using this feature.
+  // If conflicting updates are issued, the
+  // [Operation][google.longrunning.Operation]s associated with the stale
+  // updates will not be marked as [done][google.longrunning.Operation.done]
+  // until being obsolete.
   rpc AddFulfillmentPlaces(AddFulfillmentPlacesRequest)
       returns (google.longrunning.Operation) {
     option (google.api.http) = {
@@ -202,6 +239,15 @@ service ProductService {
     };
   }
 
+  // We recommend that you use the
+  // [ProductService.RemoveLocalInventories][google.cloud.retail.v2.ProductService.RemoveLocalInventories]
+  // method instead of the
+  // [ProductService.RemoveFulfillmentPlaces][google.cloud.retail.v2.ProductService.RemoveFulfillmentPlaces]
+  // method.
+  // [ProductService.RemoveLocalInventories][google.cloud.retail.v2.ProductService.RemoveLocalInventories]
+  // achieves the same results but provides more fine-grained control over
+  // ingesting local inventory data.
+  //
   // Incrementally removes place IDs from a
   // [Product.fulfillment_info.place_ids][google.cloud.retail.v2.FulfillmentInfo.place_ids].
   //
@@ -215,15 +261,14 @@ service ProductService {
   // or
   // [ProductService.ListProducts][google.cloud.retail.v2.ProductService.ListProducts].
   //
-  // The returned [Operation][]s will be obsolete after 1 day, and
-  // [GetOperation][] API will return NOT_FOUND afterwards.
+  // The returned [Operation][google.longrunning.Operation]s will be obsolete
+  // after 1 day, and [GetOperation][google.longrunning.Operations.GetOperation]
+  // API will return NOT_FOUND afterwards.
   //
-  // If conflicting updates are issued, the [Operation][]s associated with the
-  // stale updates will not be marked as [done][Operation.done] until being
-  // obsolete.
-  //
-  // This feature is only available for users who have Retail Search enabled.
-  // Please enable Retail Search on Cloud Console before using this feature.
+  // If conflicting updates are issued, the
+  // [Operation][google.longrunning.Operation]s associated with the stale
+  // updates will not be marked as [done][google.longrunning.Operation.done]
+  // until being obsolete.
   rpc RemoveFulfillmentPlaces(RemoveFulfillmentPlacesRequest)
       returns (google.longrunning.Operation) {
     option (google.api.http) = {
@@ -257,15 +302,14 @@ service ProductService {
   // [ProductService.UpdateProduct][google.cloud.retail.v2.ProductService.UpdateProduct]
   // has no effect on local inventories.
   //
-  // The returned [Operation][]s will be obsolete after 1 day, and
-  // [GetOperation][] API will return NOT_FOUND afterwards.
+  // The returned [Operation][google.longrunning.Operation]s will be obsolete
+  // after 1 day, and [GetOperation][google.longrunning.Operations.GetOperation]
+  // API will return NOT_FOUND afterwards.
   //
-  // If conflicting updates are issued, the [Operation][]s associated with the
-  // stale updates will not be marked as [done][Operation.done] until being
-  // obsolete.
-  //
-  // This feature is only available for users who have Retail Search enabled.
-  // Please enable Retail Search on Cloud Console before using this feature.
+  // If conflicting updates are issued, the
+  // [Operation][google.longrunning.Operation]s associated with the stale
+  // updates will not be marked as [done][google.longrunning.Operation.done]
+  // until being obsolete.
   rpc AddLocalInventories(AddLocalInventoriesRequest)
       returns (google.longrunning.Operation) {
     option (google.api.http) = {
@@ -297,15 +341,14 @@ service ProductService {
   // [ProductService.UpdateProduct][google.cloud.retail.v2.ProductService.UpdateProduct]
   // has no effect on local inventories.
   //
-  // The returned [Operation][]s will be obsolete after 1 day, and
-  // [GetOperation][] API will return NOT_FOUND afterwards.
+  // The returned [Operation][google.longrunning.Operation]s will be obsolete
+  // after 1 day, and [GetOperation][google.longrunning.Operations.GetOperation]
+  // API will return NOT_FOUND afterwards.
   //
-  // If conflicting updates are issued, the [Operation][]s associated with the
-  // stale updates will not be marked as [done][Operation.done] until being
-  // obsolete.
-  //
-  // This feature is only available for users who have Retail Search enabled.
-  // Please enable Retail Search on Cloud Console before using this feature.
+  // If conflicting updates are issued, the
+  // [Operation][google.longrunning.Operation]s associated with the stale
+  // updates will not be marked as [done][google.longrunning.Operation.done]
+  // until being obsolete.
   rpc RemoveLocalInventories(RemoveLocalInventoriesRequest)
       returns (google.longrunning.Operation) {
     option (google.api.http) = {
