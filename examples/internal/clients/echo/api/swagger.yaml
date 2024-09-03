@@ -11,6 +11,194 @@ consumes:
 produces:
 - "application/json"
 paths:
+  /v1/example/echo/nested/{nId.nId}:
+    get:
+      tags:
+      - "EchoService"
+      summary: "Echo method receives a simple message and returns it."
+      description: "The message posted as the id parameter will also be\nreturned."
+      operationId: "EchoService_Echo7"
+      parameters:
+      - name: "nId.nId"
+        in: "path"
+        required: true
+        type: "string"
+        x-exportParamName: "NIdNId"
+      - name: "id"
+        in: "query"
+        description: "Id represents the message identifier."
+        required: false
+        type: "string"
+        x-exportParamName: "Id"
+        x-optionalDataType: "String"
+      - name: "num"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "Num"
+        x-optionalDataType: "String"
+      - name: "lineNum"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "LineNum"
+        x-optionalDataType: "String"
+      - name: "lang"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Lang"
+        x-optionalDataType: "String"
+      - name: "status.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "StatusProgress"
+        x-optionalDataType: "String"
+      - name: "status.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "StatusNote"
+        x-optionalDataType: "String"
+      - name: "en"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "En"
+        x-optionalDataType: "String"
+      - name: "no.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "NoProgress"
+        x-optionalDataType: "String"
+      - name: "no.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NoNote"
+        x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
+      responses:
+        200:
+          description: "A successful response."
+          schema:
+            $ref: "#/definitions/examplepbSimpleMessage"
+        default:
+          description: "An unexpected error response."
+          schema:
+            $ref: "#/definitions/rpcStatus"
+  /v1/example/echo/resource/{resourceId}:
+    get:
+      tags:
+      - "EchoService"
+      summary: "Echo method receives a simple message and returns it."
+      description: "The message posted as the id parameter will also be\nreturned."
+      operationId: "EchoService_Echo6"
+      parameters:
+      - name: "resourceId"
+        in: "path"
+        required: true
+        type: "string"
+        x-exportParamName: "ResourceId"
+      - name: "id"
+        in: "query"
+        description: "Id represents the message identifier."
+        required: false
+        type: "string"
+        x-exportParamName: "Id"
+        x-optionalDataType: "String"
+      - name: "num"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "Num"
+        x-optionalDataType: "String"
+      - name: "lineNum"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "LineNum"
+        x-optionalDataType: "String"
+      - name: "lang"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Lang"
+        x-optionalDataType: "String"
+      - name: "status.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "StatusProgress"
+        x-optionalDataType: "String"
+      - name: "status.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "StatusNote"
+        x-optionalDataType: "String"
+      - name: "en"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "En"
+        x-optionalDataType: "String"
+      - name: "no.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "NoProgress"
+        x-optionalDataType: "String"
+      - name: "no.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NoNote"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
+      responses:
+        200:
+          description: "A successful response."
+          schema:
+            $ref: "#/definitions/examplepbSimpleMessage"
+        default:
+          description: "An unexpected error response."
+          schema:
+            $ref: "#/definitions/rpcStatus"
   /v1/example/echo/{id}:
     post:
       tags:
@@ -25,6 +213,77 @@ paths:
         required: true
         type: "string"
         x-exportParamName: "Id"
+      - name: "num"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "Num"
+        x-optionalDataType: "String"
+      - name: "lineNum"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "LineNum"
+        x-optionalDataType: "String"
+      - name: "lang"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Lang"
+        x-optionalDataType: "String"
+      - name: "status.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "StatusProgress"
+        x-optionalDataType: "String"
+      - name: "status.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "StatusNote"
+        x-optionalDataType: "String"
+      - name: "en"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "En"
+        x-optionalDataType: "String"
+      - name: "no.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "NoProgress"
+        x-optionalDataType: "String"
+      - name: "no.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NoNote"
+        x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -100,6 +359,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -174,6 +451,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -241,6 +536,24 @@ paths:
         type: "string"
         format: "int64"
         x-exportParamName: "NoProgress"
+        x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
         x-optionalDataType: "String"
       responses:
         200:
@@ -312,6 +625,24 @@ paths:
         format: "int64"
         x-exportParamName: "NoProgress"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -330,10 +661,90 @@ paths:
       parameters:
       - in: "body"
         name: "body"
+        description: "SimpleMessage represents a simple message sent to the Echo service."
         required: true
         schema:
           $ref: "#/definitions/examplepbSimpleMessage"
         x-exportParamName: "Body"
+      responses:
+        200:
+          description: "A successful response."
+          schema:
+            $ref: "#/definitions/examplepbSimpleMessage"
+        default:
+          description: "An unexpected error response."
+          schema:
+            $ref: "#/definitions/rpcStatus"
+  /v1/example/echo_body/{id}:
+    put:
+      tags:
+      - "EchoService"
+      summary: "EchoBody method receives a simple message and returns it."
+      operationId: "EchoService_EchoBody2"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "Id represents the message identifier."
+        required: true
+        type: "string"
+        x-exportParamName: "Id"
+      - in: "body"
+        name: "no"
+        required: true
+        schema:
+          $ref: "#/definitions/examplepbEmbedded"
+        x-exportParamName: "No"
+      - name: "num"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "Num"
+        x-optionalDataType: "String"
+      - name: "lineNum"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "LineNum"
+        x-optionalDataType: "String"
+      - name: "lang"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Lang"
+        x-optionalDataType: "String"
+      - name: "status.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "StatusProgress"
+        x-optionalDataType: "String"
+      - name: "status.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "StatusNote"
+        x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -410,6 +821,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -432,12 +861,6 @@ paths:
         schema:
           $ref: "#/definitions/examplepbDynamicMessage"
         x-exportParamName: "Body"
-      - name: "updateMask"
-        in: "query"
-        required: false
-        type: "string"
-        x-exportParamName: "UpdateMask"
-        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -516,6 +939,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -532,14 +973,12 @@ definitions:
       structField:
         type: "object"
         properties: {}
-      valueField:
-        type: "object"
-        properties: {}
+      valueField: {}
     description: "DynamicMessage represents a message which can have its structure\n\
       built dynamically using Struct and Values."
     example:
       structField: "{}"
-      valueField: "{}"
+      valueField: ""
   examplepbDynamicMessageUpdate:
     type: "object"
     properties:
@@ -550,7 +989,7 @@ definitions:
     example:
       body:
         structField: "{}"
-        valueField: "{}"
+        valueField: ""
       updateMask: "updateMask"
   examplepbEmbedded:
     type: "object"
@@ -564,6 +1003,16 @@ definitions:
     example:
       note: "note"
       progress: "progress"
+  examplepbNestedMessage:
+    type: "object"
+    properties:
+      nId:
+        type: "string"
+      val:
+        type: "string"
+    example:
+      val: "val"
+      nId: "nId"
   examplepbSimpleMessage:
     type: "object"
     properties:
@@ -585,12 +1034,20 @@ definitions:
         format: "int64"
       "no":
         $ref: "#/definitions/examplepbEmbedded"
+      resourceId:
+        type: "string"
+      nId:
+        $ref: "#/definitions/examplepbNestedMessage"
     description: "SimpleMessage represents a simple message sent to the Echo service."
     example:
       "no":
         note: "note"
         progress: "progress"
+      resourceId: "resourceId"
       num: "num"
+      nId:
+        val: "val"
+        nId: "nId"
       lineNum: "lineNum"
       en: "en"
       id: "id"
@@ -630,17 +1087,17 @@ definitions:
       \    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack\
       \ and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n\
       \    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n\
-      \    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n\
+      \    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n\
       \    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n\
-      \      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in\
+      \      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in\
       \ Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err\
       \ != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err\
       \ := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods\
       \ provided by protobuf library will by default use\n'type.googleapis.com/full.type.name'\
       \ as the type URL and the unpack\nmethods only use the fully qualified type\
       \ name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\"\
-      \ will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of\
-      \ an `Any` value uses the regular\nrepresentation of the deserialized, embedded\
+      \ will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an\
+      \ `Any` value uses the regular\nrepresentation of the deserialized, embedded\
       \ message, with an\nadditional field `@type` which contains the type URL. Example:\n\
       \n    package google.profile;\n    message Person {\n      string first_name\
       \ = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\"\

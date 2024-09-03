@@ -7,10 +7,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/casing"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/internal/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
+	"google.golang.org/grpc/grpclog"
 )
 
 type param struct {
@@ -166,11 +166,13 @@ func applyTemplate(p param, reg *descriptor.Registry) (string, error) {
 		svc.Name = &svcName
 
 		for _, meth := range svc.Methods {
-			glog.V(2).Infof("Processing %s.%s", svc.GetName(), meth.GetName())
+			if grpclog.V(2) {
+				grpclog.Infof("Processing %s.%s", svc.GetName(), meth.GetName())
+			}
 			methName := casing.Camel(*meth.Name)
 			meth.Name = &methName
 			for _, b := range meth.Bindings {
-				if err := reg.CheckDuplicateAnnotation(b.HTTPMethod, b.PathTmpl.Template); err != nil {
+				if err := reg.CheckDuplicateAnnotation(b.HTTPMethod, b.PathTmpl.Template, svc); err != nil {
 					return "", err
 				}
 
@@ -253,19 +255,19 @@ var _ = metadata.Join
 {{end}}
 `))
 
-	_ = template.Must(handlerTemplate.New("request-func-signature").Parse(strings.Replace(`
+	_ = template.Must(handlerTemplate.New("request-func-signature").Parse(strings.ReplaceAll(`
 {{if .Method.GetServerStreaming}}
 func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx context.Context, marshaler runtime.Marshaler, client {{.Method.Service.InstanceName}}Client, req *http.Request, pathParams map[string]string) ({{.Method.Service.InstanceName}}_{{.Method.GetName}}Client, runtime.ServerMetadata, error)
 {{else}}
 func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx context.Context, marshaler runtime.Marshaler, client {{.Method.Service.InstanceName}}Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error)
-{{end}}`, "\n", "", -1)))
+{{end}}`, "\n", "")))
 
 	_ = template.Must(handlerTemplate.New("client-streaming-request-func").Parse(`
 {{template "request-func-signature" .}} {
 	var metadata runtime.ServerMetadata
 	stream, err := client.{{.Method.GetName}}(ctx)
 	if err != nil {
-		grpclog.Infof("Failed to start streaming: %v", err)
+		grpclog.Errorf("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
 	dec := marshaler.NewDecoder(req.Body)
@@ -276,25 +278,25 @@ func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx cont
 			break
 		}
 		if err != nil {
-			grpclog.Infof("Failed to decode request: %v", err)
+			grpclog.Errorf("Failed to decode request: %v", err)
 			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 		}
 		if err = stream.Send(&protoReq); err != nil {
 			if err == io.EOF {
 				break
 			}
-			grpclog.Infof("Failed to send request: %v", err)
+			grpclog.Errorf("Failed to send request: %v", err)
 			return nil, metadata, err
 		}
 	}
 
 	if err := stream.CloseSend(); err != nil {
-		grpclog.Infof("Failed to terminate client stream: %v", err)
+		grpclog.Errorf("Failed to terminate client stream: %v", err)
 		return nil, metadata, err
 	}
 	header, err := stream.Header()
 	if err != nil {
-		grpclog.Infof("Failed to get header from client: %v", err)
+		grpclog.Errorf("Failed to get header from client: %v", err)
 		return nil, metadata, err
 	}
 	metadata.HeaderMD = header
@@ -308,7 +310,11 @@ func request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx cont
 }
 `))
 
-	_ = template.Must(handlerTemplate.New("client-rpc-request-func").Parse(`
+	funcMap template.FuncMap = map[string]interface{}{
+		"camelIdentifier": casing.CamelIdentifier,
+	}
+
+	_ = template.Must(handlerTemplate.New("client-rpc-request-func").Funcs(funcMap).Parse(`
 {{$AllowPatchFeature := .AllowPatchFeature}}
 {{if .HasQueryParam}}
 var (
@@ -319,14 +325,26 @@ var (
 	var protoReq {{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}
 	var metadata runtime.ServerMetadata
 {{if .Body}}
+	{{- $isFieldMask := and $AllowPatchFeature (eq (.HTTPMethod) "PATCH") (.FieldMaskField) (not (eq "*" .GetBodyFieldPath)) }}
+	{{- if $isFieldMask }}
 	newReader, berr := utilities.IOReaderFactory(req.Body)
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&{{.Body.AssignableExpr "protoReq"}}); err != nil && err != io.EOF  {
+	{{- end}}
+	{{- $protoReq := .Body.AssignableExprPrep "protoReq" .Method.Service.File.GoPkg.Path -}}
+	{{- if ne "" $protoReq }}
+	{{printf "%s" $protoReq }}
+	{{- end}}
+	{{- if not $isFieldMask }}
+	if err := marshaler.NewDecoder(req.Body).Decode(&{{.Body.AssignableExpr "protoReq" .Method.Service.File.GoPkg.Path}}); err != nil && err != io.EOF  {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	{{- if and $AllowPatchFeature (eq (.HTTPMethod) "PATCH") (.FieldMaskField) (not (eq "*" .GetBodyFieldPath)) }}
+	{{end}}
+	{{- if $isFieldMask }}
+	if err := marshaler.NewDecoder(newReader()).Decode(&{{.Body.AssignableExpr "protoReq" .Method.Service.File.GoPkg.Path}}); err != nil && err != io.EOF  {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	if protoReq.{{.FieldMaskField}} == nil || len(protoReq.{{.FieldMaskField}}.GetPaths()) == 0 {
 			if fieldMask, err := runtime.FieldMaskFromRequestBody(newReader(), protoReq.{{.GetBodyFieldStructName}}); err != nil {
 				return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -362,18 +380,22 @@ var (
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
 	{{if $enum}}
-		e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}_value)
+		e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path | camelIdentifier}}_value)
 		if err != nil {
 			return nil, metadata, status.Errorf(codes.InvalidArgument, "could not parse path as enum value, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 		}
 	{{end}}
 {{else if $enum}}
-	e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}_value)
+	e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path | camelIdentifier}}_value)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
 {{else}}
-	{{$param.AssignableExpr "protoReq"}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}})
+	{{- $protoReq := $param.AssignableExprPrep "protoReq" $binding.Method.Service.File.GoPkg.Path -}}
+	{{- if ne "" $protoReq }}
+	{{printf "%s" $protoReq }}
+	{{- end}}
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}})
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
@@ -383,9 +405,9 @@ var (
 	for i, v := range es {
 		s[i] = {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}(v)
 	}
-	{{$param.AssignableExpr "protoReq"}} = s
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}} = s
 {{else if $enum}}
-	{{$param.AssignableExpr "protoReq"}} = {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}(e)
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}} = {{$enum.GoType $param.Method.Service.File.GoPkg.Path | camelIdentifier}}(e)
 {{end}}
 	{{end}}
 {{end}}
@@ -419,7 +441,7 @@ var (
 	var metadata runtime.ServerMetadata
 	stream, err := client.{{.Method.GetName}}(ctx)
 	if err != nil {
-		grpclog.Infof("Failed to start streaming: %v", err)
+		grpclog.Errorf("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
 	dec := marshaler.NewDecoder(req.Body)
@@ -430,11 +452,11 @@ var (
 			return err
 		}
 		if err != nil {
-			grpclog.Infof("Failed to decode request: %v", err)
+			grpclog.Errorf("Failed to decode request: %v", err)
 			return err
 		}
 		if err := stream.Send(&protoReq); err != nil {
-			grpclog.Infof("Failed to send request: %v", err)
+			grpclog.Errorf("Failed to send request: %v", err)
 			return err
 		}
 		return nil
@@ -446,12 +468,12 @@ var (
 			}
 		}
 		if err := stream.CloseSend(); err != nil {
-			grpclog.Infof("Failed to terminate client stream: %v", err)
+			grpclog.Errorf("Failed to terminate client stream: %v", err)
 		}
 	}()
 	header, err := stream.Header()
 	if err != nil {
-		grpclog.Infof("Failed to get header from client: %v", err)
+		grpclog.Errorf("Failed to get header from client: %v", err)
 		return nil, metadata, err
 	}
 	metadata.HeaderMD = header
@@ -468,26 +490,38 @@ var (
 {{end}}
 `))
 
-	_ = template.Must(localHandlerTemplate.New("local-request-func-signature").Parse(strings.Replace(`
+	_ = template.Must(localHandlerTemplate.New("local-request-func-signature").Parse(strings.ReplaceAll(`
 {{if .Method.GetServerStreaming}}
 {{else}}
 func local_request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ctx context.Context, marshaler runtime.Marshaler, server {{.Method.Service.InstanceName}}Server, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error)
-{{end}}`, "\n", "", -1)))
+{{end}}`, "\n", "")))
 
-	_ = template.Must(localHandlerTemplate.New("local-client-rpc-request-func").Parse(`
+	_ = template.Must(localHandlerTemplate.New("local-client-rpc-request-func").Funcs(funcMap).Parse(`
 {{$AllowPatchFeature := .AllowPatchFeature}}
 {{template "local-request-func-signature" .}} {
 	var protoReq {{.Method.RequestType.GoType .Method.Service.File.GoPkg.Path}}
 	var metadata runtime.ServerMetadata
 {{if .Body}}
+	{{- $isFieldMask := and $AllowPatchFeature (eq (.HTTPMethod) "PATCH") (.FieldMaskField) (not (eq "*" .GetBodyFieldPath)) }}
+	{{- if $isFieldMask }}
 	newReader, berr := utilities.IOReaderFactory(req.Body)
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&{{.Body.AssignableExpr "protoReq"}}); err != nil && err != io.EOF  {
+	{{- end}}
+	{{- $protoReq := .Body.AssignableExprPrep "protoReq" .Method.Service.File.GoPkg.Path -}}
+	{{- if ne "" $protoReq }}
+	{{printf "%s" $protoReq }}
+	{{- end}}
+	{{- if not $isFieldMask }}
+	if err := marshaler.NewDecoder(req.Body).Decode(&{{.Body.AssignableExpr "protoReq" .Method.Service.File.GoPkg.Path}}); err != nil && err != io.EOF  {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	{{- if and $AllowPatchFeature (eq (.HTTPMethod) "PATCH") (.FieldMaskField) (not (eq "*" .GetBodyFieldPath)) }}
+	{{end}}
+	{{- if $isFieldMask }}
+	if err := marshaler.NewDecoder(newReader()).Decode(&{{.Body.AssignableExpr "protoReq" .Method.Service.File.GoPkg.Path}}); err != nil && err != io.EOF  {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 	if protoReq.{{.FieldMaskField}} == nil || len(protoReq.{{.FieldMaskField}}.GetPaths()) == 0 {
 			if fieldMask, err := runtime.FieldMaskFromRequestBody(newReader(), protoReq.{{.GetBodyFieldStructName}}); err != nil {
 				return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -523,18 +557,22 @@ func local_request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ct
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
 	{{if $enum}}
-		e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}_value)
+		e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path | camelIdentifier}}_value)
 		if err != nil {
 			return nil, metadata, status.Errorf(codes.InvalidArgument, "could not parse path as enum value, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 		}
 	{{end}}
 {{else if $enum}}
-	e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}_value)
+	e{{if $param.IsRepeated}}s{{end}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}}, {{$enum.GoType  $param.Method.Service.File.GoPkg.Path | camelIdentifier}}_value)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
 {{else}}
-	{{$param.AssignableExpr "protoReq"}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}})
+	{{- $protoReq := $param.AssignableExprPrep "protoReq" $binding.Method.Service.File.GoPkg.Path -}}
+	{{- if ne "" $protoReq }}
+	{{printf "%s" $protoReq }}
+	{{- end}}
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}}, err = {{$param.ConvertFuncExpr}}(val{{if $param.IsRepeated}}, {{$binding.Registry.GetRepeatedPathParamSeparator | printf "%c" | printf "%q"}}{{end}})
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", {{$param | printf "%q"}}, err)
 	}
@@ -545,9 +583,9 @@ func local_request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ct
 	for i, v := range es {
 		s[i] = {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}(v)
 	}
-	{{$param.AssignableExpr "protoReq"}} = s
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}} = s
 {{else if $enum}}
-	{{$param.AssignableExpr "protoReq"}} = {{$enum.GoType $param.Method.Service.File.GoPkg.Path}}(e)
+	{{$param.AssignableExpr "protoReq" $binding.Method.Service.File.GoPkg.Path}} = {{$enum.GoType $param.Method.Service.File.GoPkg.Path | camelIdentifier}}(e)
 {{end}}
 	{{end}}
 {{end}}
@@ -574,6 +612,7 @@ func local_request_{{.Method.Service.GetName}}_{{.Method.GetName}}_{{.Index}}(ct
 // UnaryRPC     :call {{$svc.GetName}}Server directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}FromEndpoint instead.
+// GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Server(ctx context.Context, mux *runtime.ServeMux, server {{$svc.InstanceName}}Server) error {
 	{{range $m := $svc.Methods}}
 	{{range $b := $m.Bindings}}
@@ -595,27 +634,29 @@ func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Server(ctx context.Context,
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
 		{{- if $b.PathTmpl }}
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}", runtime.WithHTTPPathPattern("{{$b.PathTmpl.Template}}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}", runtime.WithHTTPPathPattern("{{$b.PathTmpl.Template}}"))
 		{{- else -}}
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}")
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}")
 		{{- end }}
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		ctx = runtime.NewServerMetadataContext(ctx, md)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
 		{{ if $b.ResponseBody }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}{resp}, mux.GetForwardResponseOptions()...)
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}{resp.(*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})}, mux.GetForwardResponseOptions()...)
 		{{ else }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 		{{end}}
 	})
 	{{end}}
@@ -631,21 +672,21 @@ func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Server(ctx context.Context,
 // Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}FromEndpoint is same as Register{{$svc.GetName}}{{$.RegisterFuncSuffix}} but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}FromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
-	conn, err := grpc.Dial(endpoint, opts...)
+	conn, err := grpc.NewClient(endpoint, opts...)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Errorf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -663,7 +704,7 @@ func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}(ctx context.Context, mux *
 // to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "{{$svc.InstanceName}}Client".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "{{$svc.InstanceName}}Client"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
-// "{{$svc.InstanceName}}Client" to call the correct interceptors.
+// "{{$svc.InstanceName}}Client" to call the correct interceptors. This client ignores the HTTP middlewares.
 func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Client(ctx context.Context, mux *runtime.ServeMux, client {{$svc.InstanceName}}Client) error {
 	{{range $m := $svc.Methods}}
 	{{range $b := $m.Bindings}}
@@ -675,35 +716,37 @@ func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Client(ctx context.Context,
 	{{- end }}
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
 		{{- if $b.PathTmpl }}
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}", runtime.WithHTTPPathPattern("{{$b.PathTmpl.Template}}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}", runtime.WithHTTPPathPattern("{{$b.PathTmpl.Template}}"))
 		{{- else -}}
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}")
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/{{$svc.File.GetPackage}}.{{$svc.GetName}}/{{$m.GetName}}")
 		{{- end }}
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
+		resp, md, err := request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
 		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		{{if $m.GetServerStreaming}}
 		{{ if $b.ResponseBody }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) {
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) {
 			res, err := resp.Recv()
 			return response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}{res}, err
 		}, mux.GetForwardResponseOptions()...)
 		{{ else }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 		{{end}}
 		{{else}}
 		{{ if $b.ResponseBody }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}{resp}, mux.GetForwardResponseOptions()...)
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}{resp.(*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})}, mux.GetForwardResponseOptions()...)
 		{{ else }}
-		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 		{{end}}
 		{{end}}
 	})
@@ -716,12 +759,11 @@ func Register{{$svc.GetName}}{{$.RegisterFuncSuffix}}Client(ctx context.Context,
 {{range $b := $m.Bindings}}
 {{if $b.ResponseBody}}
 type response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}} struct {
-	proto.Message
+	*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}}
 }
 
 func (m response_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}) XXX_ResponseBody() interface{} {
-	response := m.Message.(*{{$m.ResponseType.GoType $m.Service.File.GoPkg.Path}})
-	return {{$b.ResponseBody.AssignableExpr "response"}}
+	return {{$b.ResponseBody.AssignableExpr "m" $m.Service.File.GoPkg.Path}}
 }
 {{end}}
 {{end}}

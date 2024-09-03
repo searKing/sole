@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	examples "github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/examplepb"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/oneofenum"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/pathenum"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/sub"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/examples/internal/proto/sub2"
@@ -18,6 +18,7 @@ import (
 	statuspb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -49,7 +50,7 @@ func (s *_ABitOfEverythingServer) Create(ctx context.Context, msg *examples.ABit
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	var uuid string
 	for {
 		uuid = fmt.Sprintf("%x", uuidgen.Next())
@@ -59,7 +60,7 @@ func (s *_ABitOfEverythingServer) Create(ctx context.Context, msg *examples.ABit
 	}
 	s.v[uuid] = msg
 	s.v[uuid].Uuid = uuid
-	glog.Infof("%v", s.v[uuid])
+	grpclog.Infof("%v", s.v[uuid])
 	return s.v[uuid], nil
 }
 
@@ -94,7 +95,7 @@ func (s *_ABitOfEverythingServer) BulkCreate(stream examples.StreamService_BulkC
 			return err
 		}
 		count++
-		glog.Info(msg)
+		grpclog.Info(msg)
 		if _, err = s.Create(ctx, msg); err != nil {
 			return err
 		}
@@ -117,7 +118,7 @@ func (s *_ABitOfEverythingServer) BulkCreate(stream examples.StreamService_BulkC
 func (s *_ABitOfEverythingServer) Lookup(ctx context.Context, msg *sub2.IdMessage) (*examples.ABitOfEverything, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
-	glog.Info(msg)
+	grpclog.Info(msg)
 
 	err := grpc.SendHeader(ctx, metadata.New(map[string]string{
 		"uuid": msg.Uuid,
@@ -137,7 +138,7 @@ func (s *_ABitOfEverythingServer) Lookup(ctx context.Context, msg *sub2.IdMessag
 	return nil, status.Errorf(codes.NotFound, "not found")
 }
 
-func (s *_ABitOfEverythingServer) List(_ *emptypb.Empty, stream examples.StreamService_ListServer) error {
+func (s *_ABitOfEverythingServer) List(opt *examples.Options, stream examples.StreamService_ListServer) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -154,20 +155,17 @@ func (s *_ABitOfEverythingServer) List(_ *emptypb.Empty, stream examples.StreamS
 		}
 	}
 
-	// return error when metadata includes error header
-	if header, ok := metadata.FromIncomingContext(stream.Context()); ok {
-		if v, ok := header["error"]; ok {
-			stream.SetTrailer(metadata.New(map[string]string{
-				"foo": "foo2",
-				"bar": "bar2",
-			}))
-			return status.Errorf(codes.InvalidArgument, "error metadata: %v", v)
-		}
+	if opt.Error {
+		stream.SetTrailer(metadata.New(map[string]string{
+			"foo": "foo2",
+			"bar": "bar2",
+		}))
+		return status.Error(codes.InvalidArgument, "error")
 	}
 	return nil
 }
 
-func (s *_ABitOfEverythingServer) Download(_ *emptypb.Empty, stream examples.StreamService_DownloadServer) error {
+func (s *_ABitOfEverythingServer) Download(opt *examples.Options, stream examples.StreamService_DownloadServer) error {
 	msgs := []*httpbody.HttpBody{{
 		ContentType: "text/html",
 		Data:        []byte("Hello 1"),
@@ -184,14 +182,47 @@ func (s *_ABitOfEverythingServer) Download(_ *emptypb.Empty, stream examples.Str
 		time.Sleep(5 * time.Millisecond)
 	}
 
+	if opt.Error {
+		stream.SetTrailer(metadata.New(map[string]string{
+			"foo": "foo2",
+			"bar": "bar2",
+		}))
+		return status.Error(codes.InvalidArgument, "error")
+	}
 	return nil
+}
+
+func (s *_ABitOfEverythingServer) Custom(ctx context.Context, msg *examples.ABitOfEverything) (*examples.ABitOfEverything, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	grpclog.Info(msg)
+	if _, ok := s.v[msg.Uuid]; ok {
+		s.v[msg.Uuid] = msg
+	} else {
+		return nil, status.Errorf(codes.NotFound, "not found")
+	}
+	return msg, nil
+}
+
+func (s *_ABitOfEverythingServer) DoubleColon(ctx context.Context, msg *examples.ABitOfEverything) (*examples.ABitOfEverything, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	grpclog.Info(msg)
+	if _, ok := s.v[msg.Uuid]; ok {
+		s.v[msg.Uuid] = msg
+	} else {
+		return nil, status.Errorf(codes.NotFound, "not found")
+	}
+	return msg, nil
 }
 
 func (s *_ABitOfEverythingServer) Update(ctx context.Context, msg *examples.ABitOfEverything) (*emptypb.Empty, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	if _, ok := s.v[msg.Uuid]; ok {
 		s.v[msg.Uuid] = msg
 	} else {
@@ -201,7 +232,7 @@ func (s *_ABitOfEverythingServer) Update(ctx context.Context, msg *examples.ABit
 }
 
 func (s *_ABitOfEverythingServer) UpdateV2(ctx context.Context, msg *examples.UpdateV2Request) (*emptypb.Empty, error) {
-	glog.Info(msg)
+	grpclog.Info(msg)
 	// If there is no update mask do a regular update
 	if msg.UpdateMask == nil || len(msg.UpdateMask.GetPaths()) == 0 {
 		return s.Update(ctx, msg.Abe)
@@ -221,7 +252,7 @@ func (s *_ABitOfEverythingServer) Delete(ctx context.Context, msg *sub2.IdMessag
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	if _, ok := s.v[msg.Uuid]; ok {
 		delete(s.v, msg.Uuid)
 	} else {
@@ -234,7 +265,7 @@ func (s *_ABitOfEverythingServer) GetQuery(ctx context.Context, msg *examples.AB
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	if _, ok := s.v[msg.Uuid]; ok {
 		s.v[msg.Uuid] = msg
 	} else {
@@ -247,7 +278,7 @@ func (s *_ABitOfEverythingServer) GetRepeatedQuery(ctx context.Context, msg *exa
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	return msg, nil
 }
 
@@ -255,7 +286,7 @@ func (s *_ABitOfEverythingServer) Echo(ctx context.Context, msg *sub.StringMessa
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	return msg, nil
 }
 
@@ -281,7 +312,7 @@ func (s *_ABitOfEverythingServer) BulkEcho(stream examples.StreamService_BulkEch
 	}
 
 	for _, msg := range msgs {
-		glog.Info(msg)
+		grpclog.Info(msg)
 		if err := stream.Send(msg); err != nil {
 			return err
 		}
@@ -298,7 +329,7 @@ func (s *_ABitOfEverythingServer) DeepPathEcho(ctx context.Context, msg *example
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	glog.Info(msg)
+	grpclog.Info(msg)
 	return msg, nil
 }
 
@@ -343,6 +374,10 @@ func (s *_ABitOfEverythingServer) CheckPostQueryParams(ctx context.Context, msg 
 	return msg, nil
 }
 
+func (s *_ABitOfEverythingServer) OverwriteRequestContentType(ctx context.Context, msg *examples.Body) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
+}
+
 func (s *_ABitOfEverythingServer) OverwriteResponseContentType(ctx context.Context, msg *emptypb.Empty) (*wrapperspb.StringValue, error) {
 	return &wrapperspb.StringValue{}, nil
 }
@@ -357,4 +392,34 @@ func (s *_ABitOfEverythingServer) CheckExternalNestedPathEnum(ctx context.Contex
 
 func (s *_ABitOfEverythingServer) CheckStatus(ctx context.Context, empty *emptypb.Empty) (*examples.CheckStatusResponse, error) {
 	return &examples.CheckStatusResponse{Status: &statuspb.Status{}}, nil
+}
+
+func (s *_ABitOfEverythingServer) Exists(ctx context.Context, msg *examples.ABitOfEverything) (*emptypb.Empty, error) {
+	if _, ok := s.v[msg.Uuid]; ok {
+		return new(emptypb.Empty), nil
+	}
+
+	return nil, status.Errorf(codes.NotFound, "not found")
+}
+
+func (s *_ABitOfEverythingServer) CustomOptionsRequest(ctx context.Context, msg *examples.ABitOfEverything) (*emptypb.Empty, error) {
+	err := grpc.SendHeader(ctx, metadata.New(map[string]string{
+		"Allow": "OPTIONS, GET, HEAD, POST, PUT, TRACE",
+	}))
+	if err != nil {
+		return nil, err
+	}
+	return new(emptypb.Empty), nil
+}
+
+func (s *_ABitOfEverythingServer) TraceRequest(ctx context.Context, msg *examples.ABitOfEverything) (*examples.ABitOfEverything, error) {
+	return msg, nil
+}
+
+func (s *_ABitOfEverythingServer) PostOneofEnum(ctx context.Context, msg *oneofenum.OneofEnumMessage) (*emptypb.Empty, error) {
+	return new(emptypb.Empty), nil
+}
+
+func (s *_ABitOfEverythingServer) PostRequiredMessageType(ctx context.Context, req *examples.RequiredMessageTypeRequest) (*emptypb.Empty, error) {
+	return new(emptypb.Empty), nil
 }

@@ -13,10 +13,20 @@ info:
     email: "none@example.com"
   license:
     name: "BSD 3-Clause License"
-    url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/master/LICENSE.txt"
+    url: "https://github.com/grpc-ecosystem/grpc-gateway/blob/main/LICENSE"
   x-something-something: "yadda"
 tags:
+- name: "Echo"
+  description: "Echo description"
+- name: "Internal"
+  description: "Internal description"
+  x-traitTag: true
 - name: "UnannotatedEchoService"
+  description: "UnannotatedEchoService description -- which should not be used in\
+    \ place of the documentation comment!"
+  externalDocs:
+    description: "Find out more about UnannotatedEchoService"
+    url: "https://github.com/grpc-ecosystem/grpc-gateway"
 schemes:
 - "http"
 - "https"
@@ -49,6 +59,84 @@ paths:
         required: true
         type: "string"
         x-exportParamName: "Id"
+      - name: "num"
+        in: "query"
+        description: "Int value field"
+        required: true
+        type: "string"
+        default: "42"
+        format: "int64"
+        x-exportParamName: "Num"
+      - name: "duration"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Duration"
+        x-optionalDataType: "String"
+      - name: "lineNum"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "LineNum"
+        x-optionalDataType: "String"
+      - name: "lang"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "Lang"
+        x-optionalDataType: "String"
+      - name: "status.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "StatusProgress"
+        x-optionalDataType: "String"
+      - name: "status.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "StatusNote"
+        x-optionalDataType: "String"
+      - name: "en"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "En"
+        x-optionalDataType: "String"
+      - name: "no.progress"
+        in: "query"
+        required: false
+        type: "string"
+        format: "int64"
+        x-exportParamName: "NoProgress"
+        x-optionalDataType: "String"
+      - name: "no.note"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NoNote"
+        x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -151,6 +239,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -188,6 +294,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
+        description: "A simple message with many types"
         required: true
         schema:
           $ref: "#/definitions/examplepbUnannotatedSimpleMessage"
@@ -284,6 +391,24 @@ paths:
         type: "string"
         x-exportParamName: "NoNote"
         x-optionalDataType: "String"
+      - name: "resourceId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceId"
+        x-optionalDataType: "String"
+      - name: "nId.nId"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdNId"
+        x-optionalDataType: "String"
+      - name: "nId.val"
+        in: "query"
+        required: false
+        type: "string"
+        x-exportParamName: "NIdVal"
+        x-optionalDataType: "String"
       responses:
         200:
           description: "A successful response."
@@ -323,6 +448,13 @@ definitions:
       note:
         type: "string"
     description: "Embedded represents a message embedded in SimpleMessage."
+  examplepbUnannotatedNestedMessage:
+    type: "object"
+    properties:
+      nId:
+        type: "string"
+      val:
+        type: "string"
   examplepbUnannotatedSimpleMessage:
     type: "object"
     required:
@@ -351,6 +483,10 @@ definitions:
         format: "int64"
       "no":
         $ref: "#/definitions/examplepbUnannotatedEmbedded"
+      resourceId:
+        type: "string"
+      nId:
+        $ref: "#/definitions/examplepbUnannotatedNestedMessage"
     externalDocs:
       description: "Find out more about UnannotatedSimpleMessage"
       url: "https://github.com/grpc-ecosystem/grpc-gateway"

@@ -2,7 +2,7 @@ package codegenerator_test
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -48,7 +48,7 @@ func TestParseRequest(t *testing.T) {
 				t.Error("did not error as expected")
 			}
 			if diff := cmp.Diff(out, tt.out, protocmp.Transform()); diff != "" {
-				t.Errorf(diff)
+				t.Error(diff)
 			}
 		})
 	}
@@ -66,5 +66,5 @@ type invalidReader struct {
 }
 
 func (*invalidReader) Read(p []byte) (int, error) {
-	return 0, fmt.Errorf("invalid reader")
+	return 0, errors.New("invalid reader")
 }

@@ -132,15 +132,22 @@ func TestJSONPbMarshal(t *testing.T) {
 func TestJSONPbMarshalFields(t *testing.T) {
 	var m runtime.JSONPb
 	m.UseEnumNumbers = true // builtin fixtures include an enum, expected to be marshaled as int
+
 	for _, spec := range builtinFieldFixtures {
+		m.Indent = spec.indent
+
 		buf, err := m.Marshal(spec.data)
 		if err != nil {
 			t.Errorf("m.Marshal(%#v) failed with %v; want success", spec.data, err)
 		}
+
 		if got, want := string(buf), spec.json; got != want {
 			t.Errorf("m.Marshal(%#v) = %q; want %q", spec.data, got, want)
 		}
 	}
+
+	// Reset m.Indent to ensure no unintended indentation settings carry over to subsequent tests
+	m.Indent = ""
 
 	nums := []examplepb.NumericEnum{examplepb.NumericEnum_ZERO, examplepb.NumericEnum_ONE}
 
@@ -523,6 +530,8 @@ var (
 		{data: uint64(1), json: "1"},
 		{data: proto.Uint64(1), json: "1"},
 		{data: "abc", json: `"abc"`},
+		{data: []byte("abc"), json: `"YWJj"`},
+		{data: []byte{}, json: `""`},
 		{data: proto.String("abc"), json: `"abc"`},
 		{data: float32(1.5), json: "1.5"},
 		{data: proto.Float32(1.5), json: "1.5"},
@@ -635,31 +644,31 @@ var (
 		},
 
 		{
-			data: &wrapperspb.BoolValue{Value: true},
+			data: wrapperspb.Bool(true),
 			json: "true",
 		},
 		{
-			data: &wrapperspb.DoubleValue{Value: 123.456},
+			data: wrapperspb.Double(123.456),
 			json: "123.456",
 		},
 		{
-			data: &wrapperspb.FloatValue{Value: 123.456},
+			data: wrapperspb.Float(123.456),
 			json: "123.456",
 		},
 		{
-			data: &wrapperspb.Int32Value{Value: -123},
+			data: wrapperspb.Int32(-123),
 			json: "-123",
 		},
 		{
-			data: &wrapperspb.Int64Value{Value: -123},
+			data: wrapperspb.Int64(-123),
 			json: `"-123"`,
 		},
 		{
-			data: &wrapperspb.UInt32Value{Value: 123},
+			data: wrapperspb.UInt32(123),
 			json: "123",
 		},
 		{
-			data: &wrapperspb.UInt64Value{Value: 123},
+			data: wrapperspb.UInt64(123),
 			json: `"123"`,
 		},
 		// TODO(yugui) Add other well-known types once jsonpb supports them

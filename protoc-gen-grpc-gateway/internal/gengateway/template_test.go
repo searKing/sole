@@ -93,6 +93,9 @@ func TestApplyTemplateHeader(t *testing.T) {
 	if want := "package example_pb\n"; !strings.Contains(got, want) {
 		t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 	}
+	if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
+		t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+	}
 }
 
 func TestApplyTemplateRequestWithoutClientStreaming(t *testing.T) {
@@ -239,7 +242,7 @@ func TestApplyTemplateRequestWithoutClientStreaming(t *testing.T) {
 		if want := spec.sigWant; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
-		if want := `marshaler.NewDecoder(newReader()).Decode(&protoReq.GetNested().Bool)`; !strings.Contains(got, want) {
+		if want := `marshaler.NewDecoder(req.Body).Decode(&protoReq.GetNested().Bool)`; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
 		if want := `val, ok = pathParams["nested.int32"]`; !strings.Contains(got, want) {
@@ -254,7 +257,10 @@ func TestApplyTemplateRequestWithoutClientStreaming(t *testing.T) {
 		if want := `pattern_ExampleService_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{0, 0}, []string(nil), ""))`; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
-		if want := `rctx, err := runtime.AnnotateContext(ctx, mux, req, "/example.ExampleService/Echo", runtime.WithHTTPPathPattern("/v1"))`; !strings.Contains(got, want) {
+		if want := `annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/example.ExampleService/Echo", runtime.WithHTTPPathPattern("/v1"))`; !strings.Contains(got, want) {
+			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+		}
+		if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
 	}
@@ -409,6 +415,9 @@ func TestApplyTemplateRequestWithClientStreaming(t *testing.T) {
 		if want := `pattern_ExampleService_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{0, 0}, []string(nil), ""))`; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
+		if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
+			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+		}
 	}
 }
 
@@ -462,7 +471,7 @@ func TestApplyTemplateInProcess(t *testing.T) {
 			serverStreaming: false,
 			sigWant: []string{
 				`func local_request_ExampleService_Echo_0(ctx context.Context, marshaler runtime.Marshaler, server ExampleServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {`,
-				`resp, md, err := local_request_ExampleService_Echo_0(rctx, inboundMarshaler, server, req, pathParams)`,
+				`resp, md, err := local_request_ExampleService_Echo_0(annotatedContext, inboundMarshaler, server, req, pathParams)`,
 			},
 		},
 		{
@@ -585,6 +594,9 @@ func TestApplyTemplateInProcess(t *testing.T) {
 		if want := `func RegisterExampleServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server ExampleServiceServer) error {`; !strings.Contains(got, want) {
 			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
+		if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
+			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+		}
 	}
 }
 
@@ -659,6 +671,9 @@ func TestAllowPatchFeature(t *testing.T) {
 			return
 		}
 		if allowPatchFeature {
+			if want := `marshaler.NewDecoder(newReader()).Decode(&protoReq.Abe)`; !strings.Contains(got, want) {
+				t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+			}
 			if !strings.Contains(got, want) {
 				t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 			}
@@ -666,6 +681,9 @@ func TestAllowPatchFeature(t *testing.T) {
 			if strings.Contains(got, want) {
 				t.Errorf("applyTemplate(%#v) = %s; want to _not_ contain %s", file, got, want)
 			}
+		}
+		if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
+			t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 		}
 	}
 }
@@ -763,9 +781,12 @@ func TestIdentifierCapitalization(t *testing.T) {
 	if want := `var protoReq ExampleResponse`; !strings.Contains(got, want) {
 		t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
 	}
+	if want := `grpclog.Errorf("Failed`; !strings.Contains(got, want) {
+		t.Errorf("applyTemplate(%#v) = %s; want to contain %s", file, got, want)
+	}
 }
 
-func TestDuplicatePaths(t *testing.T) {
+func TestDuplicatePathsInSameService(t *testing.T) {
 	msgdesc := &descriptorpb.DescriptorProto{
 		Name: proto.String("ExampleMessage"),
 		Field: []*descriptorpb.FieldDescriptorProto{
@@ -837,6 +858,91 @@ func TestDuplicatePaths(t *testing.T) {
 	_, err := applyTemplate(param{File: crossLinkFixture(&file), RegisterFuncSuffix: "Handler", AllowPatchFeature: true}, descriptor.NewRegistry())
 	if err == nil {
 		t.Errorf("applyTemplate(%#v) succeeded; want an error", file)
+		return
+	}
+}
+
+func TestDuplicatePathsInDifferentService(t *testing.T) {
+	msgdesc := &descriptorpb.DescriptorProto{
+		Name: proto.String("ExampleMessage"),
+		Field: []*descriptorpb.FieldDescriptorProto{
+			{
+				Name:     proto.String("nested"),
+				Label:    descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL.Enum(),
+				Type:     descriptorpb.FieldDescriptorProto_TYPE_STRING.Enum(),
+				TypeName: proto.String(".google.protobuf.StringValue"),
+				Number:   proto.Int32(1),
+			},
+		},
+	}
+	meth1 := &descriptorpb.MethodDescriptorProto{
+		Name:       proto.String("Echo"),
+		InputType:  proto.String("ExampleMessage"),
+		OutputType: proto.String("ExampleMessage"),
+	}
+	meth2 := &descriptorpb.MethodDescriptorProto{
+		Name:       proto.String("Echo2"),
+		InputType:  proto.String("ExampleMessage"),
+		OutputType: proto.String("ExampleMessage"),
+	}
+	svc1 := &descriptorpb.ServiceDescriptorProto{
+		Name:   proto.String("ExampleServiceNumberOne"),
+		Method: []*descriptorpb.MethodDescriptorProto{meth1, meth2},
+	}
+	svc2 := &descriptorpb.ServiceDescriptorProto{
+		Name:   proto.String("ExampleServiceNumberTwo"),
+		Method: []*descriptorpb.MethodDescriptorProto{meth1, meth2},
+	}
+	msg := &descriptor.Message{
+		DescriptorProto: msgdesc,
+	}
+	binding := &descriptor.Binding{
+		Index:      1,
+		PathTmpl:   compilePath(t, "/v1/example/echo"),
+		HTTPMethod: "GET",
+		PathParams: nil,
+		Body:       nil,
+	}
+	file := descriptor.File{
+		FileDescriptorProto: &descriptorpb.FileDescriptorProto{
+			Name:        proto.String("example.proto"),
+			Package:     proto.String("example"),
+			MessageType: []*descriptorpb.DescriptorProto{msgdesc},
+			Service:     []*descriptorpb.ServiceDescriptorProto{svc1, svc2},
+		},
+		GoPkg: descriptor.GoPackage{
+			Path: "example.com/path/to/example/example.pb",
+			Name: "example_pb",
+		},
+		Messages: []*descriptor.Message{msg},
+		Services: []*descriptor.Service{
+			{
+				ServiceDescriptorProto: svc1,
+				Methods: []*descriptor.Method{
+					{
+						MethodDescriptorProto: meth1,
+						RequestType:           msg,
+						ResponseType:          msg,
+						Bindings:              []*descriptor.Binding{binding},
+					},
+				},
+			},
+			{
+				ServiceDescriptorProto: svc2,
+				Methods: []*descriptor.Method{
+					{
+						MethodDescriptorProto: meth2,
+						RequestType:           msg,
+						ResponseType:          msg,
+						Bindings:              []*descriptor.Binding{binding},
+					},
+				},
+			},
+		},
+	}
+	_, err := applyTemplate(param{File: crossLinkFixture(&file), RegisterFuncSuffix: "Handler", AllowPatchFeature: true}, descriptor.NewRegistry())
+	if err != nil {
+		t.Errorf("applyTemplate(%#v) failed; want success", file)
 		return
 	}
 }
