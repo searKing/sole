@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1;
+
+import public "sole/types/v1/configuration/configuration.proto";
+import public "sole/types/v1/errors/errors.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1;v1";

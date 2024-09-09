@@ -1,0 +1,30 @@
+###
+### Send POST request with json body
+POST http://localhost:80/date/now
+Content-Type: application/json
+
+{
+}
+
+### 状态观测
+### for i in {1..100000}; do curl -s 'http://localhost:80/debug/vars'|grep mat_leak; sleep 1; done
+### curl -s http://localhost:80/debug/vars|python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['goffmpeg'], indent=2))"
+### curl -s http://localhost:80/debug/vars|python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['jobdaemon'], indent=2))"
+GET http://localhost:80/debug/vars
+
+
+### 文本加密
+POST http://localhost:80/Encrypt
+Content-Type: application/json
+
+{
+  "PlainText": "SGVsbG8gV29ybGQK"
+}
+
+### 样例接口
+POST http://localhost:80/Example
+Content-Type: application/json
+
+{
+  "Message": "hello, world"
+}

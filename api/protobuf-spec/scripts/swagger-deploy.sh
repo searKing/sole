@@ -44,7 +44,7 @@ fi
 find "${g_swagger_dir}" -maxdepth 1 -type f -name "swagger.json" -o -name "swagger.yaml" | while read -r swagger_file; do
   printf "\r\033[K%s deploying" "${swagger_file}"
   cp "${swagger_file}" "${g_deploy_target_dir}" || exit
-  printf "\r\033[K%s deployed" "${swagger_file}"
+  printf "\r\033[K%s deployed\n" "${g_deploy_target_dir}/""$(basename "${swagger_file}")"
 done
 
 printf "\r\033[Kswagger deploy done...\n"

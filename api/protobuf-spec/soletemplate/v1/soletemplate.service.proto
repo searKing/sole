@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package searking.sole.api.soletemplate.v1;
+import "google/api/annotations.proto";
+
+import "sole/types/v1/types.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/soletemplate/v1;v1";
+
+// Sole Template Service
+service SoleTemplateService {
+  // Health Check
+  rpc Health (HealthRequest) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/soletemplate/healthz"
+      additional_bindings {
+        post: '/api/v1/soletemplate/healthz'
+        body: "*"
+      }
+    };
+  };
+  // Text Encrypt
+  rpc Encrypt (EncryptRequest) returns (EncryptResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/soletemplate/encrypt"
+      body: "*"
+      additional_bindings {
+        post: '/Encrypt'
+        body: "*"
+      }
+    };
+  };
+
+  // Example Service Interface
+  // TODO: Replace with your own service interface
+  rpc Example (ExampleRequest) returns (ExampleResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/soletemplate/example"
+      body: "*"
+      additional_bindings {
+        post: '/Example'
+        body: "*"
+      }
+    };
+  };
+}
+
+message HealthRequest {
+  string request_id = 1[json_name = "RequestId"]; // unique id for the request
+  string app_id = 2[json_name = "AppId"]; // the ID of the application
+}
+
+message HealthResponse {
+  string request_id = 1[json_name = "RequestId"]; // same as request_id in the request, generate if not set
+
+  string status = 10[json_name = "Status"]; // health check status
+  string date = 11[json_name = "Date"]; // query date time
+
+  sole.types.v1.errors.Error.Status error = 1000[json_name = "error"];
+}
+
+message EncryptRequest {
+  string request_id = 1[json_name = "RequestId"]; // unique id for the request
+  string app_id = 2[json_name = "AppId"]; // the ID of the application
+
+  bytes plain_text = 10[json_name = "PlainText"]; // plain text
+}
+
+message EncryptResponse {
+  string request_id = 1[json_name = "RequestId"]; // same as request_id in the request, generate if not set
+
+  bytes cipher_text = 10[json_name = "CipherText"]; // cipher text
+
+  sole.types.v1.errors.Error.Status error = 1000[json_name = "error"];
+}
+
+message ExampleRequest{
+  string request_id = 1[json_name = "RequestId"]; // unique id for the request
+  string app_id = 2[json_name = "AppId"]; // the ID of the application
+
+  string message = 10[json_name = "Message"]; // message
+}
+
+message ExampleResponse {
+  string request_id = 1[json_name = "RequestId"]; // same as request_id in the request, generate if not set
+
+  string message = 10[json_name = "Message"]; // message echo
+
+  sole.types.v1.errors.Error.Status error = 1000[json_name = "error"];
+}

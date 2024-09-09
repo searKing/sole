@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1.configuration;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1/configuration;configuration";
+
+message FileCleaner {
+  string file_pattern = 1; // file pattern to clean
+  google.protobuf.Duration clean_interval = 2; // clean interval
+  int64 max_count = 3; // max count of files, older files will be deleted first.
+  google.protobuf.Duration max_age = 4; // max age of files, by modification time, files older will be deleted.
+  google.protobuf.Duration min_age = 5; // min age of files, by modification time, files younger min_age will not be deleted.
+  float max_used_percent = 6; // max used proportion of files.
+  float max_iused_percent = 7; // max used proportion of inodes.
+}

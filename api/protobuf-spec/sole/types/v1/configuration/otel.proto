@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1.configuration;
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1/configuration;configuration";
+
+message Otel {
+  repeated string trace_exporter_endpoints = 1;
+  repeated string metric_exporter_endpoints = 2;
+  map<string, string> resource_attrs = 3;
+}

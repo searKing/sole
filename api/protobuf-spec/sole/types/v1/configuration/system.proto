@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1.configuration;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1/configuration;configuration";
+
+message System{
+  // secret key to use local encryption for keeping secrets.
+  // Internally, it uses the NaCl secret box algorithm to perform encryption and authentication.
+  //
+  // Cloud applications frequently need to store sensitive information like web API credentials or
+  // encryption keys in a medium that is not fully secure.
+  // See: https://gocloud.dev/howto/secrets/
+  string secret_keeper_url = 1;
+
+  Go go = 10; // golang configuration
+}
+
+message Go{
+  google.protobuf.Duration gc_interval = 1; // CGO GC Interval, 2min by default, set by forcegcperiod.
+}

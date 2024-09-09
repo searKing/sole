@@ -1,0 +1,898 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "sole",
+    "contact": {
+      "name": "sole",
+      "url": "https://github.com/searKing/sole",
+      "email": "searKingChan@gmail.com"
+    },
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/Encrypt": {
+      "post": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Text Encrypt",
+        "operationId": "SoleTemplateService_Encrypt2",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1EncryptRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EncryptResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/Example": {
+      "post": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Example Service Interface\nTODO: Replace with your own service interface",
+        "operationId": "SoleTemplateService_Example2",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ExampleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ExampleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solesamples/encrypt": {
+      "post": {
+        "tags": [
+          "SoleSamplesService"
+        ],
+        "summary": "Text Encrypt",
+        "operationId": "SoleSamplesService_Encrypt",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1EncryptRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EncryptResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solesamples/example": {
+      "post": {
+        "tags": [
+          "SoleSamplesService"
+        ],
+        "summary": "Example Service Interface\nTODO: Replace with your own service interface",
+        "operationId": "SoleSamplesService_Example",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ExampleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ExampleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/solesamples/healthz": {
+      "get": {
+        "tags": [
+          "SoleSamplesService"
+        ],
+        "summary": "Health Check",
+        "operationId": "SoleSamplesService_Health",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "unique id for the request",
+            "name": "RequestId",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the ID of the application",
+            "name": "AppId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SoleSamplesService"
+        ],
+        "summary": "Health Check",
+        "operationId": "SoleSamplesService_Health2",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1HealthRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/soletemplate/encrypt": {
+      "post": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Text Encrypt",
+        "operationId": "SoleTemplateService_Encrypt",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1EncryptRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EncryptResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/soletemplate/example": {
+      "post": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Example Service Interface\nTODO: Replace with your own service interface",
+        "operationId": "SoleTemplateService_Example",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ExampleRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ExampleResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/soletemplate/healthz": {
+      "get": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Health Check",
+        "operationId": "SoleTemplateService_Health",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "unique id for the request",
+            "name": "RequestId",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the ID of the application",
+            "name": "AppId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SoleTemplateService"
+        ],
+        "summary": "Health Check",
+        "operationId": "SoleTemplateService_Health2",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1HealthRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1HealthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/*path": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "summary": "Date Query",
+        "operationId": "DateService_Now",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/error": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "summary": "Date Query, only return error, for test only",
+        "operationId": "DateService_Error3",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "summary": "Date Query, only return error, for test only",
+        "operationId": "DateService_Error4",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/error/**": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "summary": "Date Query, only return error, for test only",
+        "operationId": "DateService_Error2",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/error/*path": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前错误\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的错误。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询-错误"
+        ],
+        "summary": "Date Query, only return error, for test only",
+        "operationId": "DateService_Error",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/now": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "summary": "Date Query",
+        "operationId": "DateService_Now3",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "summary": "Date Query",
+        "operationId": "DateService_Now4",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    },
+    "/date/now/**": {
+      "get": {
+        "description": "+ 本接口返回服务节点当前日期\n+ 如果本服务运行在多个节点之上，此接口返回的日期只针对当前访问的服务节点，并不反应整个集群的日期。\n",
+        "consumes": [
+          ""
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "日期查询"
+        ],
+        "summary": "Date Query",
+        "operationId": "DateService_Now2",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "RequestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorErrorProto": {
+      "description": "Deprecated. This message is only used by error format v1.",
+      "type": "object"
+    },
+    "errorsErrorStatus": {
+      "description": "This message has the same semantics as `google.rpc.Status`. It uses HTTP\nstatus code instead of gRPC status code. It has extra fields `status` and\n`errors` for backward compatibility with [Google API Client\nLibraries](https://developers.google.com/api-client-library).",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The HTTP status code that corresponds to `google.rpc.Status.code`.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "details": {
+          "description": "This corresponds to `google.rpc.Status.details`.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        },
+        "errors": {
+          "description": "Deprecated. This field is only used by error format v1.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ErrorErrorProto"
+          }
+        },
+        "message": {
+          "description": "This corresponds to `google.rpc.Status.message`.",
+          "type": "string"
+        },
+        "status": {
+          "description": "This is the enum version for `google.rpc.Status.code`.",
+          "$ref": "#/definitions/rpcCode"
+        }
+      }
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rpcCode": {
+      "description": "The canonical error codes for gRPC APIs.\n\n\nSometimes multiple error codes may apply.  Services should return\nthe most specific error code that applies.  For example, prefer\n`OUT_OF_RANGE` over `FAILED_PRECONDITION` if both codes apply.\nSimilarly prefer `NOT_FOUND` or `ALREADY_EXISTS` over `FAILED_PRECONDITION`.\n\n - OK: Not an error; returned on success.\n\nHTTP Mapping: 200 OK\n - CANCELLED: The operation was cancelled, typically by the caller.\n\nHTTP Mapping: 499 Client Closed Request\n - UNKNOWN: Unknown error.  For example, this error may be returned when\na `Status` value received from another address space belongs to\nan error space that is not known in this address space.  Also\nerrors raised by APIs that do not return enough error information\nmay be converted to this error.\n\nHTTP Mapping: 500 Internal Server Error\n - INVALID_ARGUMENT: The client specified an invalid argument.  Note that this differs\nfrom `FAILED_PRECONDITION`.  `INVALID_ARGUMENT` indicates arguments\nthat are problematic regardless of the state of the system\n(e.g., a malformed file name).\n\nHTTP Mapping: 400 Bad Request\n - DEADLINE_EXCEEDED: The deadline expired before the operation could complete. For operations\nthat change the state of the system, this error may be returned\neven if the operation has completed successfully.  For example, a\nsuccessful response from a server could have been delayed long\nenough for the deadline to expire.\n\nHTTP Mapping: 504 Gateway Timeout\n - NOT_FOUND: Some requested entity (e.g., file or directory) was not found.\n\nNote to server developers: if a request is denied for an entire class\nof users, such as gradual feature rollout or undocumented allowlist,\n`NOT_FOUND` may be used. If a request is denied for some users within\na class of users, such as user-based access control, `PERMISSION_DENIED`\nmust be used.\n\nHTTP Mapping: 404 Not Found\n - ALREADY_EXISTS: The entity that a client attempted to create (e.g., file or directory)\nalready exists.\n\nHTTP Mapping: 409 Conflict\n - PERMISSION_DENIED: The caller does not have permission to execute the specified\noperation. `PERMISSION_DENIED` must not be used for rejections\ncaused by exhausting some resource (use `RESOURCE_EXHAUSTED`\ninstead for those errors). `PERMISSION_DENIED` must not be\nused if the caller can not be identified (use `UNAUTHENTICATED`\ninstead for those errors). This error code does not imply the\nrequest is valid or the requested entity exists or satisfies\nother pre-conditions.\n\nHTTP Mapping: 403 Forbidden\n - UNAUTHENTICATED: The request does not have valid authentication credentials for the\noperation.\n\nHTTP Mapping: 401 Unauthorized\n - RESOURCE_EXHAUSTED: Some resource has been exhausted, perhaps a per-user quota, or\nperhaps the entire file system is out of space.\n\nHTTP Mapping: 429 Too Many Requests\n - FAILED_PRECONDITION: The operation was rejected because the system is not in a state\nrequired for the operation's execution.  For example, the directory\nto be deleted is non-empty, an rmdir operation is applied to\na non-directory, etc.\n\nService implementors can use the following guidelines to decide\nbetween `FAILED_PRECONDITION`, `ABORTED`, and `UNAVAILABLE`:\n (a) Use `UNAVAILABLE` if the client can retry just the failing call.\n (b) Use `ABORTED` if the client should retry at a higher level. For\n     example, when a client-specified test-and-set fails, indicating the\n     client should restart a read-modify-write sequence.\n (c) Use `FAILED_PRECONDITION` if the client should not retry until\n     the system state has been explicitly fixed. For example, if an \"rmdir\"\n     fails because the directory is non-empty, `FAILED_PRECONDITION`\n     should be returned since the client should not retry unless\n     the files are deleted from the directory.\n\nHTTP Mapping: 400 Bad Request\n - ABORTED: The operation was aborted, typically due to a concurrency issue such as\na sequencer check failure or transaction abort.\n\nSee the guidelines above for deciding between `FAILED_PRECONDITION`,\n`ABORTED`, and `UNAVAILABLE`.\n\nHTTP Mapping: 409 Conflict\n - OUT_OF_RANGE: The operation was attempted past the valid range.  E.g., seeking or\nreading past end-of-file.\n\nUnlike `INVALID_ARGUMENT`, this error indicates a problem that may\nbe fixed if the system state changes. For example, a 32-bit file\nsystem will generate `INVALID_ARGUMENT` if asked to read at an\noffset that is not in the range [0,2^32-1], but it will generate\n`OUT_OF_RANGE` if asked to read from an offset past the current\nfile size.\n\nThere is a fair bit of overlap between `FAILED_PRECONDITION` and\n`OUT_OF_RANGE`.  We recommend using `OUT_OF_RANGE` (the more specific\nerror) when it applies so that callers who are iterating through\na space can easily look for an `OUT_OF_RANGE` error to detect when\nthey are done.\n\nHTTP Mapping: 400 Bad Request\n - UNIMPLEMENTED: The operation is not implemented or is not supported/enabled in this\nservice.\n\nHTTP Mapping: 501 Not Implemented\n - INTERNAL: Internal errors.  This means that some invariants expected by the\nunderlying system have been broken.  This error code is reserved\nfor serious errors.\n\nHTTP Mapping: 500 Internal Server Error\n - UNAVAILABLE: The service is currently unavailable.  This is most likely a\ntransient condition, which can be corrected by retrying with\na backoff. Note that it is not always safe to retry\nnon-idempotent operations.\n\nSee the guidelines above for deciding between `FAILED_PRECONDITION`,\n`ABORTED`, and `UNAVAILABLE`.\n\nHTTP Mapping: 503 Service Unavailable\n - DATA_LOSS: Unrecoverable data loss or corruption.\n\nHTTP Mapping: 500 Internal Server Error",
+      "type": "string",
+      "default": "OK",
+      "enum": [
+        "OK",
+        "CANCELLED",
+        "UNKNOWN",
+        "INVALID_ARGUMENT",
+        "DEADLINE_EXCEEDED",
+        "NOT_FOUND",
+        "ALREADY_EXISTS",
+        "PERMISSION_DENIED",
+        "UNAUTHENTICATED",
+        "RESOURCE_EXHAUSTED",
+        "FAILED_PRECONDITION",
+        "ABORTED",
+        "OUT_OF_RANGE",
+        "UNIMPLEMENTED",
+        "INTERNAL",
+        "UNAVAILABLE",
+        "DATA_LOSS"
+      ]
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DateRequest": {
+      "type": "object",
+      "properties": {
+        "RequestId": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DateResponse": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "error": {
+          "$ref": "#/definitions/errorsErrorStatus"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1EncryptRequest": {
+      "type": "object",
+      "properties": {
+        "AppId": {
+          "type": "string",
+          "title": "the ID of the application"
+        },
+        "PlainText": {
+          "type": "string",
+          "format": "byte",
+          "title": "plain text"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "unique id for the request"
+        }
+      }
+    },
+    "v1EncryptResponse": {
+      "type": "object",
+      "properties": {
+        "CipherText": {
+          "type": "string",
+          "format": "byte",
+          "title": "cipher text"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "same as request_id in the request, generate if not set"
+        },
+        "error": {
+          "$ref": "#/definitions/errorsErrorStatus"
+        }
+      }
+    },
+    "v1ExampleRequest": {
+      "type": "object",
+      "properties": {
+        "AppId": {
+          "type": "string",
+          "title": "the ID of the application"
+        },
+        "Message": {
+          "type": "string",
+          "title": "message"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "unique id for the request"
+        }
+      }
+    },
+    "v1ExampleResponse": {
+      "type": "object",
+      "properties": {
+        "Message": {
+          "type": "string",
+          "title": "message echo"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "same as request_id in the request, generate if not set"
+        },
+        "error": {
+          "$ref": "#/definitions/errorsErrorStatus"
+        }
+      }
+    },
+    "v1HealthRequest": {
+      "type": "object",
+      "properties": {
+        "AppId": {
+          "type": "string",
+          "title": "the ID of the application"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "unique id for the request"
+        }
+      }
+    },
+    "v1HealthResponse": {
+      "type": "object",
+      "properties": {
+        "Date": {
+          "type": "string",
+          "title": "query date time"
+        },
+        "RequestId": {
+          "type": "string",
+          "title": "same as request_id in the request, generate if not set"
+        },
+        "Status": {
+          "type": "string",
+          "title": "health check status"
+        },
+        "error": {
+          "$ref": "#/definitions/errorsErrorStatus"
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "DateService"
+    },
+    {
+      "name": "SoleTemplateService"
+    },
+    {
+      "name": "SoleSamplesService"
+    }
+  ]
+}

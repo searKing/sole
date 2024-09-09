@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1.configuration;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1/configuration;configuration";
+
+message Log {
+  enum Level {
+    option allow_alias = true;
+    _ = 0;
+    debug = -4;
+    info = 0;
+    warn = 4;
+    error = 8;
+  }
+  enum Format {
+    json = 0;
+    text = 1;
+    glog = 2;
+    glog_human = 3;
+  }
+  Level level = 1 ;
+  Format format = 2 ;
+  string path = 3;
+  bool add_source = 4;
+
+  google.protobuf.Duration rotation_duration = 5;
+  int64 rotation_size_in_byte = 6;
+  int64 rotation_max_count = 7;
+  google.protobuf.Duration rotation_max_age = 8;
+
+  bool allow_stdout = 9;
+  Level stdout_level = 10;
+
+  // glog or glog_human
+  int64  truncate_attr_size_to = 11; // truncate message size to, The default is 0 (no limit is given)
+}

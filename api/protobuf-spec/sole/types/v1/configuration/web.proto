@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package searking.sole.api.sole.types.v1.configuration;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/searKing/sole/api/protobuf-spec/sole/types/v1/configuration;configuration";
+
+message Web {
+  Net bind_addr = 1; // for listen
+  google.protobuf.Duration shutdown_delay_duration = 2; // ShutdownDelayDuration allows to block shutdown for graceful exit.
+  Middlewares middlewares = 3; // for middlewares
+  // for debug
+  bool force_disable_tls = 20; // disable tls
+
+  bool prefer_register_http_from_endpoint = 30; // prefer register http from endpoint instead of function call, grpc middleware takes effect.
+
+  message Net {
+    string host = 1;
+    int32 port = 2;
+  }
+
+  message Middlewares{
+    int64 max_concurrency_unary = 1; // for concurrent parallel requests of unary server, The default is 0 (no limit is given)
+    int64 max_concurrency_stream = 2; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
+    google.protobuf.Duration burst_limit_timeout_unary = 3; // for concurrent parallel requests of unary server, The default is 0 (no limit is given)
+    google.protobuf.Duration burst_limit_timeout_stream = 4; // for concurrent parallel requests of stream server, The default is 0 (no limit is given)
+    google.protobuf.Duration handled_timeout_unary = 5; // for max handing time of unary server, The default is 0 (no limit is given)
+    google.protobuf.Duration handled_timeout_stream = 6; // for max handing time of unary server, The default is 0 (no limit is given)
+
+    int64 max_receive_message_size_in_bytes = 7; // sets the maximum message size in bytes the grpc server can receive, The default is 0 (no limit is given).
+    int64 max_send_message_size_in_bytes = 8; // sets the maximum message size in bytes the grpc server can send, The default is 0 (no limit is given).
+
+    bool stats_handling = 9; // log for the related stats handling (e.g., RPCs, connections).
+    bool fill_request_id = 10; // for the field "RequestId" filling in Request and Response.
+    bool otel_handling = 11; // captures traces and metrics and send them to an observability platform by OpenTelemetry.
+  }
+}

@@ -1,0 +1,52 @@
+global:
+  log_path: &global_log_path ./logs/soletemplate-80
+  web_port: &global_web_port 80
+log:
+  format: glog_human
+  level: info
+  path: *global_log_path
+  add_source: true
+
+  rotation_duration: 3600s
+  rotation_size_in_byte: 0
+  rotation_max_age: 86400s
+  rotation_max_count: 0
+
+  allow_stdout: false
+  stdout_level: error
+  truncate_attr_size_to: 10240
+web:
+  bind_addr:
+    port: *global_web_port
+  advertise_addr:
+    host: ""
+    port: *global_web_port
+    domains:
+  force_disable_tls: true
+  prefer_register_http_from_endpoint: false
+  middlewares:
+    stats_handling: true
+    fill_request_id: true
+    otel_handling: true
+category:
+  system:
+    secret_keeper_url: "base64key://smGbjm71Nxd1Ig5FS0wj9SlbzAIrnolCz9bQQ6uAhl4="
+  file_cleaners:
+    - file_pattern: "./data/temp"
+      clean_interval: 30s
+      max_count: 0
+      max_age: 0s
+      min_age: 60s
+      max_used_percent: 0.85
+otel:
+  trace_exporter_endpoints:
+  #    - "stdout://localhost?allow_stdout&pretty_print&no_timestamps"
+  #    - "prometheus://localhost?deny_keys=[]"
+  #    - "otlp-http://some_endpoint/some_path?compression=gzip&insecure"
+  #    - "otlp-grpc://some_endpoint/some_path?compression=gzip&insecure"
+  metric_exporter_endpoints:
+  #    - "stdout://localhost?allow_stdout&pretty_print&no_timestamps"
+  #    - "otlp-http://some_endpoint/some_path?compression=gzip&insecure"
+  #    - "otlp-grpc://some_endpoint/some_path?compression=gzip&insecure"
+  resource_attrs:
+#    "attr_key1": "attr_value1"
