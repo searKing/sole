@@ -12,6 +12,7 @@ import (
 
 	"github.com/searKing/golang/go/version"
 
+	deploycmd "github.com/searKing/sole/soletemplate/cmd/soletemplate/app/deploy"
 	servecmd "github.com/searKing/sole/soletemplate/cmd/soletemplate/app/serve"
 	versioncmd "github.com/searKing/sole/soletemplate/cmd/soletemplate/app/version"
 )
@@ -37,6 +38,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		SilenceUsage: true,
 	}
 	rootCmd.AddCommand(versioncmd.New())
+	rootCmd.AddCommand(deploycmd.New())
 	rootCmd.AddCommand(servecmd.New(ctx))
 
 	// Cobra also supports local flags, which will only run

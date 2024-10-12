@@ -6,12 +6,13 @@ package deploy
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/kardianos/service"
+	slog_ "github.com/searKing/golang/go/log/slog"
 	"github.com/searKing/golang/go/version"
 	"github.com/searKing/sole/internal/pkg/banner"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -36,7 +37,7 @@ func RunService(action string) error {
 	case "install", "stop":
 		figure.NewFigure(version.ServiceDisplayName, "", false).Print()
 	}
-	logger := logrus.WithField("service_action", action).WithField("service_name", version.ServiceName)
+	logger := slog.With("service_action", action).With("service_name", version.ServiceName)
 
 	svcConfig := &service.Config{
 		Name:        version.ServiceName,
@@ -46,14 +47,14 @@ func RunService(action string) error {
 	}
 	s, err := service.New(&program{}, svcConfig)
 	if err != nil {
-		logger.WithError(err).Error("creates service failed")
+		logger.With(slog_.Error(err)).Error("creates service failed")
 		return err
 	}
-	logger.Infof("service is ready to control...")
+	logger.Info("service is ready to control...")
 	if err := service.Control(s, action); err != nil {
-		logger.WithError(err).Infof("service controled failed...")
+		logger.With(slog_.Error(err)).Info("control service failed...")
 		return err
 	}
-	logger.Infof("service controled successfully...")
+	logger.Info("control service successfully...")
 	return nil
 }
