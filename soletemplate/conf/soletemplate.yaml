@@ -23,6 +23,7 @@ web:
     port: *global_web_port
     domains:
   force_disable_tls: true
+  no_grpc_proxy: false
   prefer_register_http_from_endpoint: false
   middlewares:
     stats_handling: true

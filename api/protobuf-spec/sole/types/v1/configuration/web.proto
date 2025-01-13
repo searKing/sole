@@ -12,6 +12,7 @@ message Web {
   Middlewares middlewares = 3; // for middlewares
   // for debug
   bool force_disable_tls = 20; // disable tls
+  bool no_grpc_proxy = 21; // disable grpc proxy
 
   bool prefer_register_http_from_endpoint = 30; // prefer register http from endpoint instead of function call, grpc middleware takes effect.
 

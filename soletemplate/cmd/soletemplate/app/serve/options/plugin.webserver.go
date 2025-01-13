@@ -43,6 +43,7 @@ func NewWebServer(ctx context.Context, cfg *v1.Configuration) (ws *webserver.Web
 	fc.BindAddress = net.JoinHostPort(web.GetBindAddr().GetHost(), fmt.Sprintf("%d", web.GetBindAddr().GetPort()))
 	fc.PreferRegisterHTTPFromEndpoint = web.GetPreferRegisterHttpFromEndpoint()
 	fc.ForceDisableTls = slices_.Or(config.ForceDisableTls, web.GetForceDisableTls())
+	fc.NoGrpcProxy = web.GetNoGrpcProxy()
 	fc.ShutdownDelayDuration = web.GetShutdownDelayDuration().AsDuration()
 
 	mw := web.GetMiddlewares()
