@@ -171,20 +171,21 @@ for tool in protoc protoc-gen-go protoc-gen-go-tag protoc-gen-govalidators proto
     ;;
   esac
 
+  # https://grpc.io/docs/protoc-installation/
   # http://google.github.io/proto-lens/installing-protoc.html
   # https://github.com/grpc/grpc-go
   # https://www.grpc.io/docs/languages/go/quickstart/
-  # protoc-gen-go: go get -u github.com/golang/protobuf/protoc-gen-go
-  # protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-  # protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
+  # protoc-gen-go: go install github.com/golang/protobuf/protoc-gen-go@latest
+  # protoc-gen-grpc-gateway: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+  # protoc-gen-openapiv2: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
   q=$(command -v $tool) || die "didn't find $tool
   protoc: dnf install protobuf protobuf-compiler.
-  protoc-gen-go: go get -u google.golang.org/protobuf/cmd/protoc-gen-go
-  protoc-gen-go-grpc: go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
-  protoc-gen-grpc-gateway: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
-  protoc-gen-openapiv2: go get -u github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2
-  protoc-gen-go-tag: go get -u github.com/searKing/golang/tools/protoc-gen-go-tag
-  protoc-gen-govalidators: go get -u github.com/mwitkow/go-proto-validators/protoc-gen-govalidators
+  protoc-gen-go: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  protoc-gen-go-grpc: go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+  protoc-gen-grpc-gateway: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
+  protoc-gen-openapiv2: go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+  protoc-gen-go-tag: go install github.com/searKing/golang/tools/protoc-gen-go-tag@latest
+  protoc-gen-govalidators: go install github.com/mwitkow/go-proto-validators/protoc-gen-govalidators@latest
   "
   echo 1>&2 "$tool: $q"
 done
